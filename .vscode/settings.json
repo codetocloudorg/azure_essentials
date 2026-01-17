@@ -1,0 +1,24 @@
+{
+    "editor.formatOnSave": true,
+    "editor.minimap.enabled": false,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "[bicep]": {
+        "editor.defaultFormatter": "ms-azuretools.vscode-bicep"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json": "azure.yaml"
+    },
+    "files.associations": {
+        "*.bicep": "bicep"
+    }
+}

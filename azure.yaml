@@ -1,0 +1,75 @@
+# Azure Developer CLI (azd) Configuration
+# Code to Cloud - Azure Essentials Training
+# https://learn.microsoft.com/azure/developer/azure-developer-cli/
+
+name: azure-essentials
+metadata:
+  description: Azure Essentials Live Training - A comprehensive two-day course covering core Azure services
+  author: Code to Cloud
+  template: azure-essentials@1.0.0
+
+# Infrastructure configuration
+infra:
+  provider: bicep
+  path: ./infra
+  module: main
+
+# Azure resource provisioning hooks
+hooks:
+  # Pre-provision: Display welcome message
+  preprovision:
+    shell: sh
+    run: |
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   Azure Essentials - Provisioning Resources                  ║"
+      echo "║   Code to Cloud                                              ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+      echo "  Environment: ${AZURE_ENV_NAME}"
+      echo "  Location:    ${AZURE_LOCATION}"
+      echo "  Lesson:      ${LESSON_NUMBER:-All Lessons}"
+      echo ""
+      echo "  Each lesson will deploy to its own resource group:"
+      echo "    rg-${AZURE_ENV_NAME}-lesson##-<name>"
+      echo ""
+
+  # Post-provision: Display resource group information
+  postprovision:
+    shell: sh
+    run: |
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   ✅ Provisioning Complete!                                  ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+      echo "Resource groups created for ${AZURE_ENV_NAME}:"
+      az group list --query "[?contains(name, '${AZURE_ENV_NAME}')].name" -o tsv 2>/dev/null | sed 's/^/  • /' || echo "  (Run 'az group list' to see groups)"
+      echo ""
+      echo "Next steps:"
+      echo "  1. Navigate to lessons/ folder"
+      echo "  2. Follow the README for your lesson"
+      echo "  3. Run 'azd down' when finished"
+      echo ""
+      echo "Commands:"
+      echo "  azd show  - View deployed resources"
+      echo "  azd down  - Delete all resources"
+      echo ""
+      echo "Portal: https://portal.azure.com"
+      echo ""
+      echo "⚠️  Remember: Run 'azd down' when done to avoid charges!"
+      echo ""
+
+# Note: Services are deployed manually during lessons
+# This template focuses on infrastructure provisioning only
+# Learners will deploy apps as part of hands-on exercises
+#
+# Quick Start (Interactive):
+#   ./scripts/deploy.sh
+#
+# Quick Start (CLI):
+#   azd init
+#   azd env set AZURE_LOCATION eastus
+#   azd env set LESSON_NUMBER 03
+#   azd up
+
