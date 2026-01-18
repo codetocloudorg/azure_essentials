@@ -346,7 +346,6 @@ output appServicePlanId string = appServicePlan.id
 output appServicePlanName string = appServicePlan.name
 output webAppName string = webApp.name
 output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
-output webAppPrincipalId string = webApp.identity.?principalId ?? ''
 
 // Windows VM outputs - Use these to connect to the VM
 output vmName string = windowsVm.name
