@@ -185,6 +185,30 @@ install_jq() {
     fi
 }
 
+# Install Visual Studio Code
+install_vscode() {
+    if ! command_exists code; then
+        echo -e "${YELLOW}Installing Visual Studio Code...${NC}"
+        case $OS in
+            macos)
+                brew install --cask visual-studio-code
+                ;;
+            debian)
+                sudo apt-get install -y software-properties-common apt-transport-https wget
+                wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/packages.microsoft.gpg
+                sudo install -D -o root -g root -m 644 /tmp/packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+                sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+                sudo apt-get update && sudo apt-get install -y code
+                ;;
+            *)
+                echo -e "${YELLOW}Please install VS Code manually: https://code.visualstudio.com/${NC}"
+                ;;
+        esac
+    else
+        echo -e "${GREEN}✓ VS Code already installed${NC}"
+    fi
+}
+
 # Main installation
 echo ""
 echo -e "${BLUE}Installing required tools...${NC}"
@@ -198,6 +222,7 @@ fi
 install_git
 install_azure_cli
 install_azd
+install_vscode
 install_kubectl
 install_docker
 install_python
@@ -215,7 +240,7 @@ echo "  Installation Summary"
 echo "==========================================${NC}"
 echo ""
 
-tools=("az" "azd" "kubectl" "docker" "git" "python3" "jq")
+tools=("az" "azd" "git" "code" "kubectl" "docker" "python3" "jq")
 all_installed=true
 
 for tool in "${tools[@]}"; do

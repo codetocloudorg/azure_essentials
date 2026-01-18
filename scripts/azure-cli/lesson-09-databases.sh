@@ -1,6 +1,6 @@
 #!/bin/bash
 #===============================================================================
-# Lesson 09: Database Services - Azure CLI Deployment
+# Lesson 09: Database & Data Services - Azure CLI Deployment
 #===============================================================================
 # This script demonstrates how to create Azure Cosmos DB
 # using native Azure CLI commands.
@@ -23,7 +23,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-LOCATION="${LOCATION:-uksouth}"
+LOCATION="${LOCATION:-centralus}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-databases}"
 UNIQUE_SUFFIX=$(openssl rand -hex 4)
 COSMOS_ACCOUNT="cosmos-essentials-${UNIQUE_SUFFIX}"
@@ -105,7 +105,7 @@ deploy() {
         --resource-group "$RESOURCE_GROUP" \
         --locations regionName="$LOCATION" failoverPriority=0 isZoneRedundant=false \
         --default-consistency-level Session \
-        --enable-serverless true \
+        --capabilities EnableServerless \
         --kind GlobalDocumentDB
 
     echo ""
@@ -227,7 +227,7 @@ show_commands() {
     echo ""
     echo "# Create Cosmos DB account (Serverless)"
     echo "az cosmosdb create --name <account> --resource-group <rg> \\"
-    echo "    --enable-serverless true"
+    echo "    --capabilities EnableServerless"
     echo ""
     echo "# Create Cosmos DB account (Provisioned throughput)"
     echo "az cosmosdb create --name <account> --resource-group <rg>"

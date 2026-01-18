@@ -1,6 +1,33 @@
+// ============================================================================
 // Azure Compute (Windows) Module
-// Code to Cloud - Azure Essentials
+// ============================================================================
+// Code to Cloud | www.codetocloud.io
 // Lesson 05: Compute Services - Windows
+//
+// WHAT THIS CREATES:
+//   - Windows Server 2022 VM with RDP access
+//   - App Service Plan (PaaS web hosting)
+//   - Web App for .NET applications
+//   - Auto-shutdown schedule (saves costs during training)
+//
+// COST BREAKDOWN:
+//   VM (Standard_B2s):     ~$30-40/month (pay-per-hour when running)
+//   App Service (F1):      Free (1GB RAM, 60 CPU min/day)
+//   Public IP (Standard):  ~$3/month
+//   Managed Disk (128GB):  ~$5/month
+//
+// AUTO-SHUTDOWN: VM shuts down daily at 7PM UTC to save costs
+// TRAINER TIP: Show how to start/stop VMs vs delete/recreate
+//
+// VM ACCESS: RDP (Remote Desktop Protocol) on port 3389
+//   Command: mstsc /v:{public-ip-address}
+//   Username: azureuser
+//   Password: (set during deployment)
+// ============================================================================
+
+// ============================================================================
+// PARAMETERS - Customizable inputs for the module
+// ============================================================================
 
 @description('Azure region for compute resources')
 param location string
@@ -44,10 +71,20 @@ param vmSize string = 'Standard_B2s'
 param appServicePlanSku string = 'F1'
 
 // ============================================================================
-// WINDOWS VIRTUAL MACHINE
+// WINDOWS VIRTUAL MACHINE INFRASTRUCTURE
 // ============================================================================
+// A VM requires several supporting resources:
+//   1. VNet + Subnet = Private network the VM lives in
+//   2. Network Interface (NIC) = VM's network connection
+//   3. Public IP = Internet-accessible IP address
+//   4. NSG = Firewall rules controlling traffic
+//
+// The order of creation matters - dependencies are implicit in Bicep
+// based on resource references.
 
-// Virtual Network for the VM
+// ----------------------------------------------------------------------------
+// Virtual Network - Private network for the VM
+// ----------------------------------------------------------------------------
 resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: 'vnet-${vmName}'
   location: location
@@ -55,37 +92,46 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '10.1.0.0/16'
+        '10.1.0.0/16'  // 65,536 private IPs
       ]
     }
     subnets: [
       {
         name: 'default'
         properties: {
-          addressPrefix: '10.1.0.0/24'
+          addressPrefix: '10.1.0.0/24'  // 256 IPs for VMs
         }
       }
     ]
   }
 }
 
-// Public IP for RDP access
+// ----------------------------------------------------------------------------
+// Public IP - Internet-accessible address for RDP
+// ----------------------------------------------------------------------------
+// Standard SKU provides better availability and security features
+// Static allocation means the IP doesn't change when VM restarts
 resource publicIp 'Microsoft.Network/publicIPAddresses@2023-11-01' = {
   name: 'pip-${vmName}'
   location: location
   tags: tags
   sku: {
-    name: 'Standard'
+    name: 'Standard'  // Standard SKU required for zone redundancy
   }
   properties: {
-    publicIPAllocationMethod: 'Static'
+    publicIPAllocationMethod: 'Static'  // IP persists across VM restarts
     dnsSettings: {
+      // Creates DNS name like: vm-win-learn-abc123.centralus.cloudapp.azure.com
       domainNameLabel: toLower('${vmName}-${uniqueString(resourceGroup().id)}')
     }
   }
 }
 
-// Network Security Group with RDP access
+// ----------------------------------------------------------------------------
+// Network Security Group - Firewall for the VM
+// ----------------------------------------------------------------------------
+// SECURITY WARNING: RDP from anywhere (*) is for training only!
+// In production, restrict to your IP or use Azure Bastion.
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   name: 'nsg-${vmName}'
   location: location
@@ -109,7 +155,10 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   }
 }
 
-// Network Interface
+// ----------------------------------------------------------------------------
+// Network Interface - Connects VM to the network
+// ----------------------------------------------------------------------------
+// The NIC bridges the VM to the VNet and associates the public IP
 resource nic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
   name: 'nic-${vmName}'
   location: location
@@ -135,7 +184,11 @@ resource nic 'Microsoft.Network/networkInterfaces@2023-11-01' = {
   }
 }
 
+// ----------------------------------------------------------------------------
 // Windows Virtual Machine
+// ----------------------------------------------------------------------------
+// Windows Server 2022 Datacenter - Azure optimized edition
+// B2s = 2 vCPUs, 4GB RAM - Good for development and testing
 resource windowsVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: vmName
   location: location
@@ -190,7 +243,12 @@ resource windowsVm 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   }
 }
 
-// Auto-shutdown to save costs (shuts down at 7 PM UTC)
+// ----------------------------------------------------------------------------
+// Auto-Shutdown Schedule - Saves costs during training
+// ----------------------------------------------------------------------------
+// IMPORTANT: This shuts down the VM at 7 PM UTC daily
+// Learners should start the VM manually when needed
+// To disable: set status to 'Disabled' or delete this resource
 resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = {
   name: 'shutdown-computevm-${vmName}'
   location: location
@@ -210,8 +268,15 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = {
 }
 
 // ============================================================================
-// APP SERVICE PLAN
+// APP SERVICE PLAN - PaaS compute platform
 // ============================================================================
+// App Service Plans define the compute resources for web apps:
+//   F1 (Free): 1GB RAM, 60 CPU minutes/day - Great for learning
+//   B1 (Basic): 1.75GB RAM, always-on - Good for dev/test
+//   S1 (Standard): Auto-scale, slots, backups - Production ready
+//   P1v2 (Premium): Better perf, more slots - Enterprise
+//
+// Multiple web apps can share one App Service Plan
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
@@ -227,8 +292,15 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 // ============================================================================
-// WEB APP
+// WEB APP - The actual web application
 // ============================================================================
+// Web Apps are managed app hosting with built-in features:
+//   - Automatic patching and maintenance
+//   - Deployment slots for blue/green deployments
+//   - Built-in authentication (Easy Auth)
+//   - Custom domains and SSL certificates
+//
+// This web app is configured for .NET 8 applications
 
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
@@ -254,19 +326,20 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-// Application settings
+// App settings configure the runtime environment
 resource webAppSettings 'Microsoft.Web/sites/config@2023-12-01' = {
   parent: webApp
   name: 'appsettings'
   properties: {
-    WEBSITE_RUN_FROM_PACKAGE: '1'
-    ASPNETCORE_ENVIRONMENT: 'Production'
+    WEBSITE_RUN_FROM_PACKAGE: '1'       // Run directly from deployment package
+    ASPNETCORE_ENVIRONMENT: 'Production' // .NET environment name
   }
 }
 
 // ============================================================================
-// OUTPUTS
+// OUTPUTS - Values returned to the calling template
 // ============================================================================
+// These outputs provide connection information for the deployed resources
 
 // App Service outputs
 output appServicePlanId string = appServicePlan.id
@@ -275,9 +348,9 @@ output webAppName string = webApp.name
 output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
 output webAppPrincipalId string = webApp.identity.?principalId ?? ''
 
-// Windows VM outputs
+// Windows VM outputs - Use these to connect to the VM
 output vmName string = windowsVm.name
 output vmPublicIp string = publicIp.properties.ipAddress
 output vmFqdn string = publicIp.properties.dnsSettings.fqdn
 output vmAdminUsername string = adminUsername
-output rdpCommand string = 'mstsc /v:${publicIp.properties.ipAddress}'
+output rdpCommand string = 'mstsc /v:${publicIp.properties.ipAddress}'  // Copy-paste RDP command

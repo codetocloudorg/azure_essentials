@@ -1,6 +1,38 @@
+// ============================================================================
 // Azure Linux VM with MicroK8s Module
-// Code to Cloud - Azure Essentials
+// ============================================================================
+// Code to Cloud | www.codetocloud.io
 // Lesson 06: Compute - Linux and Kubernetes Intro
+//
+// WHAT THIS CREATES:
+//   - Ubuntu 22.04 LTS Virtual Machine
+//   - MicroK8s pre-installed via cloud-init
+//   - Public IP with SSH access
+//   - NSG with SSH (22) and Kubernetes API (16443) ports open
+//
+// COST BREAKDOWN:
+//   VM (Standard_B2s):  ~$30-40/month (pay-per-hour when running)
+//   Public IP:          ~$3/month
+//   Managed Disk:       ~$5/month
+//
+// WHY MICROK8S?
+//   - Lightweight Kubernetes for learning (single-node)
+//   - Runs on minimal resources (2GB RAM)
+//   - Easy addon system: microk8s enable dashboard
+//   - Production-ready for edge/IoT scenarios
+//
+// SSH ACCESS:
+//   ssh -i ~/.ssh/id_ed25519 azureuser@{public-ip}
+//
+// KUBERNETES COMMANDS (after SSH):
+//   microk8s status          # Check cluster status
+//   microk8s kubectl get all # List resources
+//   microk8s enable dns      # Enable CoreDNS
+// ============================================================================
+
+// ============================================================================
+// PARAMETERS - Customizable inputs for the module
+// ============================================================================
 
 @description('Azure region for resources')
 param location string

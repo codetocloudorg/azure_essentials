@@ -6,6 +6,18 @@
 
 Azure provides flexible compute options for running Windows workloads. This lesson covers Windows virtual machines, availability options, and Azure App Service for web applications.
 
+## 🚀 Sample Application
+
+This lesson includes a sample .NET API you can deploy to App Service:
+
+**[Cloud Quote API](src/cloud-quote-api/README.md)** - A REST API serving inspirational cloud computing quotes
+
+```bash
+# Quick deploy to App Service
+cd lessons/05-compute-windows/src/cloud-quote-api
+az webapp up --name "cloudquote-$(openssl rand -hex 4)" --sku F1
+```
+
 ## What Gets Deployed
 
 When you deploy this lesson using the deploy script, you get:
@@ -96,7 +108,7 @@ Azure VMs come in different series for different workloads:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 VM_NAME="vm-windows-001"
 ADMIN_USER="azureuser"
 

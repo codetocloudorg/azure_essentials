@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Dashboard | Code to Cloud</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="cloud-icon">☁️</span>
+                <h1>Cloud Dashboard</h1>
+            </div>
+            <p class="tagline">Code to Cloud | Azure Essentials</p>
+        </header>
+
+        <main>
+            <section class="status-grid">
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Compute</h3>
+                    <p>Virtual Machines</p>
+                    <span class="status-text">Operational</span>
+                </div>
+
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Storage</h3>
+                    <p>Blob & Files</p>
+                    <span class="status-text">Operational</span>
+                </div>
+
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Networking</h3>
+                    <p>VNets & Load Balancers</p>
+                    <span class="status-text">Operational</span>
+                </div>
+
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Containers</h3>
+                    <p>ACR & AKS</p>
+                    <span class="status-text">Operational</span>
+                </div>
+
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Serverless</h3>
+                    <p>Functions & Logic Apps</p>
+                    <span class="status-text">Operational</span>
+                </div>
+
+                <div class="status-card healthy">
+                    <div class="status-icon">🟢</div>
+                    <h3>Databases</h3>
+                    <p>Cosmos DB & SQL</p>
+                    <span class="status-text">Operational</span>
+                </div>
+            </section>
+
+            <section class="metrics">
+                <h2>📊 Quick Metrics</h2>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <span class="metric-value" id="uptime">99.99%</span>
+                        <span class="metric-label">Uptime</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value" id="requests">1.2M</span>
+                        <span class="metric-label">Requests/Day</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value" id="latency">45ms</span>
+                        <span class="metric-label">Avg Latency</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-value" id="regions">3</span>
+                        <span class="metric-label">Active Regions</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info-box">
+                <h2>🚀 Deployment Info</h2>
+                <table>
+                    <tr>
+                        <td>Container:</td>
+                        <td><code>cloud-dashboard:v1</code></td>
+                    </tr>
+                    <tr>
+                        <td>Environment:</td>
+                        <td><span id="environment">Production</span></td>
+                    </tr>
+                    <tr>
+                        <td>Last Updated:</td>
+                        <td><span id="timestamp"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Course:</td>
+                        <td>Azure Essentials - Lesson 07</td>
+                    </tr>
+                </table>
+            </section>
+        </main>
+
+        <footer>
+            <p>Built with ❤️ by <strong>Code to Cloud</strong></p>
+            <p>Azure Essentials Training | Container Services</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

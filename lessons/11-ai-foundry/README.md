@@ -75,7 +75,7 @@ By the end of this lesson, you will be able to:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 HUB_NAME="aihub-essentials-$(openssl rand -hex 4)"
 
 # Create the AI Hub (requires supporting resources)

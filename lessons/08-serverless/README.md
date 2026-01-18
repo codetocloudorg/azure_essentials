@@ -65,7 +65,7 @@ Serverless computing provides:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 STORAGE_NAME="stfunc$(openssl rand -hex 4)"
 FUNCTION_APP="func-essentials-$(openssl rand -hex 4)"
 

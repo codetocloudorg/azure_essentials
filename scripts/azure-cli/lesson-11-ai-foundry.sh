@@ -24,7 +24,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-LOCATION="${LOCATION:-uksouth}"
+LOCATION="${LOCATION:-centralus}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-ai}"
 UNIQUE_SUFFIX=$(openssl rand -hex 4)
 AI_ACCOUNT="ai-essentials-${UNIQUE_SUFFIX}"

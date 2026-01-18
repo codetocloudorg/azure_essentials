@@ -6,6 +6,18 @@
 
 Azure provides managed container services for building, storing, and orchestrating containerised applications. This lesson covers Azure Container Registry (ACR) and introduces Azure Kubernetes Service (AKS).
 
+## 🚀 Sample Application
+
+This lesson includes a containerized dashboard you can build and deploy:
+
+**[Cloud Dashboard](src/cloud-dashboard/README.md)** - An interactive Azure services status dashboard
+
+```bash
+# Build with ACR Tasks (no local Docker needed!)
+cd lessons/07-container-services/src/cloud-dashboard
+az acr build --registry $ACR_NAME --image cloud-dashboard:v1 .
+```
+
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
@@ -60,7 +72,7 @@ Local Development → Build Image → Push to ACR → Deploy to AKS
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 ACR_NAME="crazessentials$(openssl rand -hex 4)"
 
 # Create the container registry

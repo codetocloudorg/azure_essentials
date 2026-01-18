@@ -65,7 +65,7 @@ Cosmos DB supports multiple APIs for different data models:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 COSMOS_ACCOUNT="cosmos-essentials-$(openssl rand -hex 4)"
 DATABASE_NAME="azure-essentials"
 CONTAINER_NAME="items"

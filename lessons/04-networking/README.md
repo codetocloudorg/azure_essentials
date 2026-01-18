@@ -68,7 +68,7 @@ NSGs filter network traffic using rules:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 VNET_NAME="vnet-azure-essentials"
 
 # Create the virtual network

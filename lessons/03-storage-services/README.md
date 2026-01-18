@@ -62,7 +62,7 @@ Azure Storage includes four main services:
 # Variables
 STORAGE_NAME="stazessentials$(openssl rand -hex 4)"
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 
 # Create storage account
 az storage account create \

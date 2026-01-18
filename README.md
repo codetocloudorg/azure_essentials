@@ -9,6 +9,8 @@
 
 Welcome to Azure Essentials, a comprehensive two-day training course that takes you from cloud fundamentals to deploying real-world solutions on Microsoft Azure. This repository contains all the materials, infrastructure code, and hands-on exercises you need to succeed.
 
+📅 **[View Full Course Agenda](lessons/00-prerequisites/agenda.md)** — Detailed schedule with timings for each module
+
 ### What You Will Learn
 
 - **Core Azure Concepts**: Understand IaaS, PaaS, SaaS, and serverless service models
@@ -29,6 +31,8 @@ This course uses the [Azure Developer CLI (azd)](https://learn.microsoft.com/azu
 Before you begin, complete the setup guide for your operating system:
 
 👉 **[Prerequisites & Setup Guide](lessons/00-prerequisites/README.md)** — Step-by-step instructions for Windows, macOS, and Linux
+
+📅 **[Course Agenda](lessons/00-prerequisites/agenda.md)** — Full schedule with module timings and topics
 
 #### Quick Checklist
 
@@ -176,6 +180,8 @@ This course is designed to be **as cost-effective as possible** for learners usi
 
 This course is organised into 12 progressive lessons across two days. Each lesson builds upon previous concepts.
 
+📅 **[View Detailed Agenda](lessons/00-prerequisites/agenda.md)** — Complete schedule with presentation times, demos, and breaks
+
 ### Day 1: Foundations
 
 | Lesson | Title | Duration | Description |
@@ -198,6 +204,8 @@ This course is organised into 12 progressive lessons across two days. Each lesso
 | [10](lessons/10-billing-cost/README.md) | Billing and Cost Optimisation | 20 min | Cost management, budgets, and resource tagging |
 | [11](lessons/11-ai-foundry/README.md) | Azure AI Foundry | 45 min | AI workspaces, model catalog, and chatbot development |
 | [12](lessons/12-architecture-design/README.md) | Architecture Design | 45 min | Collaborative design session for real-world scenarios |
+
+👉 **[View Full Lesson Index](lessons/README.md)** — Quick navigation to all lessons
 
 ---
 
@@ -228,18 +236,27 @@ azure_essentials/
 │       └── management-groups.bicep
 │
 ├── lessons/                  # Course lessons and exercises
+│   ├── README.md             # Lesson index with quick navigation
 │   ├── 00-prerequisites/     # Setup guide (start here!)
 │   ├── 01-introduction/
 │   ├── 02-getting-started/
 │   └── ...                   # Lessons 03-12
 │
 ├── scripts/                  # Deployment and setup scripts
-│   ├── deploy.sh             # Interactive deployment (macOS/Linux)
-│   ├── deploy.ps1            # Interactive deployment (Windows)
-│   ├── setup-local-tools.sh  # Local environment setup
-│   └── validate-env.sh       # Environment validation
+│   ├── azure-cli/            # Pure Azure CLI scripts
+│   │   ├── commands/         # Copy-paste command reference
+│   │   └── lesson-*.sh       # Per-lesson CLI scripts
+│   ├── bash/                 # Bash scripts (macOS/Linux)
+│   │   ├── deploy.sh         # Interactive deployment
+│   │   └── setup-local-tools.sh
+│   └── powershell/           # PowerShell scripts (Windows)
+│       ├── deploy.ps1        # Interactive deployment
+│       └── setup-local-tools.ps1
+│
+├── CHANGELOG.md              # Version history
 │
 └── .devcontainer/            # VS Code Dev Container config
+    └── devcontainer.json
 ```
 
 ---

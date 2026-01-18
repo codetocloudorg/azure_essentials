@@ -1,11 +1,53 @@
 #!/bin/bash
+#===============================================================================
 # Azure Essentials - Interactive Deployment Menu
-# Code to Cloud
-# This script provides a guided deployment experience for learners
+#===============================================================================
+# Code to Cloud | www.codetocloud.io
+#
+# PURPOSE:
+#   Provides a guided, interactive deployment experience for the Azure
+#   Essentials 2-Day training course. This script walks learners through:
+#   - Prerequisites checking (Azure CLI, azd)
+#   - Azure authentication
+#   - Region selection (optimized for free tier availability)
+#   - Lesson selection and deployment
+#
+# DESIGNED FOR:
+#   - macOS and Linux environments
+#   - Windows users with Git Bash or WSL
+#   - Azure Cloud Shell (bash mode)
+#
+# USAGE:
+#   ./scripts/bash/deploy.sh
+#
+# REQUIREMENTS:
+#   - Azure CLI (az) installed and logged in
+#   - Azure Developer CLI (azd) installed
+#   - Bash 4.0+ (default on macOS/Linux)
+#
+# THE DEPLOYMENT FLOW:
+#   1. Check prerequisites → Login if needed
+#   2. Choose environment name → Used for resource naming
+#   3. Choose region → Where resources will be created
+#   4. Choose lesson → Which infrastructure to deploy
+#   5. Deploy via azd → Creates all Azure resources
+#
+# TRAINER NOTES:
+#   - Use --verbose flag for detailed Azure CLI output during demos
+#   - Each lesson deploys to its own resource group for isolation
+#   - Cost estimates shown help learners understand pricing
+#   - Free tier options (lessons 3, 4, 7, 9) work with $0 quota
+#
+#===============================================================================
 
+# Exit immediately on error (fail-fast for training clarity)
 set -e
 
-# Colors for output
+#===============================================================================
+# COLOR DEFINITIONS - For visual clarity during live training
+#===============================================================================
+# Using ANSI escape codes for cross-platform terminal compatibility
+# These make the output scannable and help learners follow along
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -13,9 +55,12 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 BOLD='\033[1m'
-NC='\033[0m' # No Color
+NC='\033[0m' # No Color (reset)
 
-# Print banner with ASCII logo
+#===============================================================================
+# BANNER FUNCTION - Creates visual separation for live training
+#===============================================================================
+# ASCII art banner helps attendees know they're in the right place
 print_banner() {
     clear
     echo ""
@@ -34,7 +79,9 @@ print_banner() {
     echo ""
 }
 
-# Print section header
+#===============================================================================
+# SECTION HEADER FUNCTION - Visual separators for training flow
+#===============================================================================
 print_section() {
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -43,7 +90,16 @@ print_section() {
     echo ""
 }
 
-# Check prerequisites
+#===============================================================================
+# PREREQUISITES CHECK - Validates environment before deployment
+#===============================================================================
+# This function verifies:
+#   1. Azure CLI is installed (for resource management)
+#   2. Azure Developer CLI is installed (for deployment orchestration)
+#   3. User is authenticated to Azure (or guides them through login)
+#
+# TRAINER TIP: This is a good time to explain the difference between
+# Azure CLI (resource operations) and Azure Developer CLI (app deployment)
 check_prerequisites() {
     print_section "📋 Checking Prerequisites"
 
@@ -108,7 +164,11 @@ check_prerequisites() {
     echo ""
     echo -e "${GREEN}All prerequisites satisfied!${NC}"
 
+    #---------------------------------------------------------------------------
     # Handle Azure login if needed
+    # The script supports both interactive browser login and device code flow
+    # Device code is useful for Cloud Shell or headless environments
+    #---------------------------------------------------------------------------
     if [ "${needs_login:-0}" -eq 1 ]; then
         echo ""
         print_section "🔐 Azure Login Required"
@@ -146,7 +206,19 @@ check_prerequisites() {
     fi
 }
 
-# Select region
+#===============================================================================
+# REGION SELECTION - Choose Azure datacenter location
+#===============================================================================
+# TRAINER TIP: Explain region selection factors:
+#   - Latency: Closer regions = faster response times
+#   - Compliance: Some data must stay in specific regions
+#   - Pricing: Some regions are cheaper than others
+#   - Availability: Not all services available in all regions
+#
+# These regions are optimized for:
+#   - Azure Free Account compatibility
+#   - VM quota availability (common issue with new accounts)
+#   - Service availability for all lessons
 select_region() {
     print_section "🌍 Select Azure Region"
 
@@ -176,7 +248,19 @@ select_region() {
     echo -e "${GREEN}Selected region: ${BOLD}$SELECTED_REGION${NC}"
 }
 
-# Select lesson
+#===============================================================================
+# LESSON SELECTION - Choose which infrastructure to deploy
+#===============================================================================
+# Each lesson is self-contained with its own resource group.
+# This makes it easy to:
+#   - Deploy just what you need for the current session
+#   - Clean up individual lessons without affecting others
+#   - Demonstrate resource group isolation and organization
+#
+# COST GUIDE:
+#   FREE     = Works with free tier, no quota needed
+#   QUOTA    = Requires compute quota (vCPU allocation)
+#   $$$      = Incurs costs even on free account
 select_lesson() {
     print_section "📚 Select Lesson to Deploy"
 
@@ -278,7 +362,14 @@ select_lesson() {
     fi
 }
 
-# Get environment name
+#===============================================================================
+# ENVIRONMENT NAME - Unique identifier for your deployment
+#===============================================================================
+# The environment name becomes part of all resource names.
+# This enables multiple learners to deploy simultaneously without conflicts.
+#
+# NAMING CONVENTION: {env-name}-lesson{XX}-{resource-type}
+# Example: azlearn-john-lesson03-storage
 get_environment_name() {
     print_section "🏷️  Environment Name"
 
@@ -299,7 +390,23 @@ get_environment_name() {
     echo -e "${GREEN}Environment name: ${BOLD}$ENV_NAME${NC}"
 }
 
-# Deploy Management Groups for Lesson 02 (requires tenant-level permissions)
+#===============================================================================
+# MANAGEMENT GROUPS DEPLOYMENT (Lesson 02)
+#===============================================================================
+# Management Groups provide a governance hierarchy above subscriptions.
+# This creates an Azure Landing Zone style structure:
+#
+#   Root Management Group
+#   ├── Platform (shared services)
+#   │   ├── Identity (Azure AD, access control)
+#   │   ├── Connectivity (hub networking)
+#   │   └── Management (monitoring, automation)
+#   ├── Workloads (business applications)
+#   │   ├── Production
+#   │   └── Non-Production
+#   └── Sandbox (experimentation)
+#
+# REQUIREMENT: Tenant-level permissions (Global Admin or Management Group Contributor)
 deploy_management_groups() {
     print_section "🏢 Deploying Management Groups"
 
@@ -360,7 +467,19 @@ deploy_management_groups() {
     fi
 }
 
-# Handle Windows password for VM deployments (Lesson 05)
+#===============================================================================
+# WINDOWS PASSWORD SETUP (Lesson 05)
+#===============================================================================
+# Windows VMs require password authentication for RDP access.
+# Azure enforces password complexity requirements:
+#   - Minimum 12 characters
+#   - At least one uppercase letter
+#   - At least one lowercase letter
+#   - At least one number
+#   - At least one special character (recommended)
+#
+# TRAINER TIP: This is a good time to discuss Azure's security defaults
+# and why passwords alone are not sufficient for production workloads.
 setup_windows_password() {
     if [ "${WIN_PASSWORD_REQUIRED:-0}" -ne 1 ]; then
         return
@@ -419,7 +538,18 @@ setup_windows_password() {
     echo "   Password: (the password you just entered)"
 }
 
-# Handle SSH key for VM deployments (Lesson 06)
+#===============================================================================
+# SSH KEY SETUP (Lesson 06)
+#===============================================================================
+# Linux VMs use SSH key-based authentication (more secure than passwords).
+# The script will:
+#   1. Check for existing SSH keys (~/.ssh/id_rsa.pub or id_ed25519.pub)
+#   2. Offer to use existing key or generate new one
+#   3. Generate Ed25519 key (more secure than RSA) if needed
+#
+# TRAINER TIP: Explain SSH key pairs:
+#   - Private key (id_ed25519) = Never share, stays on your machine
+#   - Public key (id_ed25519.pub) = Safe to share, uploaded to Azure VM
 setup_ssh_key() {
     if [ "${SSH_REQUIRED:-0}" -ne 1 ]; then
         return
@@ -487,7 +617,20 @@ setup_ssh_key() {
     echo ""
 }
 
-# Confirm and deploy
+#===============================================================================
+# DEPLOYMENT CONFIRMATION & EXECUTION
+#===============================================================================
+# This function:
+#   1. Displays a summary of what will be deployed
+#   2. Asks for final confirmation
+#   3. Initializes the azd environment with parameters
+#   4. Runs 'azd up' to deploy all resources
+#
+# Azure Developer CLI (azd) handles:
+#   - Resource group creation
+#   - Bicep template compilation
+#   - ARM template deployment
+#   - Output capture and display
 confirm_and_deploy() {
     print_section "🚀 Ready to Deploy"
 
@@ -591,7 +734,13 @@ confirm_and_deploy() {
     azd up
 }
 
-# Show completion message
+#===============================================================================
+# COMPLETION MESSAGE - Summarizes what was deployed
+#===============================================================================
+# Shows learners:
+#   - All resource groups that were created
+#   - Next steps for following the lesson
+#   - Commands for exploring and cleaning up
 show_completion() {
     echo ""
     echo ""
@@ -625,7 +774,18 @@ show_completion() {
     echo ""
 }
 
-# Main menu
+#===============================================================================
+# MAIN EXECUTION - Entry point for the script
+#===============================================================================
+# The flow:
+#   1. Print banner (visual confirmation script is running)
+#   2. Check prerequisites (fail early if tools missing)
+#   3. Get environment name (unique identifier)
+#   4. Select region (Azure datacenter)
+#   5. Select lesson (what to deploy)
+#   6. Setup credentials if needed (passwords/SSH keys)
+#   7. Confirm and deploy (azd up)
+#   8. Show completion (summary and next steps)
 main() {
     print_banner
     check_prerequisites
@@ -638,5 +798,8 @@ main() {
     show_completion
 }
 
-# Run main function
+#===============================================================================
+# SCRIPT ENTRY POINT
+#===============================================================================
+# Pass all command-line arguments to main function
 main "$@"

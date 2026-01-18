@@ -23,7 +23,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-LOCATION="${LOCATION:-uksouth}"
+LOCATION="${LOCATION:-centralus}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-networking}"
 VNET_NAME="vnet-essentials"
 NSG_NAME="nsg-essentials-web"

@@ -2,15 +2,37 @@
 #===============================================================================
 # Lesson 03: Storage Services - Azure CLI Deployment
 #===============================================================================
+# Code to Cloud | www.codetocloud.io
+#
 # This script demonstrates how to create and manage Azure Storage resources
-# using native Azure CLI commands.
+# using native Azure CLI commands. Perfect for Cloud Shell copy-paste.
 #
-# Prerequisites:
+# WHAT YOU'LL LEARN:
+#   - Creating Storage Accounts with security best practices
+#   - Working with Blob containers, Queues, Tables, and File shares
+#   - Uploading and downloading data
+#   - Generating SAS tokens for secure access
+#
+# AZURE CLI COMMANDS USED:
+#   az storage account create    - Create storage account
+#   az storage container create  - Create blob container
+#   az storage blob upload       - Upload files to blob storage
+#   az storage queue create      - Create message queue
+#   az storage table create      - Create NoSQL table
+#   az storage share create      - Create file share
+#
+# COST: Free tier eligible (5GB blob, 5GB file, 50K queue operations)
+#
+# PREREQUISITES:
 #   - Azure CLI installed and logged in (az login)
+#   - Alternatively, use Azure Cloud Shell (no setup needed)
 #
-# Usage:
-#   ./lesson-03-storage.sh
-#   ./lesson-03-storage.sh --cleanup
+# USAGE:
+#   ./lesson-03-storage.sh           # Deploy resources
+#   ./lesson-03-storage.sh --cleanup # Delete everything
+#
+# TRAINER TIP: Run each section separately to explain what's happening.
+# Use 'az storage account show' to inspect created resources.
 #===============================================================================
 
 set -e
@@ -23,7 +45,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-LOCATION="${LOCATION:-uksouth}"
+LOCATION="${LOCATION:-centralus}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-storage}"
 UNIQUE_SUFFIX=$(openssl rand -hex 4)
 STORAGE_ACCOUNT="stessentials${UNIQUE_SUFFIX}"

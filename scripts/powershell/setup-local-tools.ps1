@@ -207,6 +207,23 @@ if (Test-Command "jq") {
     $tools["jq"] = Test-Command "jq"
 }
 
+# Install Visual Studio Code
+Write-Host "  Checking VS Code..." -NoNewline
+if (Test-Command "code") {
+    Write-ColorOutput " ✓ Installed" Green
+    $tools["code"] = $true
+} else {
+    Write-ColorOutput " Installing..." Yellow
+    if ($hasWinget) {
+        winget install Microsoft.VisualStudioCode --silent --accept-package-agreements --accept-source-agreements
+    } elseif ($hasChoco) {
+        choco install vscode -y
+    } else {
+        Write-ColorOutput "    Please install manually: https://code.visualstudio.com/" Cyan
+    }
+    $tools["code"] = Test-Command "code"
+}
+
 # Check for Docker Desktop
 Write-Host "  Checking Docker..." -NoNewline
 if (Test-Command "docker") {
@@ -249,7 +266,7 @@ Write-ColorOutput "  ==========================================" Blue
 Write-Host ""
 
 $allInstalled = $true
-$toolList = @("az", "azd", "kubectl", "git", "python", "jq", "docker")
+$toolList = @("az", "azd", "git", "code", "kubectl", "python", "jq", "docker")
 
 foreach ($tool in $toolList) {
     if ($tools[$tool]) {
@@ -269,7 +286,7 @@ if ($allInstalled) {
     Write-Host "    1. Open a NEW terminal (to refresh PATH)"
     Write-Host "    2. Run: az login"
     Write-Host "    3. Run: azd auth login"
-    Write-Host "    4. Run: .\scripts\validate-env.ps1"
+    Write-Host "    4. Run: .\scripts\powershell\validate-env.ps1"
 } else {
     Write-ColorOutput "  Some tools could not be installed automatically." Yellow
     Write-Host "  Please install them manually and run this script again."

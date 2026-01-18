@@ -20,7 +20,7 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Configuration
-LOCATION="${AZURE_LOCATION:-uksouth}"
+LOCATION="${AZURE_LOCATION:-centralus}"
 ENV_NAME="${AZURE_ENV_NAME:-azureessentials}"
 RESOURCE_GROUP_PREFIX="rg-${ENV_NAME}"
 

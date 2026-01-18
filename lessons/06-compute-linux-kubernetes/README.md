@@ -64,7 +64,7 @@ MicroK8s is a lightweight Kubernetes distribution:
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="uksouth"
+LOCATION="centralus"
 VM_NAME="vm-linux-001"
 ADMIN_USER="azureuser"
 

@@ -77,13 +77,13 @@ Resource groups help you:
 # Create a resource group for development
 az group create \
   --name rg-azure-essentials-dev \
-  --location uksouth \
+  --location centralus \
   --tags Environment=Development Course="Azure Essentials"
 
 # Create a resource group for production exercises
 az group create \
   --name rg-azure-essentials-prod \
-  --location uksouth \
+  --location centralus \
   --tags Environment=Production Course="Azure Essentials"
 
 # Verify the resource groups were created
@@ -99,7 +99,7 @@ az group list --output table
 az config set defaults.group=rg-azure-essentials-dev
 
 # Set default location
-az config set defaults.location=uksouth
+az config set defaults.location=centralus
 
 # View your configuration
 az config get
@@ -120,7 +120,7 @@ az account show --output yaml
 az provider list --output table
 
 # Check quotas for compute resources
-az vm list-usage --location uksouth --output table
+az vm list-usage --location centralus --output table
 ```
 
 ---

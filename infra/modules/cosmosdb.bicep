@@ -1,6 +1,38 @@
+// ============================================================================
 // Azure Cosmos DB Module
-// Code to Cloud - Azure Essentials
+// ============================================================================
+// Code to Cloud | www.codetocloud.io
 // Lesson 09: Database and Data Services
+//
+// WHAT THIS CREATES:
+//   - Cosmos DB Account (Serverless capacity mode)
+//   - SQL API Database (azure-essentials)
+//   - Container with partition key (items)
+//
+// COST MODEL (Serverless):
+//   - Pay per Request Unit (RU) consumed
+//   - First 25GB storage: included
+//   - ~$0.25 per million RUs
+//   - No minimum charge when idle
+//
+// SERVERLESS vs PROVISIONED:
+//   Serverless: Pay-per-request, auto-scale, great for dev/test
+//   Provisioned: Reserved throughput, predictable cost, better for prod
+//
+// CONSISTENCY LEVELS (from strongest to weakest):
+//   1. Strong: Linearizable reads (highest latency)
+//   2. Bounded Staleness: Ordered, bounded lag
+//   3. Session: Consistent within session (DEFAULT - good balance)
+//   4. Consistent Prefix: Ordered, no staleness guarantee
+//   5. Eventual: Fastest, may read stale data
+//
+// TRAINER TIP: Session consistency is the most commonly used because
+// it guarantees read-your-writes for the same session.
+// ============================================================================
+
+// ============================================================================
+// PARAMETERS - Customizable inputs for the module
+// ============================================================================
 
 @description('Azure region for database resources')
 param location string
@@ -17,30 +49,38 @@ param cosmosDbAccountName string
 param useServerless bool = true
 
 // ============================================================================
-// COSMOS DB ACCOUNT
-// Note: Using Serverless capacity mode which is most cost-effective for learning
-// Free tier is NOT compatible with Serverless, so we use Serverless for pay-per-use
+// COSMOS DB ACCOUNT - Global NoSQL database
 // ============================================================================
+// Cosmos DB is a globally distributed, multi-model database:
+//   - Multi-region replication with automatic failover
+//   - Multiple APIs: SQL (default), MongoDB, Cassandra, Gremlin, Table
+//   - 99.999% read availability SLA (multi-region)
+//
+// SERVERLESS MODE: Best for learning - no charges when idle
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
   name: cosmosDbAccountName
   location: location
   tags: tags
-  kind: 'GlobalDocumentDB'
+  kind: 'GlobalDocumentDB'  // SQL API (not MongoDB or other)
   properties: {
-    // Note: enableFreeTier cannot be combined with Serverless
-    // Serverless is better for learning - you only pay for operations performed
     databaseAccountOfferType: 'Standard'
+
+    // Session consistency = Read your own writes (good balance of consistency/perf)
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
     }
+
+    // Single region deployment (add more locations for geo-replication)
     locations: [
       {
         locationName: location
-        failoverPriority: 0
-        isZoneRedundant: false
+        failoverPriority: 0      // Primary region
+        isZoneRedundant: false   // Zone redundancy costs extra
       }
     ]
+
+    // Enable Serverless mode for pay-per-request billing
     capabilities: useServerless
       ? [
           {
@@ -48,18 +88,22 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-05-15' = {
           }
         ]
       : []
+
+    // Continuous backup allows point-in-time restore
     backupPolicy: {
       type: 'Continuous'
       continuousModeProperties: {
-        tier: 'Continuous7Days'
+        tier: 'Continuous7Days'  // 7-day retention (30 days available)
       }
     }
   }
 }
 
 // ============================================================================
-// DATABASE
+// DATABASE - Logical container for collections
 // ============================================================================
+// A Cosmos DB account can have multiple databases
+// Databases don't consume RUs directly - containers do
 
 resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-05-15' = {
   parent: cosmosDbAccount
@@ -72,8 +116,13 @@ resource database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2024-05-15
 }
 
 // ============================================================================
-// CONTAINER
+// CONTAINER - Where your data lives
 // ============================================================================
+// Containers are similar to tables in SQL databases.
+// PARTITION KEY is crucial for scalability:
+//   - Choose a property with high cardinality (many unique values)
+//   - Common patterns: /userId, /tenantId, /category
+//   - Data with same partition key lives on same physical partition
 
 resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-05-15' = {
   parent: database
@@ -83,20 +132,20 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
       id: 'items'
       partitionKey: {
         paths: [
-          '/category'
+          '/category'  // Partition by category (e.g., "products", "orders")
         ]
-        kind: 'Hash'
+        kind: 'Hash'   // Hash partitioning for even distribution
       }
       indexingPolicy: {
-        indexingMode: 'consistent'
+        indexingMode: 'consistent'  // Index updates are synchronous
         includedPaths: [
           {
-            path: '/*'
+            path: '/*'  // Index all properties (good for queries)
           }
         ]
         excludedPaths: [
           {
-            path: '/_etag/?'
+            path: '/_etag/?'  // Exclude system properties
           }
         ]
       }
@@ -105,8 +154,9 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
 }
 
 // ============================================================================
-// OUTPUTS
+// OUTPUTS - Values returned to the calling template
 // ============================================================================
+// Use these values to connect your application to Cosmos DB
 
 output cosmosDbAccountName string = cosmosDbAccount.name
 output cosmosDbAccountId string = cosmosDbAccount.id

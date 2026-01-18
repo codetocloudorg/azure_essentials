@@ -24,6 +24,9 @@ This guide will help you set up everything you need to complete the Azure Essent
 | **kubectl** | Kubernetes CLI for Lesson 06 | 📌 Recommended |
 | **Docker Desktop** | Container development (Lesson 07) | 📌 Recommended |
 | **Python 3.11+** | For serverless and AI lessons | 📌 Recommended |
+| **jq** | JSON processor for CLI workflows | 📌 Recommended |
+| **Bicep CLI** | Infrastructure as Code (via Azure CLI) | 📌 Recommended |
+| **Azure Storage Explorer** | GUI for storage management | 📌 Optional |
 
 ---
 

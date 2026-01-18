@@ -9,6 +9,16 @@ This folder contains **pure Azure CLI** scripts for deploying lesson resources. 
 3. **No Dependencies** - Only requires Azure CLI - no azd, Bicep, or other tools
 4. **Educational** - Each script is heavily commented and shows best practices
 
+## 📋 Copy-Paste Commands for Cloud Shell
+
+**New!** The [`commands/`](commands/) folder contains copy-paste friendly markdown files for each lesson. Perfect for:
+
+- **Azure Cloud Shell users** who want to run commands one at a time
+- **Learners** who prefer to understand each command before executing
+- **Quick reference** during hands-on labs
+
+👉 **[Go to Copy-Paste Commands](commands/README.md)**
+
 ## Prerequisites
 
 - Azure CLI installed and logged in (`az login`)
@@ -21,27 +31,36 @@ If you don't have Azure CLI installed locally, use [Azure Cloud Shell](https://s
 
 1. Go to https://shell.azure.com
 2. Select **Bash**
-3. Clone this repository or upload the scripts
-4. Run the scripts directly
+3. Open the [commands/](commands/) folder in GitHub to copy commands
+4. Paste and run commands one at a time
 
 ## Available Scripts
 
-| Script | Description | Resources Created |
-|--------|-------------|-------------------|
-| `deploy.sh` | Interactive menu to deploy any lesson | All lessons |
-| `lesson-02-management-groups.sh` | Management group hierarchy | Management Groups |
-| `lesson-03-storage.sh` | Storage account with containers | Storage Account, Blobs, Queues, Tables |
-| `lesson-04-networking.sh` | Virtual network with subnets | VNet, Subnets, NSG |
-| `lesson-05-compute-windows.sh` | Windows VM and App Service | Windows Server 2022, Web App |
-| `lesson-06-compute-linux.sh` | Linux VM with MicroK8s | Ubuntu 24.04, Kubernetes |
-| `lesson-07-containers.sh` | Container registry | Azure Container Registry |
-| `lesson-08-serverless.sh` | Function app | Azure Functions (Python) |
-| `lesson-09-databases.sh` | Cosmos DB | Cosmos DB (Serverless) |
-| `lesson-11-ai-foundry.sh` | AI services | Azure OpenAI / Cognitive Services |
+| Script | Description | Resources Created | Copy-Paste |
+|--------|-------------|-------------------|------------|
+| `deploy.sh` | Interactive menu to deploy any lesson | All lessons | - |
+| `lesson-02-management-groups.sh` | Management group hierarchy | Management Groups | [📋](commands/lesson-02-management-groups.md) |
+| `lesson-03-storage.sh` | Storage account with containers | Storage Account, Blobs, Queues, Tables | [📋](commands/lesson-03-storage.md) |
+| `lesson-04-networking.sh` | Virtual network with subnets | VNet, Subnets, NSG | [📋](commands/lesson-04-networking.md) |
+| `lesson-05-compute-windows.sh` | Windows VM and App Service | Windows Server 2022, Web App | [📋](commands/lesson-05-compute-windows.md) |
+| `lesson-06-compute-linux.sh` | Linux VM with MicroK8s | Ubuntu 24.04, Kubernetes | [📋](commands/lesson-06-compute-linux.md) |
+| `lesson-07-containers.sh` | Container registry | Azure Container Registry | [📋](commands/lesson-07-containers.md) |
+| `lesson-08-serverless.sh` | Function app | Azure Functions (Python) | [📋](commands/lesson-08-serverless.md) |
+| `lesson-09-databases.sh` | Cosmos DB | Cosmos DB (Serverless) | [📋](commands/lesson-09-databases.md) |
+| `lesson-11-ai-foundry.sh` | AI services | Azure OpenAI / Cognitive Services | [📋](commands/lesson-11-ai-foundry.md) |
 
 ## Usage
 
-### Option 1: Interactive Menu
+### Option 1: Copy-Paste Commands (Cloud Shell)
+
+For **Azure Cloud Shell** users who want to run commands one at a time:
+
+1. Open [Azure Cloud Shell](https://shell.azure.com) and select **Bash**
+2. Go to the [`commands/`](commands/) folder
+3. Open the lesson you want (e.g., `lesson-03-storage.md`)
+4. Copy each command block and paste into Cloud Shell
+
+### Option 2: Interactive Menu
 
 ```bash
 ./deploy.sh
@@ -49,7 +68,7 @@ If you don't have Azure CLI installed locally, use [Azure Cloud Shell](https://s
 
 Select a lesson number from the menu to deploy.
 
-### Option 2: Individual Lesson Scripts
+### Option 3: Individual Lesson Scripts
 
 ```bash
 # Deploy a specific lesson
@@ -67,7 +86,7 @@ Select a lesson number from the menu to deploy.
 Set environment variables to customize:
 
 ```bash
-# Change location (default: uksouth)
+# Change location (default: centralus)
 export LOCATION=eastus
 
 # Change resource group name

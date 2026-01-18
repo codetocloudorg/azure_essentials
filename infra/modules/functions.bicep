@@ -1,6 +1,32 @@
+// ============================================================================
 // Azure Functions Module
-// Code to Cloud - Azure Essentials
+// ============================================================================
+// Code to Cloud | www.codetocloud.io
 // Lesson 08: Serverless Services
+//
+// WHAT THIS CREATES:
+//   - Azure Function App (Consumption plan)
+//   - Storage Account (required for function triggers/bindings)
+//   - Application Insights (monitoring and logging)
+//   - Log Analytics Workspace (centralized logs)
+//
+// COST MODEL (Consumption Plan):
+//   - First 1 million executions/month: FREE
+//   - First 400,000 GB-s compute/month: FREE
+//   - After free tier: ~$0.20 per million executions
+//   - Storage: ~$0.02/GB/month
+//
+// CONSUMPTION vs PREMIUM vs DEDICATED:
+//   Consumption: Scale to zero, pay-per-execution, cold starts
+//   Premium: Pre-warmed instances, VNet integration, no cold starts
+//   Dedicated: App Service Plan, predictable pricing, always warm
+//
+// TRAINER TIP: Demonstrate cold start behavior vs warm instances
+// ============================================================================
+
+// ============================================================================
+// PARAMETERS - Customizable inputs for the module
+// ============================================================================
 
 @description('Azure region for serverless resources')
 param location string
@@ -15,8 +41,13 @@ param functionAppName string
 param storageAccountName string
 
 // ============================================================================
-// STORAGE ACCOUNT (for Functions)
+// STORAGE ACCOUNT (required for Functions)
 // ============================================================================
+// Azure Functions REQUIRES a storage account for:
+//   - Trigger management (tracking execution state)
+//   - Queue/Blob triggers (event sources)
+//   - Durable Functions (orchestration state)
+//   - Function code storage (when using Consumption plan)
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -33,8 +64,15 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 }
 
 // ============================================================================
-// APPLICATION INSIGHTS
+// APPLICATION INSIGHTS - Monitoring & Performance Tracking
 // ============================================================================
+// Application Insights provides:
+//   - Real-time monitoring of function executions
+//   - Performance metrics (execution time, failures)
+//   - Distributed tracing across services
+//   - Custom event and metric logging
+//
+// Requires Log Analytics Workspace for data storage (newer model)
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: 'log-${functionAppName}'
@@ -60,8 +98,13 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 // ============================================================================
-// APP SERVICE PLAN (Consumption)
+// APP SERVICE PLAN (Consumption/Dynamic)
 // ============================================================================
+// Y1 SKU = Consumption Plan (Serverless)
+//   - Automatic scaling from 0 to many instances
+//   - Pay only for execution time (GB-seconds)
+//   - Maximum 10-minute execution timeout
+//   - No reserved capacity (cold starts possible)
 
 resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: 'asp-${functionAppName}'
@@ -75,8 +118,14 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 // ============================================================================
-// FUNCTION APP
+// FUNCTION APP - The serverless compute resource
 // ============================================================================
+// This creates a Python 3.11 Function App with:
+//   - HTTP trigger support (built-in)
+//   - Storage triggers/bindings (via connection string)
+//   - Application Insights integration (automatic logging)
+//
+// TRIGGER TYPES: HTTP, Timer, Blob, Queue, Event Hub, Cosmos DB, etc.
 
 resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: functionAppName
@@ -127,8 +176,12 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
 }
 
 // ============================================================================
-// OUTPUTS
+// OUTPUTS - Values returned to the calling template
 // ============================================================================
+// Use these outputs to:
+//   - Deploy code to the function app
+//   - Configure monitoring dashboards
+//   - Connect other services
 
 output functionAppName string = functionApp.name
 output functionAppId string = functionApp.id
