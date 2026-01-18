@@ -26,26 +26,21 @@ This course uses the [Azure Developer CLI (azd)](https://learn.microsoft.com/azu
 
 ### Prerequisites
 
-Before you begin, ensure you have the following:
+Before you begin, complete the setup guide for your operating system:
+
+👉 **[Prerequisites & Setup Guide](lessons/00-prerequisites/README.md)** — Step-by-step instructions for Windows, macOS, and Linux
+
+#### Quick Checklist
 
 | Requirement | Description |
 |-------------|-------------|
 | **Azure Account** | [Free Azure account](https://azure.microsoft.com/free/) with active subscription |
 | **Azure CLI** | [Install Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) version 2.50 or later |
 | **Azure Developer CLI** | [Install azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) version 1.5 or later |
-| **Visual Studio Code** | [Download VS Code](https://code.visualstudio.com/) with recommended extensions |
+| **Visual Studio Code** | [Download VS Code](https://code.visualstudio.com/) with Bicep and Azure extensions |
 | **Git** | [Install Git](https://git-scm.com/downloads) for version control |
 
-#### Required VS Code Extensions
-
-Install these extensions for the best experience:
-
-- [Azure Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-node-azure-pack)
-- [HashiCorp Terraform](https://marketplace.visualstudio.com/items?itemName=HashiCorp.terraform)
-- [Kubernetes](https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools)
-- [Azure Logic Apps](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurelogicapps)
-- [Red Hat YAML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
-- [Bicep](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep)
+> 💡 **New to Azure?** Follow our [detailed setup guide](lessons/00-prerequisites/README.md) with platform-specific instructions.
 
 ### Environment Setup
 
@@ -58,8 +53,14 @@ Install these extensions for the best experience:
 
 2. **Run the Interactive Deployment Script** (Recommended)
 
+   **macOS / Linux:**
    ```bash
-   ./scripts/deploy.sh
+   ./scripts/bash/deploy.sh
+   ```
+
+   **Windows (PowerShell):**
+   ```powershell
+   .\scripts\powershell\deploy.ps1
    ```
 
    This guided script will:
@@ -83,14 +84,29 @@ Install these extensions for the best experience:
 Each lesson deploys to its **own resource group** for clarity:
 
 ```
+rg-{your-name}-lz-platform-*         ← Lesson 02: Landing Zone Demo (6 RGs)
 rg-{your-name}-lesson03-storage      ← Lesson 03: Storage Services
 rg-{your-name}-lesson04-networking   ← Lesson 04: Networking
 rg-{your-name}-lesson05-compute      ← Lesson 05: Windows Compute
+rg-{your-name}-lesson06-linux-k8s    ← Lesson 06: Linux & MicroK8s
 rg-{your-name}-lesson07-containers   ← Lesson 07: Container Services
 rg-{your-name}-lesson08-serverless   ← Lesson 08: Azure Functions
 rg-{your-name}-lesson09-database     ← Lesson 09: Cosmos DB
 rg-{your-name}-lesson11-ai-foundry   ← Lesson 11: AI Foundry
 ```
+
+### ⚠️ Quota Considerations
+
+Some lessons require compute quota that may not be available on free accounts:
+
+| Lesson | Quota Required | If Deployment Fails |
+|--------|---------------|---------------------|
+| 5 - Windows Compute | Basic VMs | [Request quota increase](https://aka.ms/azurequotarequest) |
+| 6 - Linux & K8s | Standard_B2s | Try a different region |
+| 8 - Serverless | Dynamic VMs | [Request quota increase](https://aka.ms/azurequotarequest) |
+| 9 - Database | Cosmos DB | Use **Central US** region (best availability) |
+
+> 💡 **Tip**: Lessons 2, 3, 4, and 7 work reliably on free accounts without quota issues.
 
 ### Tear Down Resources
 
@@ -164,6 +180,7 @@ This course is organised into 12 progressive lessons across two days. Each lesso
 
 | Lesson | Title | Duration | Description |
 |--------|-------|----------|-------------|
+| [00](lessons/00-prerequisites/README.md) | Prerequisites & Setup | 15-30 min | Set up your machine (Windows, macOS, or Linux) |
 | [01](lessons/01-introduction/README.md) | Introduction to Azure | 55 min | Azure cloud concepts, service models, portal and CLI basics |
 | [02](lessons/02-getting-started/README.md) | Getting Started with Azure | 20 min | Accounts, subscriptions, tenants, and resource groups |
 | [03](lessons/03-storage-services/README.md) | Storage Services | 55 min | Blobs, files, queues, tables, and storage redundancy |
@@ -198,18 +215,31 @@ azure_essentials/
 ├── infra/                    # Infrastructure as Code (Bicep)
 │   ├── main.bicep            # Main infrastructure orchestrator
 │   ├── main.parameters.json  # Parameter values
+│   ├── abbreviations.json    # Azure naming abbreviations
 │   └── modules/              # Modular Bicep templates
+│       ├── storage.bicep
+│       ├── networking.bicep
+│       ├── compute-windows.bicep
+│       ├── linux-microk8s.bicep
+│       ├── container-registry.bicep
+│       ├── functions.bicep
+│       ├── cosmosdb.bicep
+│       ├── ai-foundry.bicep
+│       └── management-groups.bicep
 │
 ├── lessons/                  # Course lessons and exercises
+│   ├── 00-prerequisites/     # Setup guide (start here!)
 │   ├── 01-introduction/
 │   ├── 02-getting-started/
-│   └── ...
+│   └── ...                   # Lessons 03-12
 │
-├── scripts/                  # Helper scripts
+├── scripts/                  # Deployment and setup scripts
+│   ├── deploy.sh             # Interactive deployment (macOS/Linux)
+│   ├── deploy.ps1            # Interactive deployment (Windows)
 │   ├── setup-local-tools.sh  # Local environment setup
 │   └── validate-env.sh       # Environment validation
 │
-└── solutions/                # Completed exercise solutions
+└── .devcontainer/            # VS Code Dev Container config
 ```
 
 ---
@@ -240,10 +270,15 @@ If you prefer not to use the dev container, run the setup script:
 
 ```bash
 # macOS and Linux
-./scripts/setup-local-tools.sh
+./scripts/bash/setup-local-tools.sh
 
 # Validate your environment
-./scripts/validate-env.sh
+./scripts/bash/validate-env.sh
+```
+
+```powershell
+# Windows (PowerShell)
+.\scripts\powershell\setup-local-tools.ps1
 ```
 
 ---

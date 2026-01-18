@@ -65,7 +65,8 @@ hooks:
 # Learners will deploy apps as part of hands-on exercises
 #
 # Quick Start (Interactive):
-#   ./scripts/deploy.sh
+#   macOS/Linux: ./scripts/bash/deploy.sh
+#   Windows:     .\scripts\powershell\deploy.ps1
 #
 # Quick Start (CLI):
 #   azd init

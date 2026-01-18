@@ -49,6 +49,23 @@ check_prerequisites() {
 
     local missing=0
 
+    # Detect OS for setup script recommendation
+    local os_type="unknown"
+    local setup_cmd=""
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        os_type="macOS"
+        setup_cmd="./scripts/bash/setup-local-tools.sh"
+    elif [[ "$OSTYPE" == "linux"* ]]; then
+        os_type="Linux"
+        setup_cmd="./scripts/bash/setup-local-tools.sh"
+    elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+        os_type="Windows (Git Bash)"
+        setup_cmd=".\\scripts\\powershell\\setup-local-tools.ps1"
+    fi
+
+    echo -e "  ${CYAN}○${NC} Operating System: ${BOLD}$os_type${NC}"
+    echo ""
+
     # Check Azure CLI
     if command -v az &> /dev/null; then
         echo -e "  ${GREEN}✓${NC} Azure CLI: $(az version --query '\"azure-cli\"' -o tsv 2>/dev/null || echo 'installed')"
@@ -79,6 +96,12 @@ check_prerequisites() {
     if [ $missing -eq 1 ]; then
         echo ""
         echo -e "${RED}Please install missing prerequisites and try again.${NC}"
+        echo ""
+        echo -e "${YELLOW}💡 Quick Setup:${NC} Run the automated setup script for your OS:"
+        echo -e "   ${CYAN}$setup_cmd${NC}"
+        echo ""
+        echo -e "Or follow the manual setup guide:"
+        echo -e "   ${CYAN}lessons/00-prerequisites/README.md${NC}"
         exit 1
     fi
 
@@ -164,11 +187,11 @@ select_lesson() {
     echo -e "${BOLD}  DAY 1 - FOUNDATIONS                                                         ${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "   ${CYAN}1)${NC} Introduction to Azure      ${GREEN}[NO RESOURCES]${NC} Portal & CLI basics"
-    echo -e "   ${CYAN}2)${NC} Getting Started            ${GREEN}[FREE]${NC}         Landing Zone RG demo"
+    echo -e "   ${CYAN}2)${NC} Getting Started            ${YELLOW}[TENANT]${NC}       Management Groups & Policy"
     echo -e "   ${CYAN}3)${NC} Storage Services           ${GREEN}[FREE]${NC}         Blobs, queues, tables"
     echo -e "   ${CYAN}4)${NC} Networking Services        ${GREEN}[FREE]${NC}         VNets, subnets, NSGs"
-    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B1]${NC}    App Service Web App"
-    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B2s]${NC}   Ubuntu VM + MicroK8s"
+    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B2s]${NC}  Windows VM + App Service"
+    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B2s]${NC}  Ubuntu VM + MicroK8s"
     echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$5/mo]${NC}       Azure Container Registry"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -199,12 +222,12 @@ select_lesson() {
     while true; do
         read -p "Select lesson [0-12]: " lesson_choice
         case $lesson_choice in
-            0) SELECTED_LESSON=""; SSH_REQUIRED=1; break;;
+            0) SELECTED_LESSON=""; SSH_REQUIRED=1; WIN_PASSWORD_REQUIRED=1; break;;
             1) SELECTED_LESSON="01"; NO_RESOURCES=1; break;;
-            2) SELECTED_LESSON="02"; break;;
+            2) SELECTED_LESSON="02"; MGMT_GROUPS=1; break;;
             3) SELECTED_LESSON="03"; break;;
             4) SELECTED_LESSON="04"; break;;
-            5) SELECTED_LESSON="05"; break;;
+            5) SELECTED_LESSON="05"; WIN_PASSWORD_REQUIRED=1; break;;
             6) SELECTED_LESSON="06"; SSH_REQUIRED=1; break;;
             7) SELECTED_LESSON="07"; break;;
             8) SELECTED_LESSON="08"; break;;
@@ -229,6 +252,12 @@ select_lesson() {
         echo -e "Or view the lesson README directly in VS Code."
         echo ""
         read -p "Press Enter to exit..."
+        exit 0
+    fi
+
+    # Handle Lesson 2 - Management Groups (requires tenant-level permissions)
+    if [ "${MGMT_GROUPS:-0}" -eq 1 ]; then
+        deploy_management_groups
         exit 0
     fi
 
@@ -268,6 +297,126 @@ get_environment_name() {
 
     echo ""
     echo -e "${GREEN}Environment name: ${BOLD}$ENV_NAME${NC}"
+}
+
+# Deploy Management Groups for Lesson 02 (requires tenant-level permissions)
+deploy_management_groups() {
+    print_section "🏢 Deploying Management Groups"
+
+    echo -e "${YELLOW}⚠️  Management Groups require tenant-level permissions.${NC}"
+    echo ""
+    echo "This will create an Azure Landing Zone style hierarchy:"
+    echo ""
+    echo "  📁 mg-${ENV_NAME}-root (Organization Root)"
+    echo "  ├── 📁 mg-${ENV_NAME}-platform"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-identity"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-connectivity"
+    echo "  │   └── 📁 mg-${ENV_NAME}-management"
+    echo "  ├── 📁 mg-${ENV_NAME}-workloads"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-prod"
+    echo "  │   └── 📁 mg-${ENV_NAME}-nonprod"
+    echo "  └── 📁 mg-${ENV_NAME}-sandbox"
+    echo ""
+
+    read -p "Deploy Management Groups? (y/n): " confirm
+    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+        echo -e "${YELLOW}Deployment cancelled.${NC}"
+        exit 0
+    fi
+
+    echo ""
+    echo -e "${CYAN}Deploying Management Groups via Azure CLI...${NC}"
+    echo ""
+
+    # Deploy using Azure CLI with tenant scope
+    az deployment tenant create \
+        --name "mg-${ENV_NAME}-$(date +%s)" \
+        --location "$SELECTED_REGION" \
+        --template-file "infra/modules/management-groups.bicep" \
+        --parameters environmentName="$ENV_NAME"
+
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${GREEN}  ✅ Management Groups Created Successfully!${NC}"
+        echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "View in Azure Portal:"
+        echo "  https://portal.azure.com/#view/Microsoft_Azure_ManagementGroups/ManagementGroupBrowseBlade"
+        echo ""
+        echo -e "${YELLOW}To clean up Management Groups:${NC}"
+        echo -e "  ${CYAN}az account management-group delete --name mg-${ENV_NAME}-root --recurse${NC}"
+    else
+        echo ""
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}  ❌ Deployment Failed${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo "Common issues:"
+        echo "  • You need tenant-level permissions (Global Admin or similar)"
+        echo "  • Your account may not have Management Group Contributor role"
+        echo ""
+        echo "Request permissions from your Azure AD administrator."
+    fi
+}
+
+# Handle Windows password for VM deployments (Lesson 05)
+setup_windows_password() {
+    if [ "${WIN_PASSWORD_REQUIRED:-0}" -ne 1 ]; then
+        return
+    fi
+
+    print_section "🔐 Windows VM Password Setup"
+
+    echo "Lesson 5 deploys a Windows Server VM that requires RDP password authentication."
+    echo ""
+    echo -e "${YELLOW}Password requirements:${NC}"
+    echo "  • At least 12 characters"
+    echo "  • Contains uppercase, lowercase, number, and special character"
+    echo ""
+
+    while true; do
+        echo -n "Enter password for Windows VM: "
+        read -s WINDOWS_PASSWORD
+        echo ""
+
+        if [ ${#WINDOWS_PASSWORD} -lt 12 ]; then
+            echo -e "${RED}Password must be at least 12 characters.${NC}"
+            continue
+        fi
+
+        # Check for complexity (basic check)
+        if ! echo "$WINDOWS_PASSWORD" | grep -q '[A-Z]'; then
+            echo -e "${RED}Password must contain at least one uppercase letter.${NC}"
+            continue
+        fi
+        if ! echo "$WINDOWS_PASSWORD" | grep -q '[a-z]'; then
+            echo -e "${RED}Password must contain at least one lowercase letter.${NC}"
+            continue
+        fi
+        if ! echo "$WINDOWS_PASSWORD" | grep -q '[0-9]'; then
+            echo -e "${RED}Password must contain at least one number.${NC}"
+            continue
+        fi
+
+        echo -n "Confirm password: "
+        read -s WINDOWS_PASSWORD_CONFIRM
+        echo ""
+
+        if [ "$WINDOWS_PASSWORD" != "$WINDOWS_PASSWORD_CONFIRM" ]; then
+            echo -e "${RED}Passwords do not match. Try again.${NC}"
+            continue
+        fi
+
+        break
+    done
+
+    echo ""
+    echo -e "${GREEN}✓ Windows password set.${NC}"
+    echo ""
+    echo -e "${YELLOW}💡 Remember your credentials:${NC}"
+    echo "   Username: azureuser"
+    echo "   Password: (the password you just entered)"
 }
 
 # Handle SSH key for VM deployments (Lesson 06)
@@ -320,6 +469,12 @@ setup_ssh_key() {
     else
         echo ""
         echo -e "${CYAN}Generating new SSH key pair...${NC}"
+
+        # Check if key exists and remove to avoid interactive prompt
+        if [ -f "$HOME/.ssh/id_ed25519_azure" ]; then
+            rm -f "$HOME/.ssh/id_ed25519_azure" "$HOME/.ssh/id_ed25519_azure.pub"
+        fi
+
         ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_azure" -N "" -C "azure-essentials-vm"
         SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519_azure.pub")
         echo ""
@@ -386,11 +541,37 @@ confirm_and_deploy() {
     # Initialize azd environment
     print_section "⚙️  Initializing Environment"
 
-    azd env new "$ENV_NAME" 2>/dev/null || azd env select "$ENV_NAME" 2>/dev/null || true
+    # Get current subscription ID
+    local subscription_id
+    subscription_id=$(az account show --query id -o tsv 2>/dev/null)
+
+    if [ -z "$subscription_id" ]; then
+        echo -e "${RED}Error: Could not get Azure subscription ID${NC}"
+        exit 1
+    fi
+
+    echo "Using subscription: $(az account show --query name -o tsv)"
+
+    # Create or select environment (use --no-prompt to avoid interactive prompts)
+    if azd env list 2>/dev/null | grep -q "^$ENV_NAME "; then
+        echo "Environment '$ENV_NAME' already exists, selecting it..."
+        azd env select "$ENV_NAME"
+    else
+        echo "Creating new environment '$ENV_NAME'..."
+        azd env new "$ENV_NAME" --no-prompt 2>/dev/null || azd env select "$ENV_NAME" 2>/dev/null || true
+    fi
+
+    # Set subscription and location
+    azd env set AZURE_SUBSCRIPTION_ID "$subscription_id"
     azd env set AZURE_LOCATION "$SELECTED_REGION"
 
     if [ -n "$SELECTED_LESSON" ]; then
         azd env set LESSON_NUMBER "$SELECTED_LESSON"
+    fi
+
+    # Set Windows password if required
+    if [ -n "$WINDOWS_PASSWORD" ]; then
+        azd env set WINDOWS_ADMIN_PASSWORD "$WINDOWS_PASSWORD"
     fi
 
     # Set SSH key if required
@@ -451,6 +632,7 @@ main() {
     get_environment_name
     select_region
     select_lesson
+    setup_windows_password
     setup_ssh_key
     confirm_and_deploy
     show_completion

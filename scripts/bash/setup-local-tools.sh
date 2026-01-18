@@ -235,7 +235,7 @@ if $all_installed; then
     echo -e "${BLUE}Next steps:${NC}"
     echo "1. Run: az login"
     echo "2. Run: azd auth login"
-    echo "3. Run: ./scripts/validate-env.sh"
+    echo "3. Run: ./scripts/bash/validate-env.sh"
 else
     echo -e "${YELLOW}Some tools could not be installed automatically.${NC}"
     echo "Please install them manually and run this script again."

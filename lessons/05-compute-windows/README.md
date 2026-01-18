@@ -6,6 +6,41 @@
 
 Azure provides flexible compute options for running Windows workloads. This lesson covers Windows virtual machines, availability options, and Azure App Service for web applications.
 
+## What Gets Deployed
+
+When you deploy this lesson using the deploy script, you get:
+
+| Resource | Description | Purpose |
+|----------|-------------|---------|
+| **Windows Server 2022 VM** | Standard_B2s (2 vCPUs, 4GB RAM) | Practice RDP connections, Windows administration |
+| **Virtual Network** | 10.1.0.0/16 with default subnet | Isolated network for the VM |
+| **Public IP Address** | Static allocation with DNS label | RDP access from internet |
+| **Network Security Group** | Allow RDP (port 3389) | Secure inbound access |
+| **App Service Plan** | F1 (Free tier) | Host web applications |
+| **Web App** | .NET runtime | Deploy sample applications |
+
+> ⚠️ **Cost Note**: The VM uses B2s size which uses Azure credits. An auto-shutdown is configured for 7 PM UTC to save costs. Stop/deallocate the VM when not in use.
+
+### Connecting to Your Windows VM
+
+After deployment, the outputs will show your connection information:
+
+```bash
+# The deploy script outputs:
+WINDOWS_VM_PUBLIC_IP=<your-vm-ip>
+WINDOWS_VM_FQDN=<your-vm-fqdn>
+
+# Connect via Remote Desktop
+# Windows: mstsc /v:<your-vm-fqdn>
+# macOS: Use Microsoft Remote Desktop app
+# Linux: Use remmina or xfreerdp
+```
+
+**Connection Details**:
+- **Username**: `azureuser`
+- **Password**: The password you entered during deployment
+- **Port**: 3389 (RDP)
+
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:

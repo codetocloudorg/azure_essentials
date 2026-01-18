@@ -25,12 +25,16 @@ param environmentName string
 param location string
 
 @description('Optional: Specific lesson number to deploy. Leave empty for full deployment.')
-@allowed(['', '02', '03', '04', '05', '06', '07', '08', '09', '11'])
+@allowed(['', '03', '04', '05', '06', '07', '08', '09', '11'])
 param lessonNumber string = ''
 
 @description('App Service Plan SKU. Use B1 if your subscription has no F1 quota.')
 @allowed(['F1', 'B1'])
 param appServicePlanSku string = 'B1'
+
+@description('Admin password for Lesson 05 Windows VM. Must be 12+ chars with uppercase, lowercase, number, and special char.')
+@secure()
+param windowsAdminPassword string = ''
 
 @description('SSH public key for Lesson 06 Linux VM. Generate with: ssh-keygen -t rsa -b 4096')
 @secure()
@@ -53,8 +57,8 @@ var defaultTags = union(tags, {
 })
 
 // Determine which resources to deploy based on lesson number
+// Note: Lesson 02 (Management Groups) is deployed separately via Azure CLI at tenant scope
 var deployAll = empty(lessonNumber)
-var deployLandingZone = deployAll || lessonNumber == '02'
 var deployStorage = deployAll || lessonNumber == '03'
 var deployNetworking = deployAll || lessonNumber == '04'
 var deployComputeWindows = deployAll || lessonNumber == '05'
@@ -67,9 +71,6 @@ var deployAI = deployAll || lessonNumber == '11'
 // ============================================================================
 // RESOURCE GROUPS - One per lesson for clarity
 // ============================================================================
-
-// Lesson 02: Landing Zone Demo (multiple RGs showing hierarchy)
-// Note: This module creates its own RGs at subscription scope
 
 // Lesson 03: Storage Services
 resource rgStorage 'Microsoft.Resources/resourceGroups@2024-03-01' = if (deployStorage) {
@@ -163,6 +164,8 @@ module computeWindows './modules/compute-windows.bicep' = if (deployComputeWindo
     appServicePlanName: '${abbrs.appServicePlan}${environmentName}'
     webAppName: '${abbrs.webApp}${resourceToken}'
     appServicePlanSku: appServicePlanSku
+    vmName: 'vm-${environmentName}-win'
+    adminPassword: windowsAdminPassword
   }
 }
 
@@ -211,15 +214,6 @@ module ai './modules/ai-foundry.bicep' = if (deployAI) {
   }
 }
 
-// Lesson 02: Azure Landing Zone Demo (creates its own resource groups)
-module landingZone './modules/landing-zone-demo.bicep' = if (deployLandingZone) {
-  name: 'landing-zone-${resourceToken}'
-  params: {
-    environmentName: environmentName
-    location: location
-  }
-}
-
 // Lesson 06: Linux VM with MicroK8s
 module linuxK8s './modules/linux-microk8s.bicep' = if (deployLinuxK8s) {
   name: 'linux-k8s-${resourceToken}'
@@ -241,6 +235,7 @@ module linuxK8s './modules/linux-microk8s.bicep' = if (deployLinuxK8s) {
 output AZURE_LOCATION string = location
 
 // Resource Group outputs - shows which resource groups were created
+// Note: Lesson 02 (Management Groups) has no outputs here - deployed separately at tenant scope
 output RESOURCE_GROUP_STORAGE string = rgStorage.?name ?? ''
 output RESOURCE_GROUP_NETWORKING string = rgNetworking.?name ?? ''
 output RESOURCE_GROUP_COMPUTE string = rgCompute.?name ?? ''
@@ -261,6 +256,10 @@ output VNET_ID string = networking.?outputs.?vnetId ?? ''
 // Compute outputs
 output WEB_APP_NAME string = computeWindows.?outputs.?webAppName ?? ''
 output WEB_APP_URL string = computeWindows.?outputs.?webAppUrl ?? ''
+output WINDOWS_VM_NAME string = computeWindows.?outputs.?vmName ?? ''
+output WINDOWS_VM_PUBLIC_IP string = computeWindows.?outputs.?vmPublicIp ?? ''
+output WINDOWS_VM_FQDN string = computeWindows.?outputs.?vmFqdn ?? ''
+output WINDOWS_VM_RDP_COMMAND string = computeWindows.?outputs.?rdpCommand ?? ''
 
 // Container outputs
 output ACR_NAME string = containers.?outputs.?acrName ?? ''
@@ -276,14 +275,6 @@ output COSMOS_DB_ENDPOINT string = database.?outputs.?cosmosDbEndpoint ?? ''
 
 // AI outputs
 output AI_HUB_NAME string = ai.?outputs.?aiHubName ?? ''
-
-// Landing Zone outputs (Lesson 02)
-output LANDING_ZONE_RG_IDENTITY string = landingZone.?outputs.?identityResourceGroup ?? ''
-output LANDING_ZONE_RG_CONNECTIVITY string = landingZone.?outputs.?connectivityResourceGroup ?? ''
-output LANDING_ZONE_RG_MANAGEMENT string = landingZone.?outputs.?managementResourceGroup ?? ''
-output LANDING_ZONE_RG_PROD string = landingZone.?outputs.?productionResourceGroup ?? ''
-output LANDING_ZONE_RG_NONPROD string = landingZone.?outputs.?nonProductionResourceGroup ?? ''
-output LANDING_ZONE_RG_SANDBOX string = landingZone.?outputs.?sandboxResourceGroup ?? ''
 
 // Linux K8s VM outputs (Lesson 06)
 output LINUX_K8S_VM_NAME string = linuxK8s.?outputs.?vmName ?? ''
