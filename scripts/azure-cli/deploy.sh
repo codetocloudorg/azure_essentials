@@ -690,6 +690,22 @@ deploy_lesson_7() {
     local admin_user=$(az acr credential show --name "$acr_name" --resource-group "$rg_name" --query username -o tsv)
     local admin_pass=$(az acr credential show --name "$acr_name" --resource-group "$rg_name" --query "passwords[0].value" -o tsv)
 
+    # Build hello-container in ACR (if sample app exists)
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local repo_root="$(cd "${script_dir}/../.." && pwd)"
+    local hello_app_dir="${repo_root}/lessons/07-container-services/src/hello-container"
+
+    if [[ -d "$hello_app_dir" ]]; then
+        print_info "Building hello-container image in ACR..."
+        az acr build \
+            --registry "$acr_name" \
+            --image hello-container:v1 \
+            --file "${hello_app_dir}/Dockerfile" \
+            "$hello_app_dir" \
+            --no-logs
+        print_success "Image built: ${login_server}/hello-container:v1"
+    fi
+
     echo ""
     print_success "Lesson 7 deployment complete!"
     echo ""
@@ -700,6 +716,7 @@ deploy_lesson_7() {
     echo "  Admin Password: ${admin_pass:0:8}..."
     echo ""
     echo "  Docker Login:   docker login ${login_server} -u ${admin_user}"
+    echo "  Container:      ${login_server}/hello-container:v1"
     echo ""
     echo "  Resource Group: ${rg_name}"
 }

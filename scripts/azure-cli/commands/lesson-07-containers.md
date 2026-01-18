@@ -76,51 +76,54 @@ az acr login --name "$ACR_NAME"
 
 ---
 
-## Step 5: Create a Sample Dockerfile
+## Step 5: Build Hello Container in ACR
+
+> 💡 **No Docker Required!** ACR Tasks builds the image in Azure.
+
+The sample app is in `lessons/07-container-services/src/hello-container/`:
+
+```bash
+# Navigate to repo root (adjust path as needed)
+cd /path/to/azure_essentials
+
+# Build hello-container directly in ACR
+az acr build \
+    --registry "$ACR_NAME" \
+    --image "hello-container:v1" \
+    --file "lessons/07-container-services/src/hello-container/Dockerfile" \
+    "lessons/07-container-services/src/hello-container"
+```
+
+**Alternative: Create a simple sample inline:**
 
 ```bash
 # Create a simple Dockerfile
 cat << 'EOF' > /tmp/Dockerfile
-FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/index.html
-EXPOSE 80
+FROM python:3.11-alpine
+WORKDIR /app
+RUN pip install flask gunicorn
+COPY <<PYEOF app.py
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def hello():
+    return "<h1>Hello from Azure!</h1>"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
+PYEOF
+EXPOSE 8080
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
 EOF
 
-# Create a sample HTML page
-cat << 'EOF' > /tmp/index.html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Azure Essentials</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        h1 { color: #0078d4; }
-    </style>
-</head>
-<body>
-    <h1>Hello from Azure Container Registry!</h1>
-    <p>This container was built and pushed using Azure CLI.</p>
-</body>
-</html>
-EOF
+# Build it in ACR
+az acr build --registry "$ACR_NAME" --image "hello-container:v1" /tmp
 ```
 
 ---
 
-## Step 6: Build and Push Image with ACR Tasks
-
-```bash
-# Build the image directly in ACR (no local Docker needed!)
-az acr build \
-    --registry "$ACR_NAME" \
-    --image "essentials-web:v1" \
-    --file /tmp/Dockerfile \
-    /tmp
-```
-
----
-
-## Step 7: List Images in Registry
+## Step 6: List Images in Registry
 
 ```bash
 # List repositories
@@ -133,19 +136,19 @@ az acr repository list \
 # Show image tags
 az acr repository show-tags \
     --name "$ACR_NAME" \
-    --repository "essentials-web" \
+    --repository "hello-container" \
     -o table
 ```
 
 ---
 
-## Step 8: View Image Details
+## Step 7: View Image Details
 
 ```bash
 # Show image manifest
 az acr repository show \
     --name "$ACR_NAME" \
-    --image "essentials-web:v1"
+    --image "hello-container:v1"
 ```
 
 ---
@@ -160,11 +163,14 @@ az acr repository show \
 # Get the login server
 LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)
 
+# Login to ACR
+az acr login --name "$ACR_NAME"
+
 # Pull the image
-docker pull ${LOGIN_SERVER}/essentials-web:v1
+docker pull ${LOGIN_SERVER}/hello-container:v1
 
 # Run the container
-docker run -d -p 8080:80 ${LOGIN_SERVER}/essentials-web:v1
+docker run -d -p 8080:8080 ${LOGIN_SERVER}/hello-container:v1
 
 # Visit http://localhost:8080
 ```
@@ -211,7 +217,7 @@ docker push ${LOGIN_SERVER}/myimage:v1
 # Delete a specific tag
 az acr repository delete \
     --name "$ACR_NAME" \
-    --image "essentials-web:v1" \
+    --image "hello-container:v1" \
     --yes
 ```
 
