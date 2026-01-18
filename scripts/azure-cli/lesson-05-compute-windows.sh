@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - Sufficient quota for B2s VMs
+#   - Sufficient quota for B1s VMs (1 vCPU)
 #
 # Usage:
 #   ./lesson-05-compute-windows.sh
@@ -347,7 +347,7 @@ show_commands() {
     echo ""
     echo "# Create Windows VM"
     echo "az vm create --name <vm> --resource-group <rg> --image Win2022Datacenter \\"
-    echo "    --size Standard_B2s --admin-username azureuser"
+    echo "    --size Standard_B1s --admin-username azureuser"
     echo ""
     echo "# Open port on VM"
     echo "az vm open-port --name <vm> --resource-group <rg> --port 3389"

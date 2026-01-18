@@ -259,8 +259,8 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "2)" Cyan -NoNewline; Write-Host " Getting Started            " -NoNewline; Write-ColorOutput "[TENANT]" Yellow -NoNewline; Write-Host "       Management Groups & Policy"
     Write-Host "     " -NoNewline; Write-ColorOutput "3)" Cyan -NoNewline; Write-Host " Storage Services           " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         Blobs, queues, tables"
     Write-Host "     " -NoNewline; Write-ColorOutput "4)" Cyan -NoNewline; Write-Host " Networking Services        " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         VNets, subnets, NSGs"
-    Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
-    Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
+    Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
+    Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
     Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$5/mo]" Yellow -NoNewline; Write-Host "       Azure Container Registry"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow

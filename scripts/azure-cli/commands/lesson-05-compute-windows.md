@@ -104,7 +104,7 @@ az vm create \
     --resource-group "$RESOURCE_GROUP" \
     --location "$LOCATION" \
     --image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" \
-    --size "Standard_B2s" \
+    --size "Standard_B1s" \
     --admin-username "$ADMIN_USERNAME" \
     --admin-password "$ADMIN_PASSWORD" \
     --vnet-name "vnet-windows" \

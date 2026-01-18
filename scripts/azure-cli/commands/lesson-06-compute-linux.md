@@ -162,7 +162,7 @@ az vm create \
     --resource-group "$RESOURCE_GROUP" \
     --location "$LOCATION" \
     --image "Canonical:ubuntu-24_04-lts:server:latest" \
-    --size "Standard_B2ms" \
+    --size "Standard_B1s" \
     --admin-username "$ADMIN_USERNAME" \
     --ssh-key-values ~/.ssh/azure_vm_key.pub \
     --vnet-name "vnet-linux" \

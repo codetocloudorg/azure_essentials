@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - Sufficient quota for B2s VMs
+#   - Sufficient quota for B1s VMs (1 vCPU)
 #
 # Usage:
 #   ./lesson-06-compute-linux.sh
@@ -254,7 +254,7 @@ show_commands() {
     echo ""
     echo "# Create Linux VM with SSH key"
     echo "az vm create --name <vm> --resource-group <rg> --image Ubuntu2204 \\"
-    echo "    --size Standard_B2s --admin-username azureuser --generate-ssh-keys"
+    echo "    --size Standard_B1s --admin-username azureuser --generate-ssh-keys"
     echo ""
     echo "# Create VM with cloud-init"
     echo "az vm create --name <vm> --resource-group <rg> --image Ubuntu2204 \\"

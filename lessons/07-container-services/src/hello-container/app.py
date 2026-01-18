@@ -17,8 +17,8 @@ def hello():
     <head>
         <title>Hello from Azure Container!</title>
         <style>
-            body {{ 
-                font-family: Arial, sans-serif; 
+            body {{
+                font-family: Arial, sans-serif;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
                 display: flex;
