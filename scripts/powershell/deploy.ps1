@@ -273,7 +273,7 @@ function Select-Lesson {
     Write-Host "    " -NoNewline; Write-ColorOutput "12)" Cyan -NoNewline; Write-Host " Architecture Design        " -NoNewline; Write-ColorOutput "[NO RESOURCES]" Green -NoNewline; Write-Host " Whiteboard session"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
-    Write-Host "     " -NoNewline; Write-ColorOutput "0)" Cyan -NoNewline; Write-Host " Deploy ALL Resources       " -NoNewline; Write-ColorOutput "[ALL QUOTAS]" Red -NoNewline; Write-Host "   Lessons 2-9,11"
+    Write-Host "     " -NoNewline; Write-ColorOutput "0)" Cyan -NoNewline; Write-Host " Deploy ALL Resources       " -NoNewline; Write-ColorOutput "[ALL QUOTAS]" Red -NoNewline; Write-Host "   Lessons 3-9,11 (RGs)"
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
     Write-Host ""
     Write-ColorOutput "  ┌─────────────────────────────────────────────────────────────────────────────┐" Magenta
