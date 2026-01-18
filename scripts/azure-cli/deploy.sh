@@ -181,7 +181,17 @@ deploy_lesson_2() {
     print_section "📦 Lesson 2: Management Groups"
 
     print_warning "Management Groups require Tenant-level permissions."
-    print_info "This creates a demo management group structure."
+    print_info "This creates an Azure Landing Zone style hierarchy."
+    echo ""
+    echo "  📁 mg-${ENV_NAME}-root (Organization Root)"
+    echo "  ├── 📁 mg-${ENV_NAME}-platform"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-identity"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-connectivity"
+    echo "  │   └── 📁 mg-${ENV_NAME}-management"
+    echo "  ├── 📁 mg-${ENV_NAME}-workloads"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-prod"
+    echo "  │   └── 📁 mg-${ENV_NAME}-nonprod"
+    echo "  └── 📁 mg-${ENV_NAME}-sandbox"
     echo ""
     read -p "Do you have tenant admin permissions? (y/n): " confirm
 
@@ -191,25 +201,53 @@ deploy_lesson_2() {
     fi
 
     local mg_prefix="mg-${ENV_NAME}"
-    local tenant_id=$(az account show --query tenantId -o tsv)
 
-    print_info "Creating management group: ${mg_prefix}-root"
+    # Level 1: Root
+    print_info "Creating root management group: ${mg_prefix}-root"
     az account management-group create \
         --name "${mg_prefix}-root" \
-        --display-name "Azure Essentials Root" \
-        --output none 2>/dev/null || print_warning "Management group may already exist"
+        --display-name "Organization Root" \
+        --output none 2>/dev/null || print_warning "May already exist"
 
-    print_info "Creating child management groups..."
-
-    for child in "production" "development" "sandbox"; do
+    # Level 2: Platform, Workloads, Sandbox
+    print_info "Creating second-level management groups..."
+    for child in "platform" "workloads" "sandbox"; do
         az account management-group create \
             --name "${mg_prefix}-${child}" \
-            --display-name "Azure Essentials ${child^}" \
+            --display-name "${child^}" \
             --parent "${mg_prefix}-root" \
             --output none 2>/dev/null || true
+        echo "  ✓ ${mg_prefix}-${child}"
     done
 
-    print_success "Management Groups created!"
+    # Level 3: Platform children
+    print_info "Creating Platform child groups..."
+    for child in "identity" "connectivity" "management"; do
+        az account management-group create \
+            --name "${mg_prefix}-${child}" \
+            --display-name "${child^}" \
+            --parent "${mg_prefix}-platform" \
+            --output none 2>/dev/null || true
+        echo "  ✓ ${mg_prefix}-${child}"
+    done
+
+    # Level 3: Workloads children
+    print_info "Creating Workloads child groups..."
+    az account management-group create \
+        --name "${mg_prefix}-prod" \
+        --display-name "Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "  ✓ ${mg_prefix}-prod"
+
+    az account management-group create \
+        --name "${mg_prefix}-nonprod" \
+        --display-name "Non-Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "  ✓ ${mg_prefix}-nonprod"
+
+    print_success "Management Groups created (9 total)!"
     echo ""
     print_info "View in portal: https://portal.azure.com/#view/Microsoft_Azure_ManagementGroups"
 }

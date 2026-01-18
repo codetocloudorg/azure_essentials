@@ -2,6 +2,20 @@
 
 > ⚠️ **Requires Tenant-level permissions** (Global Admin or Management Group Contributor)
 
+This creates an **Azure Landing Zone style hierarchy** with nested child management groups.
+
+```
+📁 mg-{prefix}-root (Organization Root)
+├── 📁 mg-{prefix}-platform
+│   ├── 📁 mg-{prefix}-identity
+│   ├── 📁 mg-{prefix}-connectivity
+│   └── 📁 mg-{prefix}-management
+├── 📁 mg-{prefix}-workloads
+│   ├── 📁 mg-{prefix}-prod
+│   └── 📁 mg-{prefix}-nonprod
+└── 📁 mg-{prefix}-sandbox
+```
+
 ---
 
 ## 📋 Setup Variables
@@ -30,37 +44,34 @@ az account show --query tenantId -o tsv
 # Create the root management group
 az account management-group create \
     --name "${MG_PREFIX}-root" \
-    --display-name "Azure Essentials Root"
+    --display-name "Organization Root"
 ```
 
 ---
 
-## Step 2: Create Child Management Groups
+## Step 2: Create Second-Level Management Groups
 
-### Production Environment
+### Platform (for shared infrastructure)
 
 ```bash
-# Create Production management group
 az account management-group create \
-    --name "${MG_PREFIX}-production" \
-    --display-name "Production" \
+    --name "${MG_PREFIX}-platform" \
+    --display-name "Platform" \
     --parent "${MG_PREFIX}-root"
 ```
 
-### Development Environment
+### Workloads (for application subscriptions)
 
 ```bash
-# Create Development management group
 az account management-group create \
-    --name "${MG_PREFIX}-development" \
-    --display-name "Development" \
+    --name "${MG_PREFIX}-workloads" \
+    --display-name "Workloads" \
     --parent "${MG_PREFIX}-root"
 ```
 
-### Sandbox Environment
+### Sandbox (for learning/experimentation)
 
 ```bash
-# Create Sandbox management group
 az account management-group create \
     --name "${MG_PREFIX}-sandbox" \
     --display-name "Sandbox" \
@@ -69,12 +80,65 @@ az account management-group create \
 
 ---
 
-## Step 3: View Management Groups
+## Step 3: Create Platform Child Groups
+
+### Identity (Azure AD, authentication services)
+
+```bash
+az account management-group create \
+    --name "${MG_PREFIX}-identity" \
+    --display-name "Identity" \
+    --parent "${MG_PREFIX}-platform"
+```
+
+### Connectivity (networking, DNS, firewalls)
+
+```bash
+az account management-group create \
+    --name "${MG_PREFIX}-connectivity" \
+    --display-name "Connectivity" \
+    --parent "${MG_PREFIX}-platform"
+```
+
+### Management (monitoring, automation)
+
+```bash
+az account management-group create \
+    --name "${MG_PREFIX}-management" \
+    --display-name "Management" \
+    --parent "${MG_PREFIX}-platform"
+```
+
+---
+
+## Step 4: Create Workloads Child Groups
+
+### Production
+
+```bash
+az account management-group create \
+    --name "${MG_PREFIX}-prod" \
+    --display-name "Production" \
+    --parent "${MG_PREFIX}-workloads"
+```
+
+### Non-Production
+
+```bash
+az account management-group create \
+    --name "${MG_PREFIX}-nonprod" \
+    --display-name "Non-Production" \
+    --parent "${MG_PREFIX}-workloads"
+```
+
+---
+
+## Step 5: View Management Groups
 
 ```bash
 # List all management groups you created
 az account management-group list \
-    --query "[?contains(name, 'mg-essentials')].{Name:name, DisplayName:displayName}" \
+    --query "[?contains(name, '${MG_PREFIX}')].{Name:name, DisplayName:displayName}" \
     -o table
 ```
 
@@ -95,7 +159,7 @@ SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 # Move subscription to a management group
 az account management-group subscription add \
-    --name "${MG_PREFIX}-development" \
+    --name "${MG_PREFIX}-sandbox" \
     --subscription "$SUBSCRIPTION_ID"
 ```
 
@@ -103,7 +167,7 @@ az account management-group subscription add \
 
 ```bash
 az account management-group subscription remove \
-    --name "${MG_PREFIX}-development" \
+    --name "${MG_PREFIX}-sandbox" \
     --subscription "$SUBSCRIPTION_ID"
 ```
 
@@ -111,25 +175,34 @@ az account management-group subscription remove \
 
 ## 🧹 Cleanup
 
-> ⚠️ Delete child management groups first, then the parent
+> ⚠️ **Delete child groups first, then parents** (deepest children first)
+
+### Delete Platform children
 
 ```bash
-# Delete Sandbox
+az account management-group delete --name "${MG_PREFIX}-identity"
+az account management-group delete --name "${MG_PREFIX}-connectivity"
+az account management-group delete --name "${MG_PREFIX}-management"
+```
+
+### Delete Workloads children
+
+```bash
+az account management-group delete --name "${MG_PREFIX}-prod"
+az account management-group delete --name "${MG_PREFIX}-nonprod"
+```
+
+### Delete second-level groups
+
+```bash
+az account management-group delete --name "${MG_PREFIX}-platform"
+az account management-group delete --name "${MG_PREFIX}-workloads"
 az account management-group delete --name "${MG_PREFIX}-sandbox"
 ```
 
-```bash
-# Delete Development
-az account management-group delete --name "${MG_PREFIX}-development"
-```
+### Delete root (must be empty)
 
 ```bash
-# Delete Production
-az account management-group delete --name "${MG_PREFIX}-production"
-```
-
-```bash
-# Delete Root (must be empty)
 az account management-group delete --name "${MG_PREFIX}-root"
 ```
 
