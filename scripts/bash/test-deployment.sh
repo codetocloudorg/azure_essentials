@@ -486,7 +486,8 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         [0-9]*)
-            LESSON="$1"
+            # Zero-pad lesson number to 2 digits (3 -> 03)
+            LESSON=$(printf "%02d" "$1")
             shift
             ;;
         --help|-h)
@@ -528,11 +529,12 @@ for mg in "mg-essentials-root" "mg-essentials-production" "mg-essentials-develop
 done
 mg_list=$(echo -e "$mg_list" | sed '/^$/d')
 
-# Then check for resource groups (look for both patterns)
+# Then check for resource groups (look for multiple patterns to catch any env names)
 rg_list=$(find_resource_groups "$ENV_NAME")
 essentials_rg_list=$(find_resource_groups "essentials")
+lesson_rg_list=$(find_resource_groups "lesson")
 # Merge and dedupe
-all_rg_list=$(echo -e "${rg_list}\n${essentials_rg_list}" | sort -u | sed '/^$/d')
+all_rg_list=$(echo -e "${rg_list}\n${essentials_rg_list}\n${lesson_rg_list}" | sort -u | sed '/^$/d')
 rg_list="$all_rg_list"
 
 # Handle case where neither exist
