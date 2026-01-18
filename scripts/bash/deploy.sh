@@ -732,6 +732,41 @@ confirm_and_deploy() {
     echo ""
 
     azd up
+
+    # Post-deployment: Build container for Lesson 07
+    if [ "$SELECTED_LESSON" = "07" ] || [ -z "$SELECTED_LESSON" ]; then
+        build_hello_container
+    fi
+}
+
+#===============================================================================
+# POST-DEPLOYMENT: Build hello-container in ACR (Lesson 07)
+#===============================================================================
+build_hello_container() {
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local repo_root="$(cd "${script_dir}/../.." && pwd)"
+    local hello_app_dir="${repo_root}/lessons/07-container-services/src/hello-container"
+
+    # Find the ACR name from deployed resources
+    local acr_name=$(az acr list --query "[?contains(name, '${ENV_NAME}')].name" -o tsv 2>/dev/null | head -1)
+
+    if [ -n "$acr_name" ] && [ -d "$hello_app_dir" ]; then
+        echo ""
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}  Building hello-container in ACR...${NC}"
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+
+        az acr build \
+            --registry "$acr_name" \
+            --image hello-container:v1 \
+            --file "${hello_app_dir}/Dockerfile" \
+            "$hello_app_dir" \
+            --no-logs
+
+        local login_server=$(az acr show --name "$acr_name" --query loginServer -o tsv)
+        echo -e "${GREEN}✓${NC} Image built: ${login_server}/hello-container:v1"
+    fi
 }
 
 #===============================================================================

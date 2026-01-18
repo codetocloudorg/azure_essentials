@@ -8,8 +8,8 @@
 //   - Storage Account (general-purpose v2)
 //   - Blob container for object storage exercises
 //   - Queue for messaging exercises
-//   - Table service (available but no sample table created)
-//   - File share service (available but no sample share created)
+//   - Table for NoSQL data exercises
+//   - File share for SMB file storage exercises
 //
 // COST: Free tier eligible (5GB Blob, 5GB File, 50K Queue operations/month)
 //
@@ -160,6 +160,50 @@ resource queueService 'Microsoft.Storage/storageAccounts/queueServices@2023-05-0
 resource sampleQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
   parent: queueService
   name: 'sample-messages'
+}
+
+// ============================================================================
+// TABLE SERVICE - NoSQL key-value storage
+// ============================================================================
+// Table storage is used for:
+//   - Structured NoSQL data
+//   - Web scale apps without complex joins
+//   - Address books, device info, metadata
+//
+// Each entity can be up to 1MB with 255 properties
+
+resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+// Sample table for NoSQL exercises
+resource sampleTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023-05-01' = {
+  parent: tableService
+  name: 'sampledata'
+}
+
+// ============================================================================
+// FILE SERVICE - SMB/NFS file shares
+// ============================================================================
+// File storage is used for:
+//   - Lift-and-shift legacy apps that need file shares
+//   - Shared configuration files
+//   - Cross-platform file storage (Windows/Linux/macOS)
+
+resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+// Sample file share for exercises
+resource sampleFileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-05-01' = {
+  parent: fileService
+  name: 'samplefiles'
+  properties: {
+    shareQuota: 5  // 5 GB quota
+    accessTier: 'Hot'
+  }
 }
 
 // ============================================================================

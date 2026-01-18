@@ -669,6 +669,42 @@ function Confirm-AndDeploy {
     Write-Host ""
 
     azd up
+
+    # Post-deployment: Build container for Lesson 07
+    if ($script:SelectedLesson -eq "07" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
+        Build-HelloContainer
+    }
+}
+
+function Build-HelloContainer {
+    $scriptPath = $PSScriptRoot
+    $repoRoot = Split-Path -Parent (Split-Path -Parent $scriptPath)
+    $helloAppDir = Join-Path $repoRoot "lessons/07-container-services/src/hello-container"
+
+    # Find the ACR name from deployed resources
+    try {
+        $acrName = az acr list --query "[?contains(name, '$($script:EnvName)')].name" -o tsv 2>$null | Select-Object -First 1
+    } catch {
+        return
+    }
+
+    if ($acrName -and (Test-Path $helloAppDir)) {
+        Write-Host ""
+        Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Cyan
+        Write-ColorOutput "    Building hello-container in ACR..." Cyan
+        Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Cyan
+        Write-Host ""
+
+        az acr build `
+            --registry $acrName `
+            --image "hello-container:v1" `
+            --file "$helloAppDir/Dockerfile" `
+            $helloAppDir `
+            --no-logs
+
+        $loginServer = az acr show --name $acrName --query loginServer -o tsv
+        Write-ColorOutput "  ✓ Image built: ${loginServer}/hello-container:v1" Green
+    }
 }
 
 function Show-Completion {
