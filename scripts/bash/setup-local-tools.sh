@@ -196,7 +196,7 @@ install_vscode() {
         fi
         return
     fi
-    
+
     if ! command_exists code; then
         echo -e "${YELLOW}Installing Visual Studio Code...${NC}"
         case $OS in

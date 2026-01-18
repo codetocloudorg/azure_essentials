@@ -503,7 +503,7 @@ deploy_lesson_5() {
         --location "$LOCATION" \
         --nics "$nic_name" \
         --image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" \
-        --size "Standard_B2s" \
+        --size "Standard_B1s" \
         --admin-username "azureuser" \
         --admin-password "$WIN_PASSWORD" \
         --os-disk-name "${vm_name}-osdisk" \
@@ -613,7 +613,7 @@ EOF
         --resource-group "$rg_name" \
         --location "$LOCATION" \
         --image "Canonical:ubuntu-24_04-lts:server:latest" \
-        --size "Standard_B2s" \
+        --size "Standard_B1s" \
         --admin-username "azureuser" \
         --generate-ssh-keys \
         --public-ip-sku Standard \

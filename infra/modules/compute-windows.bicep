@@ -58,7 +58,7 @@ param adminPassword string
   'Standard_B2ms'
   'Standard_D2s_v5'
 ])
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_B1s'
 
 @description('App Service Plan SKU')
 @allowed([

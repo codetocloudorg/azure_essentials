@@ -288,7 +288,7 @@ foreach ($tool in $toolList) {
             $isInstalled = (Test-Path "/Applications/Visual Studio Code.app")
         }
     }
-    
+
     if ($isInstalled) {
         Write-ColorOutput "  ✓ $tool" Green
     } else {

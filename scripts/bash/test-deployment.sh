@@ -436,7 +436,8 @@ validate_lesson_09() {
 validate_lesson_11() {
     print_section "🤖 Lesson 11: Azure AI Foundry"
 
-    local rg=$(az group list --query "[?contains(name, 'ai') || contains(name, 'foundry') || contains(name, 'lesson11') || contains(name, 'lesson-11')].name" -o tsv 2>/dev/null | head -1)
+    # Be specific with '-ai' suffix to avoid matching 'containers' which contains 'ai'
+    local rg=$(az group list --query "[?contains(name, '-ai') || contains(name, 'foundry') || contains(name, 'lesson11') || contains(name, 'lesson-11')].name" -o tsv 2>/dev/null | head -1)
 
     if [[ -z "$rg" ]]; then
         print_error "Resource group not found for Lesson 11"

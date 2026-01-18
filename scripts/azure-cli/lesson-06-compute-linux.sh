@@ -144,7 +144,7 @@ EOF
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
         --image "Canonical:ubuntu-24_04-lts:server:latest" \
-        --size "Standard_B2s" \
+        --size "Standard_B1s" \
         --admin-username "azureuser" \
         --generate-ssh-keys \
         --public-ip-sku Standard \
@@ -158,16 +158,10 @@ EOF
     #---------------------------------------------------------------------------
     # Step 4: Open Required Ports
     #---------------------------------------------------------------------------
-    print_step "Opening ports for SSH and Kubernetes..."
+    print_step "Opening ports for Kubernetes..."
 
-    # SSH is already open, but let's be explicit
-    az vm open-port \
-        --name "$VM_NAME" \
-        --resource-group "$RESOURCE_GROUP" \
-        --port 22 \
-        --priority 1000 \
-        --output none
-    echo "  ✓ Port 22 (SSH) opened"
+    # SSH is already opened by az vm create with --generate-ssh-keys
+    echo "  ✓ Port 22 (SSH) already open"
 
     # MicroK8s API server
     az vm open-port \
@@ -227,7 +221,7 @@ EOF
     echo -e "${CYAN}Linux VM:${NC}"
     echo "  Name:        ${VM_NAME}"
     echo "  Image:       Ubuntu 24.04 LTS"
-    echo "  Size:        ${vm_size} (2 vCPUs, 4 GB RAM)"
+    echo "  Size:        ${vm_size} (1 vCPU, 1 GB RAM)"
     echo "  Public IP:   ${public_ip}"
     echo "  Username:    azureuser"
     echo ""

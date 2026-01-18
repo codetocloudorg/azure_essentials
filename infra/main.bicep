@@ -224,7 +224,7 @@ module linuxK8s './modules/linux-microk8s.bicep' = if (deployLinuxK8s) {
     namePrefix: environmentName
     adminUsername: 'azureuser'
     sshPublicKey: sshPublicKey
-    vmSize: 'Standard_B2s'
+    vmSize: 'Standard_B1s'
   }
 }
 

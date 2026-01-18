@@ -56,7 +56,7 @@ param sshPublicKey string
   'Standard_B2s'
   'Standard_B2ms'
 ])
-param vmSize string = 'Standard_B2s'
+param vmSize string = 'Standard_B1s'
 
 // ============================================================================
 // VARIABLES

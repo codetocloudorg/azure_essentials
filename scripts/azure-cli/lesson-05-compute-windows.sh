@@ -77,39 +77,45 @@ deploy() {
     print_header
 
     #---------------------------------------------------------------------------
-    # Get Password
+    # Get Password (from env var or prompt)
     #---------------------------------------------------------------------------
-    print_info "Windows VM requires an admin password."
-    echo ""
-    echo "Password requirements:"
-    echo "  • At least 12 characters"
-    echo "  • Contains uppercase letter"
-    echo "  • Contains lowercase letter"
-    echo "  • Contains number"
-    echo ""
-
-    while true; do
-        read -sp "Enter Windows admin password: " ADMIN_PASSWORD
+    if [[ -n "${ADMIN_PASSWORD:-}" ]]; then
+        print_info "Using password from ADMIN_PASSWORD environment variable"
+    else
+        print_info "Windows VM requires an admin password."
+        echo ""
+        echo "Password requirements:"
+        echo "  • At least 12 characters"
+        echo "  • Contains uppercase letter"
+        echo "  • Contains lowercase letter"
+        echo "  • Contains number"
+        echo ""
+        echo "Tip: Set ADMIN_PASSWORD env var to skip this prompt"
         echo ""
 
-        if [[ ${#ADMIN_PASSWORD} -lt 12 ]]; then
-            echo -e "${RED}Password must be at least 12 characters${NC}"
-            continue
-        fi
-        if [[ ! "$ADMIN_PASSWORD" =~ [A-Z] ]]; then
-            echo -e "${RED}Password must contain uppercase letter${NC}"
-            continue
-        fi
-        if [[ ! "$ADMIN_PASSWORD" =~ [a-z] ]]; then
-            echo -e "${RED}Password must contain lowercase letter${NC}"
-            continue
-        fi
-        if [[ ! "$ADMIN_PASSWORD" =~ [0-9] ]]; then
-            echo -e "${RED}Password must contain a number${NC}"
-            continue
-        fi
-        break
-    done
+        while true; do
+            read -sp "Enter Windows admin password: " ADMIN_PASSWORD
+            echo ""
+
+            if [[ ${#ADMIN_PASSWORD} -lt 12 ]]; then
+                echo -e "${RED}Password must be at least 12 characters${NC}"
+                continue
+            fi
+            if [[ ! "$ADMIN_PASSWORD" =~ [A-Z] ]]; then
+                echo -e "${RED}Password must contain uppercase letter${NC}"
+                continue
+            fi
+            if [[ ! "$ADMIN_PASSWORD" =~ [a-z] ]]; then
+                echo -e "${RED}Password must contain lowercase letter${NC}"
+                continue
+            fi
+            if [[ ! "$ADMIN_PASSWORD" =~ [0-9] ]]; then
+                echo -e "${RED}Password must contain a number${NC}"
+                continue
+            fi
+            break
+        done
+    fi
 
     echo ""
     print_info "Location: ${LOCATION}"
@@ -218,7 +224,7 @@ deploy() {
         --location "$LOCATION" \
         --nics "nic-${VM_NAME}" \
         --image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" \
-        --size "Standard_B2s" \
+        --size "Standard_B1s" \
         --admin-username "azureuser" \
         --admin-password "$ADMIN_PASSWORD" \
         --os-disk-name "${VM_NAME}-osdisk" \
@@ -311,7 +317,7 @@ deploy() {
     echo -e "${CYAN}Windows VM:${NC}"
     echo "  Name:        ${VM_NAME}"
     echo "  Image:       Windows Server 2022 Datacenter"
-    echo "  Size:        Standard_B2s (2 vCPUs, 4 GB RAM)"
+    echo "  Size:        Standard_B1s (1 vCPU, 1 GB RAM)"
     echo "  Public IP:   ${public_ip}"
     echo "  FQDN:        ${fqdn}"
     echo "  Username:    azureuser"
