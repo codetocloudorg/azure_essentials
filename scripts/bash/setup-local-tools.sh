@@ -187,6 +187,16 @@ install_jq() {
 
 # Install Visual Studio Code
 install_vscode() {
+    # On macOS, check for the .app even if 'code' command isn't in PATH
+    if [[ "$OS" == "macos" ]] && [[ -d "/Applications/Visual Studio Code.app" ]]; then
+        echo -e "${GREEN}✓ VS Code already installed${NC}"
+        # Suggest adding 'code' to PATH if not available
+        if ! command_exists code; then
+            echo -e "${YELLOW}  Tip: Add 'code' to PATH via: VS Code > Command Palette > 'Shell Command: Install'${NC}"
+        fi
+        return
+    fi
+    
     if ! command_exists code; then
         echo -e "${YELLOW}Installing Visual Studio Code...${NC}"
         case $OS in
@@ -246,6 +256,9 @@ all_installed=true
 for tool in "${tools[@]}"; do
     if command_exists "$tool"; then
         echo -e "${GREEN}✓ $tool${NC}"
+    # Special case for VS Code on macOS - check for .app even if 'code' not in PATH
+    elif [[ "$tool" == "code" ]] && [[ "$OS" == "macos" ]] && [[ -d "/Applications/Visual Studio Code.app" ]]; then
+        echo -e "${GREEN}✓ $tool (app installed, 'code' CLI not in PATH)${NC}"
     else
         echo -e "${RED}✗ $tool (not installed)${NC}"
         all_installed=false
