@@ -163,9 +163,14 @@ if (Test-Command "git") {
 
 # Install Python
 Write-Host "  Checking Python..." -NoNewline
-if (Test-Command "python") {
+if ((Test-Command "python") -or (Test-Command "python3")) {
     try {
-        $pythonVersion = (python --version 2>&1)
+        # Try python3 first (macOS/Linux), then python (Windows)
+        if (Test-Command "python3") {
+            $pythonVersion = (python3 --version 2>&1)
+        } else {
+            $pythonVersion = (python --version 2>&1)
+        }
         Write-ColorOutput " ✓ $pythonVersion" Green
         $tools["python"] = $true
     } catch {
@@ -181,7 +186,7 @@ if (Test-Command "python") {
     } else {
         Write-ColorOutput "    Please install manually: https://www.python.org/downloads/" Cyan
     }
-    $tools["python"] = Test-Command "python"
+    $tools["python"] = (Test-Command "python") -or (Test-Command "python3")
 }
 
 # Install jq
@@ -209,9 +214,14 @@ if (Test-Command "jq") {
 
 # Install Visual Studio Code
 Write-Host "  Checking VS Code..." -NoNewline
-if (Test-Command "code") {
+# Check for 'code' command OR VS Code app on macOS
+$vscodeInstalled = (Test-Command "code") -or (Test-Path "/Applications/Visual Studio Code.app")
+if ($vscodeInstalled) {
     Write-ColorOutput " ✓ Installed" Green
     $tools["code"] = $true
+    if (-not (Test-Command "code")) {
+        Write-ColorOutput "    Tip: Add 'code' to PATH via: VS Code > Command Palette > 'Shell Command: Install'" Yellow
+    }
 } else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
@@ -269,7 +279,17 @@ $allInstalled = $true
 $toolList = @("az", "azd", "git", "code", "kubectl", "python", "jq", "docker")
 
 foreach ($tool in $toolList) {
-    if ($tools[$tool]) {
+    # Special handling for tools that might be named differently on macOS
+    $isInstalled = $tools[$tool]
+    if (-not $isInstalled) {
+        if ($tool -eq "python") {
+            $isInstalled = (Test-Command "python3")
+        } elseif ($tool -eq "code") {
+            $isInstalled = (Test-Path "/Applications/Visual Studio Code.app")
+        }
+    }
+    
+    if ($isInstalled) {
         Write-ColorOutput "  ✓ $tool" Green
     } else {
         Write-ColorOutput "  ✗ $tool (not installed)" Red
