@@ -697,19 +697,30 @@ EOF
 }
 
 #===============================================================================
-# Lesson 7: Container Registry
+# Lesson 7: Container Services (ACR + AKS)
 #===============================================================================
 
 deploy_lesson_7() {
-    print_section "📦 Lesson 7: Container Services"
+    print_section "📦 Lesson 7: Container Services (ACR + AKS)"
 
     local rg_name=$(create_resource_group 7)
     local suffix=$(generate_unique_suffix)
     local acr_name="acr${ENV_NAME}${suffix}"
+    local aks_name="aks-${ENV_NAME}-${suffix}"
 
     # Ensure ACR name is valid
     acr_name=$(echo "$acr_name" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-50)
 
+    print_warning "This creates AKS (~\$30/month). Proceed? (y/n)"
+    read -r confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        print_warning "Skipping Lesson 7 deployment."
+        return
+    fi
+
+    #---------------------------------------------------------------------------
+    # Step 1: Create Container Registry
+    #---------------------------------------------------------------------------
     print_info "Creating Azure Container Registry: ${acr_name}"
 
     az acr create \
@@ -723,12 +734,11 @@ deploy_lesson_7() {
 
     print_success "Container Registry created: ${acr_name}"
 
-    # Get login credentials
     local login_server=$(az acr show --name "$acr_name" --resource-group "$rg_name" --query loginServer -o tsv)
-    local admin_user=$(az acr credential show --name "$acr_name" --resource-group "$rg_name" --query username -o tsv)
-    local admin_pass=$(az acr credential show --name "$acr_name" --resource-group "$rg_name" --query "passwords[0].value" -o tsv)
 
-    # Build hello-container in ACR (if sample app exists)
+    #---------------------------------------------------------------------------
+    # Step 2: Build hello-container in ACR
+    #---------------------------------------------------------------------------
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local repo_root="$(cd "${script_dir}/../.." && pwd)"
     local hello_app_dir="${repo_root}/lessons/07-container-services/src/hello-container"
@@ -744,17 +754,64 @@ deploy_lesson_7() {
         print_success "Image built: ${login_server}/hello-container:v1"
     fi
 
+    #---------------------------------------------------------------------------
+    # Step 3: Create AKS Cluster
+    #---------------------------------------------------------------------------
+    print_info "Creating AKS Cluster: ${aks_name} (3-5 minutes)..."
+
+    az aks create \
+        --name "$aks_name" \
+        --resource-group "$rg_name" \
+        --location "$LOCATION" \
+        --node-count 1 \
+        --node-vm-size Standard_B2s \
+        --enable-managed-identity \
+        --attach-acr "$acr_name" \
+        --generate-ssh-keys \
+        --tags "course=azure-essentials" "lesson=7" \
+        --output none
+
+    print_success "AKS Cluster created: ${aks_name}"
+
+    #---------------------------------------------------------------------------
+    # Step 4: Get credentials and deploy app
+    #---------------------------------------------------------------------------
+    print_info "Getting AKS credentials..."
+    az aks get-credentials \
+        --name "$aks_name" \
+        --resource-group "$rg_name" \
+        --overwrite-existing
+
+    print_info "Deploying hello-container to AKS..."
+    kubectl create deployment hello-container \
+        --image="${login_server}/hello-container:v1" \
+        --replicas=2
+
+    kubectl expose deployment hello-container \
+        --type=LoadBalancer \
+        --port=80 \
+        --target-port=8080
+
+    print_success "App deployed to AKS!"
+
+    # Wait briefly for external IP
+    print_info "Waiting for external IP..."
+    sleep 30
+    local external_ip=$(kubectl get svc hello-container -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
+
     echo ""
     print_success "Lesson 7 deployment complete!"
     echo ""
     echo -e "${CYAN}Outputs:${NC}"
-    echo "  Registry Name:  ${acr_name}"
+    echo "  Registry:       ${acr_name}"
     echo "  Login Server:   ${login_server}"
-    echo "  Admin User:     ${admin_user}"
-    echo "  Admin Password: ${admin_pass:0:8}..."
-    echo ""
-    echo "  Docker Login:   docker login ${login_server} -u ${admin_user}"
+    echo "  AKS Cluster:    ${aks_name}"
     echo "  Container:      ${login_server}/hello-container:v1"
+    if [[ "$external_ip" != "pending" && -n "$external_ip" ]]; then
+        echo "  App URL:        http://${external_ip}"
+    else
+        echo "  App URL:        (pending - run: kubectl get svc hello-container)"
+    fi
     echo ""
     echo "  Resource Group: ${rg_name}"
 }

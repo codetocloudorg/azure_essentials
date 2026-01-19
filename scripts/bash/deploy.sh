@@ -276,7 +276,7 @@ select_lesson() {
     echo -e "   ${CYAN}4)${NC} Networking Services        ${GREEN}[FREE]${NC}         VNets, subnets, NSGs"
     echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B1s]${NC}  Windows VM + App Service"
     echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B1s]${NC}  Ubuntu VM + MicroK8s"
-    echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$5/mo]${NC}       Azure Container Registry"
+    echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$35/mo]${NC}      ACR + AKS + Hello World"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BOLD}  DAY 2 - ADVANCED SERVICES                                                   ${NC}"
@@ -288,7 +288,7 @@ select_lesson() {
     echo -e "  ${CYAN}12)${NC} Architecture Design        ${GREEN}[NO RESOURCES]${NC} Whiteboard session"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "   ${CYAN}0)${NC} Deploy ALL Resources       ${RED}[ALL QUOTAS]${NC}   Lessons 3-9,11 (RGs)"
+    echo -e "   ${CYAN}0)${NC} Deploy ALL Resources       ${RED}[ALL QUOTAS]${NC}   Lessons 2-9,11"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     echo -e "${MAGENTA}┌─────────────────────────────────────────────────────────────────────────────┐${NC}"
@@ -306,7 +306,7 @@ select_lesson() {
     while true; do
         read -p "Select lesson [0-12]: " lesson_choice
         case $lesson_choice in
-            0) SELECTED_LESSON=""; SSH_REQUIRED=1; WIN_PASSWORD_REQUIRED=1; break;;
+            0) SELECTED_LESSON=""; SSH_REQUIRED=1; WIN_PASSWORD_REQUIRED=1; DEPLOY_ALL=1; break;;
             1) SELECTED_LESSON="01"; NO_RESOURCES=1; break;;
             2) SELECTED_LESSON="02"; MGMT_GROUPS=1; break;;
             3) SELECTED_LESSON="03"; break;;
@@ -435,14 +435,55 @@ deploy_management_groups() {
     echo -e "${CYAN}Deploying Management Groups via Azure CLI...${NC}"
     echo ""
 
-    # Deploy using Azure CLI with tenant scope
-    az deployment tenant create \
-        --name "mg-${ENV_NAME}-$(date +%s)" \
-        --location "$SELECTED_REGION" \
-        --template-file "infra/modules/management-groups.bicep" \
-        --parameters environmentName="$ENV_NAME"
+    local mg_prefix="mg-${ENV_NAME}"
+    local success=true
 
-    if [ $? -eq 0 ]; then
+    # Level 1: Root
+    echo "Creating root: ${mg_prefix}-root"
+    az account management-group create \
+        --name "${mg_prefix}-root" \
+        --display-name "Organization Root" \
+        --output none 2>/dev/null || success=false
+
+    # Level 2: Platform, Workloads, Sandbox
+    echo "Creating second-level groups..."
+    for child in "platform" "workloads" "sandbox"; do
+        az account management-group create \
+            --name "${mg_prefix}-${child}" \
+            --display-name "${child^}" \
+            --parent "${mg_prefix}-root" \
+            --output none 2>/dev/null || true
+        echo "  ✓ ${mg_prefix}-${child}"
+    done
+
+    # Level 3: Platform children
+    echo "Creating Platform children..."
+    for child in "identity" "connectivity" "management"; do
+        az account management-group create \
+            --name "${mg_prefix}-${child}" \
+            --display-name "${child^}" \
+            --parent "${mg_prefix}-platform" \
+            --output none 2>/dev/null || true
+        echo "  ✓ ${mg_prefix}-${child}"
+    done
+
+    # Level 3: Workloads children
+    echo "Creating Workloads children..."
+    az account management-group create \
+        --name "${mg_prefix}-prod" \
+        --display-name "Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "  ✓ ${mg_prefix}-prod"
+
+    az account management-group create \
+        --name "${mg_prefix}-nonprod" \
+        --display-name "Non-Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "  ✓ ${mg_prefix}-nonprod"
+
+    if [ "$success" = true ]; then
         echo ""
         echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo -e "${GREEN}  ✅ Management Groups Created Successfully!${NC}"
@@ -451,8 +492,8 @@ deploy_management_groups() {
         echo "View in Azure Portal:"
         echo "  https://portal.azure.com/#view/Microsoft_Azure_ManagementGroups/ManagementGroupBrowseBlade"
         echo ""
-        echo -e "${YELLOW}To clean up Management Groups:${NC}"
-        echo -e "  ${CYAN}az account management-group delete --name mg-${ENV_NAME}-root --recurse${NC}"
+        echo -e "${YELLOW}To clean up Management Groups (delete in order):${NC}"
+        echo -e "  ${CYAN}scripts/azure-cli/lesson-02-management-groups.sh --cleanup${NC}"
     else
         echo ""
         echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -465,6 +506,89 @@ deploy_management_groups() {
         echo ""
         echo "Request permissions from your Azure AD administrator."
     fi
+}
+
+#===============================================================================
+# MANAGEMENT GROUPS DEPLOYMENT (Silent version for Deploy ALL)
+#===============================================================================
+deploy_management_groups_silent() {
+    echo ""
+    echo -e "${CYAN}Deploying Management Groups via Azure CLI...${NC}"
+    echo ""
+
+    local mg_prefix="mg-${ENV_NAME}"
+
+    # Level 1: Root
+    echo "  Creating root: ${mg_prefix}-root"
+    az account management-group create \
+        --name "${mg_prefix}-root" \
+        --display-name "Organization Root" \
+        --output none 2>/dev/null || true
+
+    # Level 2: Platform, Workloads, Sandbox
+    echo "  Creating second-level groups..."
+    az account management-group create \
+        --name "${mg_prefix}-platform" \
+        --display-name "Platform" \
+        --parent "${mg_prefix}-root" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-platform"
+    
+    az account management-group create \
+        --name "${mg_prefix}-workloads" \
+        --display-name "Workloads" \
+        --parent "${mg_prefix}-root" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-workloads"
+    
+    az account management-group create \
+        --name "${mg_prefix}-sandbox" \
+        --display-name "Sandbox" \
+        --parent "${mg_prefix}-root" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-sandbox"
+
+    # Level 3: Platform children
+    echo "  Creating Platform children..."
+    az account management-group create \
+        --name "${mg_prefix}-identity" \
+        --display-name "Identity" \
+        --parent "${mg_prefix}-platform" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-identity"
+    
+    az account management-group create \
+        --name "${mg_prefix}-connectivity" \
+        --display-name "Connectivity" \
+        --parent "${mg_prefix}-platform" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-connectivity"
+    
+    az account management-group create \
+        --name "${mg_prefix}-management" \
+        --display-name "Management" \
+        --parent "${mg_prefix}-platform" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-management"
+
+    # Level 3: Workloads children
+    echo "  Creating Workloads children..."
+    az account management-group create \
+        --name "${mg_prefix}-prod" \
+        --display-name "Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-prod"
+
+    az account management-group create \
+        --name "${mg_prefix}-nonprod" \
+        --display-name "Non-Production" \
+        --parent "${mg_prefix}-workloads" \
+        --output none 2>/dev/null || true
+    echo "    ✓ ${mg_prefix}-nonprod"
+
+    echo ""
+    echo -e "${GREEN}  ✅ Management Groups created (9 total)${NC}"
 }
 
 #===============================================================================
@@ -637,9 +761,12 @@ confirm_and_deploy() {
     echo -e "  Environment:  ${BOLD}$ENV_NAME${NC}"
     echo -e "  Region:       ${BOLD}$SELECTED_REGION${NC}"
     if [ -z "$SELECTED_LESSON" ]; then
-        echo -e "  Lesson:       ${BOLD}All Lessons (03-09, 11)${NC}"
+        echo -e "  Lesson:       ${BOLD}All Lessons (02-09, 11)${NC}"
         echo ""
-        echo -e "  ${CYAN}Resource groups to be created:${NC}"
+        echo -e "  ${CYAN}Management Groups (via Azure CLI):${NC}"
+        echo "    • 9 management groups in Landing Zone hierarchy"
+        echo ""
+        echo -e "  ${CYAN}Resource groups to be created (via Bicep):${NC}"
         echo "    • rg-$ENV_NAME-lesson03-storage"
         echo "    • rg-$ENV_NAME-lesson04-networking"
         echo "    • rg-$ENV_NAME-lesson05-compute"
@@ -648,8 +775,6 @@ confirm_and_deploy() {
         echo "    • rg-$ENV_NAME-lesson08-serverless"
         echo "    • rg-$ENV_NAME-lesson09-database"
         echo "    • rg-$ENV_NAME-lesson11-ai-foundry"
-        echo ""
-        echo -e "  ${YELLOW}Note: Lesson 02 (Management Groups) must be deployed separately.${NC}"
     elif [ "$SELECTED_LESSON" = "06" ]; then
         echo -e "  Lesson:       ${BOLD}Lesson 06 - Linux & Kubernetes${NC}"
         echo ""
@@ -721,6 +846,14 @@ confirm_and_deploy() {
 
     echo "This may take 5-15 minutes depending on the resources..."
     echo ""
+
+    # Deploy Lesson 2 (Management Groups) via CLI if Deploy ALL
+    if [ "${DEPLOY_ALL:-0}" -eq 1 ]; then
+        echo -e "${CYAN}Step 1/2: Deploying Management Groups via Azure CLI...${NC}"
+        deploy_management_groups_silent
+        echo ""
+        echo -e "${CYAN}Step 2/2: Deploying Lessons 3-9,11 via Bicep...${NC}"
+    fi
 
     azd up
 

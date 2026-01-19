@@ -261,7 +261,7 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "4)" Cyan -NoNewline; Write-Host " Networking Services        " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         VNets, subnets, NSGs"
     Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
     Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
-    Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$5/mo]" Yellow -NoNewline; Write-Host "       Azure Container Registry"
+    Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$35/mo]" Yellow -NoNewline; Write-Host "      ACR + AKS + Hello World"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
     Write-Host "  DAY 2 - ADVANCED SERVICES" -ForegroundColor White
@@ -273,7 +273,7 @@ function Select-Lesson {
     Write-Host "    " -NoNewline; Write-ColorOutput "12)" Cyan -NoNewline; Write-Host " Architecture Design        " -NoNewline; Write-ColorOutput "[NO RESOURCES]" Green -NoNewline; Write-Host " Whiteboard session"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
-    Write-Host "     " -NoNewline; Write-ColorOutput "0)" Cyan -NoNewline; Write-Host " Deploy ALL Resources       " -NoNewline; Write-ColorOutput "[ALL QUOTAS]" Red -NoNewline; Write-Host "   Lessons 3-9,11 (RGs)"
+    Write-Host "     " -NoNewline; Write-ColorOutput "0)" Cyan -NoNewline; Write-Host " Deploy ALL Resources       " -NoNewline; Write-ColorOutput "[ALL QUOTAS]" Red -NoNewline; Write-Host "   Lessons 2-9,11"
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
     Write-Host ""
     Write-ColorOutput "  ┌─────────────────────────────────────────────────────────────────────────────┐" Magenta
@@ -290,7 +290,7 @@ function Select-Lesson {
     while ($true) {
         $choice = Read-Host "  Select lesson [0-12]"
         switch ($choice) {
-            "0" { $script:SelectedLesson = ""; $script:SshRequired = $true; $script:WinPasswordRequired = $true; break }
+            "0" { $script:SelectedLesson = ""; $script:SshRequired = $true; $script:WinPasswordRequired = $true; $script:DeployAll = $true; break }
             "1" { $script:SelectedLesson = "01"; $script:NoResources = $true; break }
             "2" { $script:SelectedLesson = "02"; $script:MgmtGroups = $true; break }
             "3" { $script:SelectedLesson = "03"; break }
@@ -541,19 +541,37 @@ function Deploy-ManagementGroups {
     Write-ColorOutput "  Deploying Management Groups via Azure CLI..." Cyan
     Write-Host ""
 
-    # Get current timestamp for deployment name
-    $timestamp = [DateTimeOffset]::Now.ToUnixTimeSeconds()
-    $deploymentName = "mg-$($script:EnvName)-$timestamp"
+    $mgPrefix = "mg-$($script:EnvName)"
+    $success = $true
 
-    # Deploy using Azure CLI with tenant scope
     try {
-        az deployment tenant create `
-            --name $deploymentName `
-            --location $script:SelectedRegion `
-            --template-file "infra/modules/management-groups.bicep" `
-            --parameters environmentName="$($script:EnvName)"
+        # Level 1: Root
+        Write-Host "  Creating root: $mgPrefix-root"
+        az account management-group create --name "$mgPrefix-root" --display-name "Organization Root" --output none 2>$null
+        if ($LASTEXITCODE -ne 0) { $success = $false }
 
-        if ($LASTEXITCODE -eq 0) {
+        # Level 2: Platform, Workloads, Sandbox
+        Write-Host "  Creating second-level groups..."
+        foreach ($child in @("platform", "workloads", "sandbox")) {
+            az account management-group create --name "$mgPrefix-$child" --display-name ([cultureinfo]::CurrentCulture.TextInfo.ToTitleCase($child)) --parent "$mgPrefix-root" --output none 2>$null
+            Write-Host "    ✓ $mgPrefix-$child"
+        }
+
+        # Level 3: Platform children
+        Write-Host "  Creating Platform children..."
+        foreach ($child in @("identity", "connectivity", "management")) {
+            az account management-group create --name "$mgPrefix-$child" --display-name ([cultureinfo]::CurrentCulture.TextInfo.ToTitleCase($child)) --parent "$mgPrefix-platform" --output none 2>$null
+            Write-Host "    ✓ $mgPrefix-$child"
+        }
+
+        # Level 3: Workloads children
+        Write-Host "  Creating Workloads children..."
+        az account management-group create --name "$mgPrefix-prod" --display-name "Production" --parent "$mgPrefix-workloads" --output none 2>$null
+        Write-Host "    ✓ $mgPrefix-prod"
+        az account management-group create --name "$mgPrefix-nonprod" --display-name "Non-Production" --parent "$mgPrefix-workloads" --output none 2>$null
+        Write-Host "    ✓ $mgPrefix-nonprod"
+
+        if ($success) {
             Write-Host ""
             Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
             Write-ColorOutput "    ✅ Management Groups Created Successfully!" Green
@@ -562,8 +580,8 @@ function Deploy-ManagementGroups {
             Write-Host "  View in Azure Portal:"
             Write-Host "    https://portal.azure.com/#view/Microsoft_Azure_ManagementGroups/ManagementGroupBrowseBlade"
             Write-Host ""
-            Write-ColorOutput "  To clean up Management Groups:" Yellow
-            Write-ColorOutput "    az account management-group delete --name mg-$($script:EnvName)-root --recurse" Cyan
+            Write-ColorOutput "  To clean up Management Groups (delete in order):" Yellow
+            Write-ColorOutput "    scripts/azure-cli/lesson-02-management-groups.sh --cleanup" Cyan
         } else {
             throw "Deployment failed with exit code $LASTEXITCODE"
         }
@@ -581,6 +599,43 @@ function Deploy-ManagementGroups {
     }
 }
 
+# Silent version of Deploy-ManagementGroups for Deploy ALL
+function Deploy-ManagementGroupsSilent {
+    Write-Host ""
+    Write-ColorOutput "  Deploying Management Groups via Azure CLI..." Cyan
+    Write-Host ""
+
+    $mgPrefix = "mg-$($script:EnvName)"
+
+    # Level 1: Root
+    Write-Host "    Creating root: $mgPrefix-root"
+    az account management-group create --name "$mgPrefix-root" --display-name "Organization Root" --output none 2>$null
+
+    # Level 2: Platform, Workloads, Sandbox
+    Write-Host "    Creating second-level groups..."
+    foreach ($child in @("platform", "workloads", "sandbox")) {
+        az account management-group create --name "$mgPrefix-$child" --display-name ([cultureinfo]::CurrentCulture.TextInfo.ToTitleCase($child)) --parent "$mgPrefix-root" --output none 2>$null
+        Write-Host "      ✓ $mgPrefix-$child"
+    }
+
+    # Level 3: Platform children
+    Write-Host "    Creating Platform children..."
+    foreach ($child in @("identity", "connectivity", "management")) {
+        az account management-group create --name "$mgPrefix-$child" --display-name ([cultureinfo]::CurrentCulture.TextInfo.ToTitleCase($child)) --parent "$mgPrefix-platform" --output none 2>$null
+        Write-Host "      ✓ $mgPrefix-$child"
+    }
+
+    # Level 3: Workloads children
+    Write-Host "    Creating Workloads children..."
+    az account management-group create --name "$mgPrefix-prod" --display-name "Production" --parent "$mgPrefix-workloads" --output none 2>$null
+    Write-Host "      ✓ $mgPrefix-prod"
+    az account management-group create --name "$mgPrefix-nonprod" --display-name "Non-Production" --parent "$mgPrefix-workloads" --output none 2>$null
+    Write-Host "      ✓ $mgPrefix-nonprod"
+
+    Write-Host ""
+    Write-ColorOutput "    ✅ Management Groups created (9 total)" Green
+}
+
 function Confirm-AndDeploy {
     Show-Section "🚀 Ready to Deploy"
 
@@ -591,9 +646,12 @@ function Confirm-AndDeploy {
 
     if ([string]::IsNullOrEmpty($script:SelectedLesson)) {
         Write-Host "    Lesson:       " -NoNewline
-        Write-Host "All Lessons" -ForegroundColor White
+        Write-Host "All Lessons (02-09, 11)" -ForegroundColor White
         Write-Host ""
-        Write-ColorOutput "    Resource groups to be created:" Cyan
+        Write-ColorOutput "    Management Groups (via Azure CLI):" Cyan
+        Write-Host "      • 9 management groups in Landing Zone hierarchy"
+        Write-Host ""
+        Write-ColorOutput "    Resource groups to be created (via Bicep):" Cyan
         Write-Host "      • rg-$($script:EnvName)-lesson03-storage"
         Write-Host "      • rg-$($script:EnvName)-lesson04-networking"
         Write-Host "      • rg-$($script:EnvName)-lesson05-compute"
@@ -667,6 +725,14 @@ function Confirm-AndDeploy {
 
     Write-Host "  This may take 5-15 minutes depending on the resources..."
     Write-Host ""
+
+    # Deploy Lesson 2 (Management Groups) via CLI if Deploy ALL
+    if ($script:DeployAll) {
+        Write-ColorOutput "  Step 1/2: Deploying Management Groups via Azure CLI..." Cyan
+        Deploy-ManagementGroupsSilent
+        Write-Host ""
+        Write-ColorOutput "  Step 2/2: Deploying Lessons 3-9,11 via Bicep..." Cyan
+    }
 
     azd up
 
