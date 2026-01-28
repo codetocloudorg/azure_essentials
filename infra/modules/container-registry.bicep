@@ -124,7 +124,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   properties: {
     dnsPrefix: aksName
     kubernetesVersion: '1.33'
-    
+
     agentPoolProfiles: [
       {
         name: 'nodepool1'
@@ -135,7 +135,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
         enableAutoScaling: false
       }
     ]
-    
+
     networkProfile: {
       networkPlugin: 'azure'
       loadBalancerSku: 'standard'

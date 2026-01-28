@@ -2,6 +2,8 @@
 
 This folder contains **pure Azure CLI** scripts for deploying lesson resources. These scripts use native `az` commands instead of Bicep templates or Azure Developer CLI (azd).
 
+📜 **[← Back to Main Scripts Guide](../../SCRIPTS.md)** — Overview of all scripts and deployment options
+
 ## Why Use These Scripts?
 
 1. **Learn the Commands** - See exactly what Azure CLI commands create each resource
@@ -36,18 +38,18 @@ If you don't have Azure CLI installed locally, use [Azure Cloud Shell](https://s
 
 ## Available Scripts
 
-| Script | Description | Resources Created | Copy-Paste |
-|--------|-------------|-------------------|------------|
-| `deploy.sh` | Interactive menu to deploy any lesson | All lessons | - |
-| `lesson-02-management-groups.sh` | Management group hierarchy | Management Groups | [📋](commands/lesson-02-management-groups.md) |
-| `lesson-03-storage.sh` | Storage account with containers | Storage Account, Blobs, Queues, Tables | [📋](commands/lesson-03-storage.md) |
-| `lesson-04-networking.sh` | Virtual network with subnets | VNet, Subnets, NSG | [📋](commands/lesson-04-networking.md) |
-| `lesson-05-compute-windows.sh` | Windows VM and App Service | Windows Server 2022, Web App | [📋](commands/lesson-05-compute-windows.md) |
-| `lesson-06-compute-linux.sh` | Linux VM with MicroK8s | Ubuntu 24.04, Kubernetes | [📋](commands/lesson-06-compute-linux.md) |
-| `lesson-07-containers.sh` | Container registry | Azure Container Registry | [📋](commands/lesson-07-containers.md) |
-| `lesson-08-serverless.sh` | Function app | Azure Functions (Python) | [📋](commands/lesson-08-serverless.md) |
-| `lesson-09-databases.sh` | Cosmos DB | Cosmos DB (Serverless) | [📋](commands/lesson-09-databases.md) |
-| `lesson-11-ai-foundry.sh` | AI services | Azure OpenAI / Cognitive Services | [📋](commands/lesson-11-ai-foundry.md) |
+| Script                           | Description                           | Resources Created                      | Copy-Paste                                    |
+| -------------------------------- | ------------------------------------- | -------------------------------------- | --------------------------------------------- |
+| `deploy.sh`                      | Interactive menu to deploy any lesson | All lessons                            | -                                             |
+| `lesson-02-management-groups.sh` | Management group hierarchy            | Management Groups                      | [📋](commands/lesson-02-management-groups.md) |
+| `lesson-03-storage.sh`           | Storage account with containers       | Storage Account, Blobs, Queues, Tables | [📋](commands/lesson-03-storage.md)           |
+| `lesson-04-networking.sh`        | Virtual network with subnets          | VNet, Subnets, NSG                     | [📋](commands/lesson-04-networking.md)        |
+| `lesson-05-compute-windows.sh`   | Windows VM and App Service            | Windows Server 2022, Web App           | [📋](commands/lesson-05-compute-windows.md)   |
+| `lesson-06-compute-linux.sh`     | Linux VM with MicroK8s                | Ubuntu 24.04, Kubernetes               | [📋](commands/lesson-06-compute-linux.md)     |
+| `lesson-07-containers.sh`        | Container registry                    | Azure Container Registry               | [📋](commands/lesson-07-containers.md)        |
+| `lesson-08-serverless.sh`        | Function app                          | Azure Functions (Python)               | [📋](commands/lesson-08-serverless.md)        |
+| `lesson-09-databases.sh`         | Cosmos DB                             | Cosmos DB (Serverless)                 | [📋](commands/lesson-09-databases.md)         |
+| `lesson-11-ai-foundry.sh`        | AI services                           | Azure OpenAI / Cognitive Services      | [📋](commands/lesson-11-ai-foundry.md)        |
 
 ## Usage
 
@@ -129,13 +131,13 @@ To avoid charges, clean up resources when done:
 
 ## Comparison with Other Scripts
 
-| Feature | azure-cli/ | bash/ (azd) | powershell/ (azd) |
-|---------|------------|-------------|-------------------|
-| Deployment Method | Native `az` commands | Azure Developer CLI | Azure Developer CLI |
-| Templates | None (imperative) | Bicep (declarative) | Bicep (declarative) |
-| Best For | Learning CLI commands | Production deployments | Windows users |
-| Cloud Shell | ✅ Yes | ⚠️ Requires azd install | ❌ No |
-| Dependencies | Azure CLI only | azd + Bicep | azd + Bicep + PowerShell |
+| Feature           | azure-cli/            | bash/ (azd)             | powershell/ (azd)        |
+| ----------------- | --------------------- | ----------------------- | ------------------------ |
+| Deployment Method | Native `az` commands  | Azure Developer CLI     | Azure Developer CLI      |
+| Templates         | None (imperative)     | Bicep (declarative)     | Bicep (declarative)      |
+| Best For          | Learning CLI commands | Production deployments  | Windows users            |
+| Cloud Shell       | ✅ Yes                | ⚠️ Requires azd install | ❌ No                    |
+| Dependencies      | Azure CLI only        | azd + Bicep             | azd + Bicep + PowerShell |
 
 ## Troubleshooting
 

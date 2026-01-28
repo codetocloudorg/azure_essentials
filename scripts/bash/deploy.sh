@@ -12,6 +12,51 @@
 #   - Region selection (optimized for free tier availability)
 #   - Lesson selection and deployment
 #
+# HOW DEPLOYMENT WORKS (THE TECHNOLOGY STACK):
+#
+#   ┌─────────────────────────────────────────────────────────────────────────┐
+#   │  1. YOU RUN THIS SCRIPT (deploy.sh)                                     │
+#   │     └─> Collects: environment name, region, lesson choice               │
+#   │                                                                         │
+#   │  2. AZURE DEVELOPER CLI (azd)                                           │
+#   │     └─> Reads: azure.yaml (project definition)                          │
+#   │     └─> Initializes: environment variables and parameters               │
+#   │     └─> Orchestrates: the entire deployment process                     │
+#   │                                                                         │
+#   │  3. BICEP COMPILER                                                      │
+#   │     └─> Input: /infra/main.bicep (Infrastructure as Code)               │
+#   │     └─> Output: ARM JSON template (Azure Resource Manager format)       │
+#   │     └─> Modules: /infra/modules/*.bicep (reusable components)           │
+#   │                                                                         │
+#   │  4. AZURE RESOURCE MANAGER (ARM)                                        │
+#   │     └─> Receives: Compiled JSON template + parameters                   │
+#   │     └─> Validates: Template syntax and resource availability            │
+#   │     └─> Creates: Azure resources in your subscription                   │
+#   │                                                                         │
+#   │  5. AZURE RESOURCES                                                     │
+#   │     └─> Resource groups, VMs, storage, networking, etc.                 │
+#   │     └─> All tagged and organized by lesson                              │
+#   └─────────────────────────────────────────────────────────────────────────┘
+#
+# KEY TECHNOLOGIES EXPLAINED:
+#
+#   BICEP:
+#     - Azure's domain-specific language for Infrastructure as Code (IaC)
+#     - Cleaner syntax than ARM JSON templates
+#     - Files located in: /infra/main.bicep and /infra/modules/*.bicep
+#     - Example: resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01'
+#
+#   AZURE DEVELOPER CLI (azd):
+#     - High-level deployment orchestrator
+#     - Commands: azd init, azd up, azd down
+#     - Configuration: azure.yaml at project root
+#     - Manages: infrastructure + application code together
+#
+#   ARM (Azure Resource Manager):
+#     - Azure's deployment and management service
+#     - All Azure operations go through ARM
+#     - Provides: RBAC, tagging, resource organization
+#
 # DESIGNED FOR:
 #   - macOS and Linux environments
 #   - Windows users with Git Bash or WSL
@@ -46,16 +91,25 @@ set -e
 #===============================================================================
 # COLOR DEFINITIONS - For visual clarity during live training
 #===============================================================================
-# Using ANSI escape codes for cross-platform terminal compatibility
-# These make the output scannable and help learners follow along
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color (reset)
+# Using ANSI escape codes for cross-platform terminal compatibility.
+# These make the output scannable and help learners follow along.
+#
+# HOW ANSI COLORS WORK:
+#   - \033[ is the escape sequence that tells the terminal "color command coming"
+#   - The number defines the color (31=red, 32=green, 33=yellow, etc.)
+#   - 'm' ends the color code
+#   - \033[0m resets to default (no color)
+#
+# Example: echo -e "${RED}Error!${NC}" prints "Error!" in red, then resets
+#===============================================================================
+RED='\033[0;31m'      # Errors, failures, warnings
+GREEN='\033[0;32m'    # Success, completion, checkmarks
+YELLOW='\033[1;33m'   # Cautions, important notes
+BLUE='\033[0;34m'     # Links, informational
+CYAN='\033[0;36m'     # Commands, technical details
+MAGENTA='\033[0;35m'  # Highlights, special callouts
+BOLD='\033[1m'        # Emphasis (works with colors too)
+NC='\033[0m'          # No Color (reset to terminal default)
 
 #===============================================================================
 # BANNER FUNCTION - Creates visual separation for live training
@@ -198,38 +252,392 @@ check_prerequisites() {
 
         echo ""
         echo -e "${GREEN}✓ Azure Developer CLI login successful!${NC}"
-
-        # Show current subscription
-        local account=$(az account show --query name -o tsv 2>/dev/null)
-        echo ""
-        echo -e "Signed in to: ${BOLD}$account${NC}"
     fi
+}
+
+#===============================================================================
+# SUBSCRIPTION SELECTION - Choose which Azure subscription to use
+#===============================================================================
+# WHAT IS AN AZURE SUBSCRIPTION?
+#   A subscription is a billing and access boundary in Azure.
+#   All resources are created within a subscription, and costs are billed
+#   to the subscription.
+#
+# WHY SUBSCRIPTION SELECTION MATTERS:
+#   - Many users have multiple subscriptions (personal, work, trial, etc.)
+#   - Deploying to the wrong subscription can cause billing surprises
+#   - Some subscriptions have quotas/restrictions (free tier limits)
+#   - RBAC permissions differ between subscriptions
+#
+# SUBSCRIPTION TYPES YOU MIGHT SEE:
+#   - Free Trial: $200 credit for 30 days, limited quotas
+#   - Pay-As-You-Go: Standard billing, no commitment
+#   - Visual Studio: Monthly credits for MSDN subscribers
+#   - Enterprise Agreement: Corporate/volume licensing
+#   - Azure for Students: $100 credit, no credit card required
+#
+# TRAINER TIP: This is a good time to discuss:
+#   - How to check remaining credits (Cost Management)
+#   - Subscription vs Resource Group vs Resource hierarchy
+#   - How to request quota increases
+#===============================================================================
+select_subscription() {
+    print_section "💳 Select Azure Subscription"
+
+    echo -e "${CYAN}WHAT IS A SUBSCRIPTION?${NC}"
+    echo "  A subscription is your billing account in Azure."
+    echo "  All resources you create will be billed to this subscription."
+    echo ""
+
+    # Get list of subscriptions
+    echo -e "${CYAN}Fetching your Azure subscriptions...${NC}"
+    echo ""
+
+    # Store subscriptions in an array
+    local subs
+    subs=$(az account list --query "[].{name:name, id:id, state:state, isDefault:isDefault}" -o json 2>/dev/null)
+
+    if [ -z "$subs" ] || [ "$subs" = "[]" ]; then
+        echo -e "${RED}No subscriptions found.${NC}"
+        echo "Please ensure you have access to at least one Azure subscription."
+        echo ""
+        echo "If you need a subscription:"
+        echo "  • Free Trial: https://azure.microsoft.com/free/"
+        echo "  • Azure for Students: https://azure.microsoft.com/free/students/"
+        exit 1
+    fi
+
+    # Count subscriptions
+    local sub_count
+    sub_count=$(echo "$subs" | jq 'length')
+
+    if [ "$sub_count" -eq 1 ]; then
+        # Only one subscription, use it automatically
+        local sub_name
+        local sub_id
+        sub_name=$(echo "$subs" | jq -r '.[0].name')
+        sub_id=$(echo "$subs" | jq -r '.[0].id')
+
+        echo -e "  ${GREEN}✓${NC} Found 1 subscription: ${BOLD}$sub_name${NC}"
+        echo ""
+        SELECTED_SUBSCRIPTION_ID="$sub_id"
+        SELECTED_SUBSCRIPTION_NAME="$sub_name"
+    else
+        # Multiple subscriptions, let user choose
+        echo -e "  Found ${BOLD}$sub_count${NC} subscriptions:"
+        echo ""
+
+        # Display subscriptions with numbers
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        printf "  ${BOLD}%-3s %-45s %-10s${NC}\n" "#" "SUBSCRIPTION NAME" "STATE"
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+        local i=1
+        while IFS= read -r sub; do
+            local name=$(echo "$sub" | jq -r '.name')
+            local state=$(echo "$sub" | jq -r '.state')
+            local is_default=$(echo "$sub" | jq -r '.isDefault')
+
+            local default_marker=""
+            if [ "$is_default" = "true" ]; then
+                default_marker=" ${GREEN}(current)${NC}"
+            fi
+
+            if [ "$state" = "Enabled" ]; then
+                printf "  ${CYAN}%-3s${NC} %-45s ${GREEN}%-10s${NC}%b\n" "$i)" "$name" "$state" "$default_marker"
+            else
+                printf "  ${CYAN}%-3s${NC} %-45s ${YELLOW}%-10s${NC}\n" "$i)" "$name" "$state"
+            fi
+            ((i++))
+        done < <(echo "$subs" | jq -c '.[]')
+
+        echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+
+        # Get default subscription number for suggestion
+        local default_num=1
+        i=1
+        while IFS= read -r sub; do
+            local is_default=$(echo "$sub" | jq -r '.isDefault')
+            if [ "$is_default" = "true" ]; then
+                default_num=$i
+                break
+            fi
+            ((i++))
+        done < <(echo "$subs" | jq -c '.[]')
+
+        while true; do
+            read -p "Select subscription [1-$sub_count] (default: $default_num): " sub_choice
+
+            # Use default if empty
+            if [ -z "$sub_choice" ]; then
+                sub_choice=$default_num
+            fi
+
+            # Validate input
+            if [[ "$sub_choice" =~ ^[0-9]+$ ]] && [ "$sub_choice" -ge 1 ] && [ "$sub_choice" -le "$sub_count" ]; then
+                # Get the selected subscription (0-indexed)
+                local idx=$((sub_choice - 1))
+                SELECTED_SUBSCRIPTION_ID=$(echo "$subs" | jq -r ".[$idx].id")
+                SELECTED_SUBSCRIPTION_NAME=$(echo "$subs" | jq -r ".[$idx].name")
+                break
+            else
+                echo -e "${RED}Invalid choice. Please enter a number between 1 and $sub_count.${NC}"
+            fi
+        done
+    fi
+
+    # Set the subscription as active
+    echo ""
+    echo -e "${CYAN}Setting active subscription...${NC}"
+    az account set --subscription "$SELECTED_SUBSCRIPTION_ID"
+
+    echo ""
+    echo -e "${GREEN}✓ Using subscription: ${BOLD}$SELECTED_SUBSCRIPTION_NAME${NC}"
+    echo -e "  ${CYAN}ID:${NC} ${SELECTED_SUBSCRIPTION_ID:0:8}..."
+}
+
+#===============================================================================
+# PREFLIGHT CHECKS - Validate Azure readiness before deployment
+#===============================================================================
+# WHAT ARE PREFLIGHT CHECKS?
+#   These are validation steps that run BEFORE we attempt deployment.
+#   They catch common issues early, saving time and avoiding partial failures.
+#
+# WHAT WE CHECK:
+#   1. Subscription state (is it enabled/active?)
+#   2. Resource provider registration (are required services enabled?)
+#   3. Quota availability (do we have enough vCPU quota?)
+#   4. RBAC permissions (can we create resources?)
+#
+# WHY PREFLIGHT CHECKS MATTER:
+#   - Failing after 10 minutes of deployment is frustrating
+#   - Better to catch issues upfront with clear error messages
+#   - Helps learners understand Azure's prerequisite requirements
+#
+# COMMON ISSUES DETECTED:
+#   - "Microsoft.Compute not registered" → Need to register provider
+#   - "QuotaExceeded" → Need to request quota increase
+#   - "AuthorizationFailed" → Need Contributor role on subscription
+#===============================================================================
+run_preflight_checks() {
+    print_section "🔍 Running Preflight Checks"
+
+    echo -e "${CYAN}WHAT ARE PREFLIGHT CHECKS?${NC}"
+    echo "  Validation steps that catch issues BEFORE deployment starts."
+    echo "  This saves time by detecting problems early."
+    echo ""
+
+    local checks_passed=true
+    local warnings=0
+
+    #---------------------------------------------------------------------------
+    # Check 1: Subscription State
+    #---------------------------------------------------------------------------
+    echo -e "${BOLD}1. Subscription Status${NC}"
+    local sub_state
+    sub_state=$(az account show --query state -o tsv 2>/dev/null)
+
+    if [ "$sub_state" = "Enabled" ]; then
+        echo -e "   ${GREEN}✓${NC} Subscription is active and enabled"
+    else
+        echo -e "   ${RED}✗${NC} Subscription state: $sub_state"
+        echo -e "     ${CYAN}Your subscription may be suspended or disabled.${NC}"
+        echo -e "     ${CYAN}Check: https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade${NC}"
+        checks_passed=false
+    fi
+
+    #---------------------------------------------------------------------------
+    # Check 2: Resource Providers
+    #---------------------------------------------------------------------------
+    echo ""
+    echo -e "${BOLD}2. Resource Provider Registration${NC}"
+    echo -e "   ${CYAN}(Azure services must be registered before use)${NC}"
+
+    local providers=("Microsoft.Compute" "Microsoft.Storage" "Microsoft.Network" "Microsoft.Web" "Microsoft.ContainerRegistry")
+
+    for provider in "${providers[@]}"; do
+        local state
+        state=$(az provider show --namespace "$provider" --query registrationState -o tsv 2>/dev/null)
+
+        if [ "$state" = "Registered" ]; then
+            echo -e "   ${GREEN}✓${NC} $provider"
+        elif [ "$state" = "Registering" ]; then
+            echo -e "   ${YELLOW}○${NC} $provider (registering, may take a few minutes)"
+            ((warnings++))
+        else
+            echo -e "   ${YELLOW}○${NC} $provider - ${state:-Not found}"
+            echo -e "     ${CYAN}Registering automatically...${NC}"
+            az provider register --namespace "$provider" --wait 2>/dev/null &
+            ((warnings++))
+        fi
+    done
+
+    #---------------------------------------------------------------------------
+    # Check 3: Quota Check (for VM-based lessons)
+    #---------------------------------------------------------------------------
+    echo ""
+    echo -e "${BOLD}3. Compute Quota Check${NC}"
+    echo -e "   ${CYAN}(Checking if you have vCPU quota for VMs)${NC}"
+
+    # Check B-series quota (used by our VMs)
+    local quota_info
+    quota_info=$(az vm list-usage --location "$SELECTED_REGION" --query "[?contains(name.value, 'standardBSFamily')].{current:currentValue, limit:limit}" -o json 2>/dev/null)
+
+    if [ -n "$quota_info" ] && [ "$quota_info" != "[]" ]; then
+        local current=$(echo "$quota_info" | jq -r '.[0].current // 0')
+        local limit=$(echo "$quota_info" | jq -r '.[0].limit // 0')
+        local available=$((limit - current))
+
+        if [ "$limit" -eq 0 ]; then
+            echo -e "   ${YELLOW}⚠${NC} B-series vCPU quota: $current/$limit used (${RED}no quota${NC})"
+            echo -e "     ${CYAN}Lessons 5 & 6 (VMs) may fail without quota.${NC}"
+            echo -e "     ${CYAN}Request quota: https://aka.ms/azurequotarequest${NC}"
+            ((warnings++))
+        elif [ "$available" -lt 2 ]; then
+            echo -e "   ${YELLOW}⚠${NC} B-series vCPU quota: $current/$limit used (${YELLOW}$available available${NC})"
+            echo -e "     ${CYAN}You may not have enough quota for VM lessons.${NC}"
+            ((warnings++))
+        else
+            echo -e "   ${GREEN}✓${NC} B-series vCPU quota: $current/$limit used (${GREEN}$available available${NC})"
+        fi
+    else
+        echo -e "   ${YELLOW}○${NC} Could not check quota (may need permissions)"
+        ((warnings++))
+    fi
+
+    #---------------------------------------------------------------------------
+    # Check 4: RBAC Permissions
+    #---------------------------------------------------------------------------
+    echo ""
+    echo -e "${BOLD}4. Permissions Check${NC}"
+    echo -e "   ${CYAN}(Checking if you can create resources)${NC}"
+
+    # Try to get role assignments for current user
+    local user_id
+    user_id=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
+
+    if [ -n "$user_id" ]; then
+        local roles
+        roles=$(az role assignment list --assignee "$user_id" --query "[].roleDefinitionName" -o tsv 2>/dev/null | head -5)
+
+        if [ -n "$roles" ]; then
+            if echo "$roles" | grep -qiE "(owner|contributor)"; then
+                echo -e "   ${GREEN}✓${NC} You have Owner/Contributor access"
+            else
+                echo -e "   ${YELLOW}⚠${NC} Found roles: $(echo $roles | tr '\n' ', ')"
+                echo -e "     ${CYAN}You may need Contributor role to deploy resources.${NC}"
+                ((warnings++))
+            fi
+        else
+            echo -e "   ${YELLOW}○${NC} Could not determine role assignments"
+            ((warnings++))
+        fi
+    else
+        echo -e "   ${YELLOW}○${NC} Could not check permissions (Azure AD access needed)"
+        ((warnings++))
+    fi
+
+    #---------------------------------------------------------------------------
+    # Check 5: Region Availability
+    #---------------------------------------------------------------------------
+    echo ""
+    echo -e "${BOLD}5. Region Availability${NC}"
+    echo -e "   ${CYAN}(Checking if selected region is accessible)${NC}"
+
+    local region_available
+    region_available=$(az account list-locations --query "[?name=='$SELECTED_REGION'].name" -o tsv 2>/dev/null)
+
+    if [ -n "$region_available" ]; then
+        echo -e "   ${GREEN}✓${NC} Region '$SELECTED_REGION' is available"
+    else
+        echo -e "   ${RED}✗${NC} Region '$SELECTED_REGION' is not available"
+        echo -e "     ${CYAN}This region may not be enabled for your subscription.${NC}"
+        checks_passed=false
+    fi
+
+    #---------------------------------------------------------------------------
+    # Summary
+    #---------------------------------------------------------------------------
+    echo ""
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    if [ "$checks_passed" = false ]; then
+        echo -e "${RED}  ✗ Preflight checks failed${NC}"
+        echo ""
+        echo "  Please address the issues above before continuing."
+        echo "  Some resources may not deploy correctly."
+        echo ""
+        read -p "  Continue anyway? (y/n): " continue_anyway
+        if [ "$continue_anyway" != "y" ] && [ "$continue_anyway" != "Y" ]; then
+            echo ""
+            echo -e "${YELLOW}Deployment cancelled. Please fix the issues and try again.${NC}"
+            exit 1
+        fi
+    elif [ "$warnings" -gt 0 ]; then
+        echo -e "${YELLOW}  ⚠ Preflight checks passed with $warnings warning(s)${NC}"
+        echo ""
+        echo "  Some checks had warnings. Deployment should work, but"
+        echo "  certain lessons (especially VMs) may have issues."
+        echo ""
+        read -p "  Continue with deployment? (y/n) [y]: " continue_deploy
+        if [ "$continue_deploy" = "n" ] || [ "$continue_deploy" = "N" ]; then
+            echo ""
+            echo -e "${YELLOW}Deployment cancelled.${NC}"
+            exit 0
+        fi
+    else
+        echo -e "${GREEN}  ✓ All preflight checks passed!${NC}"
+    fi
+
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
 #===============================================================================
 # REGION SELECTION - Choose Azure datacenter location
 #===============================================================================
-# TRAINER TIP: Explain region selection factors:
-#   - Latency: Closer regions = faster response times
-#   - Compliance: Some data must stay in specific regions
-#   - Pricing: Some regions are cheaper than others
-#   - Availability: Not all services available in all regions
+# WHAT IS AN AZURE REGION?
+#   An Azure region is a set of datacenters deployed within a specific
+#   geographic area. Azure has 60+ regions worldwide.
 #
-# These regions are optimized for:
-#   - Azure Free Account compatibility
-#   - VM quota availability (common issue with new accounts)
-#   - Service availability for all lessons
+# WHY REGION MATTERS:
+#   1. LATENCY: Closer regions = faster response times for your users
+#   2. COMPLIANCE: Some data must stay in specific countries/regions (GDPR, etc.)
+#   3. PRICING: Some regions are 10-20% cheaper than others
+#   4. AVAILABILITY: Not all services available in all regions
+#   5. CAPACITY: New accounts may have quota limits in popular regions
+#
+# AZURE REGION PAIRS:
+#   Each region is paired with another 300+ miles away for disaster recovery.
+#   Example: East US <-> West US, North Europe <-> West Europe
+#
+# FREE ACCOUNT CONSIDERATIONS:
+#   - Some regions have better VM quota availability
+#   - East US/East US 2 typically have the most capacity
+#   - If deployment fails with "quota" error, try a different region
+#
+# TRAINER TIP: This is a good time to discuss:
+#   - How to check service availability by region
+#   - Latency testing with Azure Speed Test
+#   - Cost differences between regions
+#===============================================================================
 select_region() {
     print_section "🌍 Select Azure Region"
 
-    echo -e "These regions have the ${GREEN}best capacity${NC} for Azure free accounts:"
+    echo -e "${CYAN}WHAT IS A REGION?${NC}"
+    echo "  An Azure region is a set of datacenters in a geographic area."
+    echo "  Your resources will be physically located in these datacenters."
     echo ""
-    echo -e "  ${BOLD}North America (Recommended):${NC}"
-    echo -e "    1) ${CYAN}East US${NC}          - Virginia (Largest Azure region)"
-    echo -e "    2) ${CYAN}East US 2${NC}        - Virginia (High availability)"
-    echo -e "    3) ${CYAN}West US 2${NC}        - Washington"
-    echo -e "    4) ${CYAN}Central US${NC}       - Iowa ${GREEN}(Best for Cosmos DB)${NC}"
-    echo -e "    5) ${CYAN}Canada Central${NC}   - Toronto"
+    echo -e "${CYAN}WHY THESE REGIONS?${NC}"
+    echo "  These regions have the best capacity for Azure free/trial accounts."
+    echo "  They're less likely to have quota issues for VMs and other resources."
+    echo ""
+    echo -e "  ${BOLD}North America (Recommended for training):${NC}"
+    echo -e "    1) ${CYAN}East US${NC}          - Virginia (Largest Azure region, most services)"
+    echo -e "    2) ${CYAN}East US 2${NC}        - Virginia (High availability, paired with Central US)"
+    echo -e "    3) ${CYAN}West US 2${NC}        - Washington (Good for West Coast latency)"
+    echo -e "    4) ${CYAN}Central US${NC}       - Iowa ${GREEN}(Best for Cosmos DB free tier)${NC}"
+    echo -e "    5) ${CYAN}Canada Central${NC}   - Toronto (Data residency in Canada)"
     echo ""
 
     while true; do
@@ -257,14 +665,76 @@ select_region() {
 #   - Clean up individual lessons without affecting others
 #   - Demonstrate resource group isolation and organization
 #
-# COST GUIDE:
-#   FREE     = Works with free tier, no quota needed
-#   QUOTA    = Requires compute quota (vCPU allocation)
-#   $$$      = Incurs costs even on free account
+# WHAT GETS DEPLOYED (INFRASTRUCTURE OVERVIEW):
+#
+#   LESSON 02 - MANAGEMENT GROUPS:
+#     Resources: 9 Management Groups in hierarchy
+#     Why: Demonstrates governance at scale, how enterprises organize subscriptions
+#     Bicep: Uses targetScope = 'managementGroup' (not subscription)
+#
+#   LESSON 03 - STORAGE SERVICES:
+#     Resources: Storage Account with Blob containers, File shares, Queues, Tables
+#     Why: Storage is foundational - nearly every Azure solution needs it
+#     Bicep: /infra/modules/storage.bicep
+#     Cost: FREE (within free tier limits: 5GB blob, 5GB file)
+#
+#   LESSON 04 - NETWORKING:
+#     Resources: Virtual Network, Subnets, Network Security Groups (NSG)
+#     Why: Networking is the backbone - VMs, databases, apps all need VNets
+#     Bicep: /infra/modules/networking.bicep
+#     Cost: FREE (VNets and NSGs have no charge, only data transfer)
+#
+#   LESSON 05 - COMPUTE (WINDOWS):
+#     Resources: Windows Server VM, IIS, ASP.NET runtime, Public IP
+#     Why: Shows traditional Windows workloads running in Azure IaaS
+#     Bicep: /infra/modules/compute-windows.bicep
+#     Cost: ~$15/month (B1s VM), FREE if you have $200 credits
+#
+#   LESSON 06 - COMPUTE (LINUX + KUBERNETES):
+#     Resources: Ubuntu VM with MicroK8s pre-installed via cloud-init
+#     Why: Demonstrates Linux VMs and intro to Kubernetes concepts
+#     Bicep: /infra/modules/linux-microk8s.bicep
+#     Cost: ~$10/month (B1s VM)
+#
+#   LESSON 07 - CONTAINER SERVICES:
+#     Resources: Azure Container Registry (ACR), container images
+#     Why: Shows container workflow - build, store, deploy
+#     Bicep: /infra/modules/container-registry.bicep
+#     Cost: ~$5/month (Basic ACR tier)
+#
+#   LESSON 08 - SERVERLESS:
+#     Resources: Azure Functions (Consumption Plan), Storage Account
+#     Why: Event-driven computing, pay-per-execution model
+#     Bicep: /infra/modules/functions.bicep
+#     Cost: FREE (1M executions/month free)
+#
+#   LESSON 09 - DATABASE SERVICES:
+#     Resources: Cosmos DB (Serverless), Database, Container
+#     Why: NoSQL, globally distributed, multi-model database
+#     Bicep: /infra/modules/cosmosdb.bicep
+#     Cost: Pay-per-request (very low for demos)
+#
+#   LESSON 11 - AI FOUNDRY:
+#     Resources: Azure OpenAI, AI Hub, Model deployments
+#     Why: Shows Azure's AI capabilities and GPT integration
+#     Bicep: /infra/modules/ai-foundry.bicep
+#     Cost: $1-5/day depending on usage
+#
+# COST GUIDE LEGEND:
+#   FREE  = Works with free tier, no quota needed
+#   QUOTA = Requires compute quota (vCPU allocation)
+#   $$$   = Incurs costs even on free account
+#===============================================================================
 select_lesson() {
     print_section "📚 Select Lesson to Deploy"
 
-    echo -e "Each lesson deploys to its ${CYAN}own resource group${NC} for clarity."
+    echo -e "${CYAN}HOW DEPLOYMENT WORKS:${NC}"
+    echo "  1. You select a lesson below"
+    echo "  2. Bicep files in /infra/modules/ define the Azure resources"
+    echo "  3. azd compiles Bicep → ARM template → deploys to Azure"
+    echo "  4. Resources appear in a dedicated resource group"
+    echo ""
+    echo -e "Each lesson deploys to its ${CYAN}own resource group${NC} for easy cleanup."
     echo -e "Lessons 1, 10, 12 are ${GREEN}portal/CLI demos${NC} - no Azure resources needed."
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -368,13 +838,38 @@ select_lesson() {
 # The environment name becomes part of all resource names.
 # This enables multiple learners to deploy simultaneously without conflicts.
 #
-# NAMING CONVENTION: {env-name}-lesson{XX}-{resource-type}
-# Example: azlearn-john-lesson03-storage
+# AZURE NAMING CONVENTIONS (BEST PRACTICES):
+#   - Use consistent prefixes: rg- (resource group), st (storage), vm- (VM)
+#   - Include environment: dev, test, prod
+#   - Include region abbreviation: eus (East US), wus (West US)
+#   - Keep names short but descriptive
+#
+# THIS COURSE USES:
+#   Resource Group: rg-{env-name}-lesson{XX}-{purpose}
+#   Example: rg-azlearn-john-lesson03-storage
+#
+# WHY NAMING MATTERS:
+#   - Easy to identify resources in Azure Portal
+#   - Enables filtering and searching
+#   - Supports cost allocation and billing reports
+#   - Required for automation scripts
+#
+# RESTRICTIONS:
+#   - Storage accounts: 3-24 chars, lowercase letters and numbers only
+#   - Resource groups: 1-90 chars, alphanumeric, underscores, hyphens
+#   - Most resources: 1-63 chars, alphanumeric and hyphens
+#===============================================================================
 get_environment_name() {
     print_section "🏷️  Environment Name"
 
-    echo "Enter a unique name for your environment."
-    echo "This will be used in resource group names (e.g., rg-{name}-lesson03-storage)"
+    echo -e "${CYAN}WHAT IS AN ENVIRONMENT NAME?${NC}"
+    echo "  A unique prefix used to name all your Azure resources."
+    echo "  This prevents naming conflicts if multiple learners deploy."
+    echo ""
+    echo -e "${CYAN}HOW IT'S USED:${NC}"
+    echo "  Resource Group: rg-{name}-lesson03-storage"
+    echo "  Storage Account: st{name}lesson03"
+    echo "  Virtual Machine: vm-{name}-win-01"
     echo ""
 
     local default_name="azlearn-$(whoami | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g' | cut -c1-8)"
@@ -383,46 +878,67 @@ get_environment_name() {
     if [ -z "$env_name" ]; then
         ENV_NAME="$default_name"
     else
+        # Sanitize: lowercase, remove special chars except hyphens
         ENV_NAME=$(echo "$env_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]//g')
     fi
 
     echo ""
     echo -e "${GREEN}Environment name: ${BOLD}$ENV_NAME${NC}"
+    echo -e "${CYAN}Your resources will be named like: rg-$ENV_NAME-lesson03-storage${NC}"
 }
 
 #===============================================================================
 # MANAGEMENT GROUPS DEPLOYMENT (Lesson 02)
 #===============================================================================
-# Management Groups provide a governance hierarchy above subscriptions.
-# This creates an Azure Landing Zone style structure:
+# WHAT ARE MANAGEMENT GROUPS?
+#   Management Groups provide a governance hierarchy above subscriptions.
+#   They enable you to organize subscriptions and apply policies at scale.
 #
-#   Root Management Group
-#   ├── Platform (shared services)
+# WHY MANAGEMENT GROUPS MATTER:
+#   - Enterprise Governance: Apply policies to multiple subscriptions at once
+#   - Cost Management: Aggregate costs across subscriptions
+#   - Access Control: Assign RBAC at management group level
+#   - Compliance: Enforce standards across the organization
+#
+# THE AZURE LANDING ZONE PATTERN:
+#   This is Microsoft's recommended structure for enterprise Azure:
+#
+#   Root Management Group (Tenant Root Group)
+#   ├── Platform (shared infrastructure)
 #   │   ├── Identity (Azure AD, access control)
-#   │   ├── Connectivity (hub networking)
+#   │   ├── Connectivity (hub networking, DNS)
 #   │   └── Management (monitoring, automation)
 #   ├── Workloads (business applications)
-#   │   ├── Production
-#   │   └── Non-Production
-#   └── Sandbox (experimentation)
+#   │   ├── Production (live workloads)
+#   │   └── Non-Production (dev/test)
+#   └── Sandbox (experimentation, no governance)
+#
+# BICEP NOTE:
+#   Management Groups use targetScope = 'tenant' in Bicep.
+#   They're created via Azure CLI here because they're tenant-level resources.
 #
 # REQUIREMENT: Tenant-level permissions (Global Admin or Management Group Contributor)
+#===============================================================================
 deploy_management_groups() {
     print_section "🏢 Deploying Management Groups"
 
-    echo -e "${YELLOW}⚠️  Management Groups require tenant-level permissions.${NC}"
+    echo -e "${CYAN}WHAT YOU'RE DEPLOYING:${NC}"
+    echo "  Management Groups create an organizational hierarchy above subscriptions."
+    echo "  This follows the Azure Landing Zone pattern used by enterprises."
     echo ""
-    echo "This will create an Azure Landing Zone style hierarchy:"
+    echo -e "${YELLOW}⚠️  REQUIREMENT: Tenant-level permissions (Global Admin or similar)${NC}"
+    echo ""
+    echo -e "${CYAN}HIERARCHY BEING CREATED:${NC}"
     echo ""
     echo "  📁 mg-${ENV_NAME}-root (Organization Root)"
-    echo "  ├── 📁 mg-${ENV_NAME}-platform"
-    echo "  │   ├── 📁 mg-${ENV_NAME}-identity"
-    echo "  │   ├── 📁 mg-${ENV_NAME}-connectivity"
-    echo "  │   └── 📁 mg-${ENV_NAME}-management"
-    echo "  ├── 📁 mg-${ENV_NAME}-workloads"
-    echo "  │   ├── 📁 mg-${ENV_NAME}-prod"
-    echo "  │   └── 📁 mg-${ENV_NAME}-nonprod"
-    echo "  └── 📁 mg-${ENV_NAME}-sandbox"
+    echo "  ├── 📁 mg-${ENV_NAME}-platform     ← Shared infrastructure"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-identity      (Azure AD, RBAC)"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-connectivity  (Hub networking)"
+    echo "  │   └── 📁 mg-${ENV_NAME}-management    (Monitoring, automation)"
+    echo "  ├── 📁 mg-${ENV_NAME}-workloads    ← Business applications"
+    echo "  │   ├── 📁 mg-${ENV_NAME}-prod         (Production)"
+    echo "  │   └── 📁 mg-${ENV_NAME}-nonprod      (Dev/Test)"
+    echo "  └── 📁 mg-${ENV_NAME}-sandbox      ← Experimentation"
     echo ""
 
     read -p "Deploy Management Groups? (y/n): " confirm
@@ -448,9 +964,11 @@ deploy_management_groups() {
     # Level 2: Platform, Workloads, Sandbox
     echo "Creating second-level groups..."
     for child in "platform" "workloads" "sandbox"; do
+        # Cross-platform capitalize: works on both macOS (BSD) and Linux (GNU)
+        display_name=$(echo "$child" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
         az account management-group create \
             --name "${mg_prefix}-${child}" \
-            --display-name "${child^}" \
+            --display-name "$display_name" \
             --parent "${mg_prefix}-root" \
             --output none 2>/dev/null || true
         echo "  ✓ ${mg_prefix}-${child}"
@@ -459,9 +977,11 @@ deploy_management_groups() {
     # Level 3: Platform children
     echo "Creating Platform children..."
     for child in "identity" "connectivity" "management"; do
+        # Cross-platform capitalize: works on both macOS (BSD) and Linux (GNU)
+        display_name=$(echo "$child" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
         az account management-group create \
             --name "${mg_prefix}-${child}" \
-            --display-name "${child^}" \
+            --display-name "$display_name" \
             --parent "${mg_prefix}-platform" \
             --output none 2>/dev/null || true
         echo "  ✓ ${mg_prefix}-${child}"
@@ -533,14 +1053,14 @@ deploy_management_groups_silent() {
         --parent "${mg_prefix}-root" \
         --output none 2>/dev/null || true
     echo "    ✓ ${mg_prefix}-platform"
-    
+
     az account management-group create \
         --name "${mg_prefix}-workloads" \
         --display-name "Workloads" \
         --parent "${mg_prefix}-root" \
         --output none 2>/dev/null || true
     echo "    ✓ ${mg_prefix}-workloads"
-    
+
     az account management-group create \
         --name "${mg_prefix}-sandbox" \
         --display-name "Sandbox" \
@@ -556,14 +1076,14 @@ deploy_management_groups_silent() {
         --parent "${mg_prefix}-platform" \
         --output none 2>/dev/null || true
     echo "    ✓ ${mg_prefix}-identity"
-    
+
     az account management-group create \
         --name "${mg_prefix}-connectivity" \
         --display-name "Connectivity" \
         --parent "${mg_prefix}-platform" \
         --output none 2>/dev/null || true
     echo "    ✓ ${mg_prefix}-connectivity"
-    
+
     az account management-group create \
         --name "${mg_prefix}-management" \
         --display-name "Management" \
@@ -594,16 +1114,67 @@ deploy_management_groups_silent() {
 #===============================================================================
 # WINDOWS PASSWORD SETUP (Lesson 05)
 #===============================================================================
-# Windows VMs require password authentication for RDP access.
-# Azure enforces password complexity requirements:
-#   - Minimum 12 characters
-#   - At least one uppercase letter
-#   - At least one lowercase letter
-#   - At least one number
-#   - At least one special character (recommended)
+# Windows VMs require password authentication for RDP (Remote Desktop) access.
 #
-# TRAINER TIP: This is a good time to discuss Azure's security defaults
-# and why passwords alone are not sufficient for production workloads.
+# AZURE PASSWORD REQUIREMENTS:
+#   Azure enforces strong password complexity to prevent brute-force attacks:
+#   - Minimum 12 characters (Azure requires 8, but 12+ is best practice)
+#   - At least one uppercase letter (A-Z)
+#   - At least one lowercase letter (a-z)
+#   - At least one number (0-9)
+#   - At least one special character (!@#$%^&*) - recommended
+#
+# SECURITY BEST PRACTICES (PRODUCTION):
+#   For production workloads, passwords alone are NOT sufficient:
+#   - Use Azure Bastion: Secure RDP/SSH without public IPs
+#   - Use Just-in-Time (JIT) VM access: Time-limited access
+#   - Use Azure AD authentication: MFA and conditional access
+#   - Use Azure Key Vault: Store credentials securely
+#
+# TRAINER TIP: This is a good time to discuss:
+#   - Why public IP + RDP is risky (port 3389 attacks)
+#   - Azure Bastion as a secure alternative
+#   - The shared responsibility model in cloud security
+#===============================================================================
+# Generate a secure random password that meets Azure requirements
+generate_random_password() {
+    # Azure requires: 12+ chars, uppercase, lowercase, number, special char
+    local upper="ABCDEFGHJKLMNPQRSTUVWXYZ"
+    local lower="abcdefghjkmnpqrstuvwxyz"
+    local nums="23456789"
+    local special="!@#\$%&*"
+
+    # Build password with guaranteed character types at specific positions
+    # This ensures complexity requirements are met without needing shuffle
+    local pass=""
+
+    # Start with one of each required type
+    pass+="${upper:RANDOM%${#upper}:1}"
+    pass+="${lower:RANDOM%${#lower}:1}"
+    pass+="${nums:RANDOM%${#nums}:1}"
+    pass+="${special:RANDOM%${#special}:1}"
+
+    # Fill with more random characters from all sets
+    local all="${upper}${lower}${nums}"
+    for i in {1..8}; do
+        pass+="${all:RANDOM%${#all}:1}"
+    done
+
+    # Add another special char and uppercase for good measure
+    pass+="${special:RANDOM%${#special}:1}"
+    pass+="${upper:RANDOM%${#upper}:1}"
+    pass+="${lower:RANDOM%${#lower}:1}"
+    pass+="${nums:RANDOM%${#nums}:1}"
+
+    # Cross-platform shuffle: use awk with random sorting (works on macOS and Linux)
+    if command -v shuf &> /dev/null; then
+        echo "$pass" | fold -w1 | shuf | tr -d '\n'
+    else
+        # macOS fallback: use awk for shuffling
+        echo "$pass" | fold -w1 | awk 'BEGIN{srand()} {print rand()"\t"$0}' | sort -n | cut -f2 | tr -d '\n'
+    fi
+}
+
 setup_windows_password() {
     if [ "${WIN_PASSWORD_REQUIRED:-0}" -ne 1 ]; then
         return
@@ -611,69 +1182,129 @@ setup_windows_password() {
 
     print_section "🔐 Windows VM Password Setup"
 
-    echo "Lesson 5 deploys a Windows Server VM that requires RDP password authentication."
+    echo -e "${CYAN}WHAT YOU'RE CONFIGURING:${NC}"
+    echo "  Lesson 5 deploys a Windows Server VM with IIS web server."
+    echo "  You'll use Remote Desktop (RDP) to connect to this VM."
     echo ""
-    echo -e "${YELLOW}Password requirements:${NC}"
+    echo -e "${CYAN}WHY A PASSWORD?${NC}"
+    echo "  Windows VMs use username/password for RDP authentication."
+    echo "  In production, you'd use Azure Bastion or Azure AD instead."
+    echo ""
+    echo -e "${YELLOW}Password requirements (Azure enforced):${NC}"
     echo "  • At least 12 characters"
-    echo "  • Contains uppercase, lowercase, number, and special character"
+    echo "  • Contains uppercase (A-Z)"
+    echo "  • Contains lowercase (a-z)"
+    echo "  • Contains number (0-9)"
+    echo "  • Special character recommended (!@#$%^&*)"
     echo ""
 
-    while true; do
-        echo -n "Enter password for Windows VM: "
-        read -s WINDOWS_PASSWORD
+    echo -e "${CYAN}Password options:${NC}"
+    echo "  1) Generate a secure random password (recommended)"
+    echo "  2) Enter your own password"
+    echo ""
+    echo -n "Select option [1-2, default=1]: "
+    read password_option
+    password_option=${password_option:-1}
+    echo ""
+
+    if [ "$password_option" = "1" ]; then
+        # Auto-generate password
+        WINDOWS_PASSWORD=$(generate_random_password)
+        echo -e "${GREEN}✓ Generated secure password.${NC}"
         echo ""
-
-        if [ ${#WINDOWS_PASSWORD} -lt 12 ]; then
-            echo -e "${RED}Password must be at least 12 characters.${NC}"
-            continue
-        fi
-
-        # Check for complexity (basic check)
-        if ! echo "$WINDOWS_PASSWORD" | grep -q '[A-Z]'; then
-            echo -e "${RED}Password must contain at least one uppercase letter.${NC}"
-            continue
-        fi
-        if ! echo "$WINDOWS_PASSWORD" | grep -q '[a-z]'; then
-            echo -e "${RED}Password must contain at least one lowercase letter.${NC}"
-            continue
-        fi
-        if ! echo "$WINDOWS_PASSWORD" | grep -q '[0-9]'; then
-            echo -e "${RED}Password must contain at least one number.${NC}"
-            continue
-        fi
-
-        echo -n "Confirm password: "
-        read -s WINDOWS_PASSWORD_CONFIRM
+        echo -e "${YELLOW}╔══════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${YELLOW}║  ${RED}IMPORTANT: SAVE THIS PASSWORD NOW!${YELLOW}                          ║${NC}"
+        echo -e "${YELLOW}╠══════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "${YELLOW}║  Username: ${WHITE}azureuser${YELLOW}                                        ║${NC}"
+        echo -e "${YELLOW}║  Password: ${WHITE}${WINDOWS_PASSWORD}${YELLOW}                      ║${NC}"
+        echo -e "${YELLOW}╚══════════════════════════════════════════════════════════════╝${NC}"
         echo ""
+        echo -e "${CYAN}You'll need these credentials to RDP into your Windows VM.${NC}"
+    else
+        # Manual password entry
+        while true; do
+            echo -n "Enter password for Windows VM: "
+            read -s WINDOWS_PASSWORD
+            echo ""
 
-        if [ "$WINDOWS_PASSWORD" != "$WINDOWS_PASSWORD_CONFIRM" ]; then
-            echo -e "${RED}Passwords do not match. Try again.${NC}"
-            continue
-        fi
+            if [ ${#WINDOWS_PASSWORD} -lt 12 ]; then
+                echo -e "${RED}Password must be at least 12 characters.${NC}"
+                continue
+            fi
 
-        break
-    done
+            # Check for complexity (basic check)
+            if ! echo "$WINDOWS_PASSWORD" | grep -q '[A-Z]'; then
+                echo -e "${RED}Password must contain at least one uppercase letter.${NC}"
+                continue
+            fi
+            if ! echo "$WINDOWS_PASSWORD" | grep -q '[a-z]'; then
+                echo -e "${RED}Password must contain at least one lowercase letter.${NC}"
+                continue
+            fi
+            if ! echo "$WINDOWS_PASSWORD" | grep -q '[0-9]'; then
+                echo -e "${RED}Password must contain at least one number.${NC}"
+                continue
+            fi
 
-    echo ""
-    echo -e "${GREEN}✓ Windows password set.${NC}"
-    echo ""
-    echo -e "${YELLOW}💡 Remember your credentials:${NC}"
-    echo "   Username: azureuser"
-    echo "   Password: (the password you just entered)"
+            echo -n "Confirm password: "
+            read -s WINDOWS_PASSWORD_CONFIRM
+            echo ""
+
+            if [ "$WINDOWS_PASSWORD" != "$WINDOWS_PASSWORD_CONFIRM" ]; then
+                echo -e "${RED}Passwords do not match. Try again.${NC}"
+                continue
+            fi
+
+            break
+        done
+
+        echo ""
+        echo -e "${GREEN}✓ Windows password set.${NC}"
+        echo ""
+        echo -e "${YELLOW}💡 Remember your credentials:${NC}"
+        echo "   Username: azureuser"
+        echo "   Password: (the password you just entered)"
+    fi
 }
 
 #===============================================================================
 # SSH KEY SETUP (Lesson 06)
 #===============================================================================
 # Linux VMs use SSH key-based authentication (more secure than passwords).
-# The script will:
-#   1. Check for existing SSH keys (~/.ssh/id_rsa.pub or id_ed25519.pub)
-#   2. Offer to use existing key or generate new one
-#   3. Generate Ed25519 key (more secure than RSA) if needed
 #
-# TRAINER TIP: Explain SSH key pairs:
-#   - Private key (id_ed25519) = Never share, stays on your machine
-#   - Public key (id_ed25519.pub) = Safe to share, uploaded to Azure VM
+# HOW SSH KEY AUTHENTICATION WORKS:
+#   SSH uses asymmetric cryptography with a key pair:
+#
+#   ┌─────────────────────────────────────────────────────────────────────┐
+#   │  PRIVATE KEY (id_ed25519)              PUBLIC KEY (id_ed25519.pub)  │
+#   │  ─────────────────────────             ───────────────────────────  │
+#   │  • Stays on YOUR machine               • Uploaded to Azure VM      │
+#   │  • NEVER share this file               • Safe to share publicly    │
+#   │  • Used to prove your identity         • Used to verify identity   │
+#   │  • Located: ~/.ssh/id_ed25519          • Located: ~/.ssh/*.pub     │
+#   └─────────────────────────────────────────────────────────────────────┘
+#
+# KEY TYPES:
+#   - Ed25519: Modern, recommended (shorter keys, faster, more secure)
+#   - RSA: Traditional, widely compatible (use 4096-bit minimum)
+#
+# THE SSH CONNECTION FLOW:
+#   1. You run: ssh azureuser@<vm-ip>
+#   2. VM sends a challenge encrypted with your public key
+#   3. Your machine decrypts with private key and responds
+#   4. VM verifies response → you're authenticated!
+#
+# AZURE SSH BEST PRACTICES:
+#   - Use Ed25519 keys (ssh-keygen -t ed25519)
+#   - Disable password authentication on VMs
+#   - Use Azure Bastion for production (no public SSH exposure)
+#   - Rotate keys periodically
+#
+# TRAINER TIP: This is a good time to explain:
+#   - Why SSH keys are more secure than passwords
+#   - How to use ssh-agent for key management
+#   - Azure Bastion as a secure alternative to public SSH
+#===============================================================================
 setup_ssh_key() {
     if [ "${SSH_REQUIRED:-0}" -ne 1 ]; then
         return
@@ -681,7 +1312,15 @@ setup_ssh_key() {
 
     print_section "🔑 SSH Key Setup"
 
-    echo "Lesson 6 deploys an Ubuntu VM that requires SSH key authentication."
+    echo -e "${CYAN}WHAT YOU'RE CONFIGURING:${NC}"
+    echo "  Lesson 6 deploys an Ubuntu Linux VM with MicroK8s."
+    echo "  You'll use SSH (Secure Shell) to connect to this VM."
+    echo ""
+    echo -e "${CYAN}WHY SSH KEYS?${NC}"
+    echo "  SSH keys are more secure than passwords:"
+    echo "  • Can't be guessed or brute-forced"
+    echo "  • Private key never leaves your machine"
+    echo "  • Can be protected with a passphrase"
     echo ""
 
     # Check for existing SSH key
@@ -744,45 +1383,206 @@ setup_ssh_key() {
 #===============================================================================
 # DEPLOYMENT CONFIRMATION & EXECUTION
 #===============================================================================
-# This function:
-#   1. Displays a summary of what will be deployed
-#   2. Asks for final confirmation
-#   3. Initializes the azd environment with parameters
-#   4. Runs 'azd up' to deploy all resources
+# This is where the actual Azure deployment happens!
 #
-# Azure Developer CLI (azd) handles:
-#   - Resource group creation
-#   - Bicep template compilation
-#   - ARM template deployment
-#   - Output capture and display
+# WHAT 'azd up' DOES BEHIND THE SCENES:
+#
+#   1. READS azure.yaml
+#      - Project configuration file at repository root
+#      - Defines project name, services, and infrastructure location
+#
+#   2. COMPILES BICEP TO ARM
+#      - Input: /infra/main.bicep (and modules)
+#      - Output: ARM JSON template
+#      - Uses: Azure Bicep CLI (az bicep build)
+#
+#   3. VALIDATES TEMPLATE
+#      - Checks syntax and resource availability
+#      - Verifies you have permissions
+#      - Estimates deployment time
+#
+#   4. CREATES RESOURCE GROUP
+#      - Name pattern: rg-{env-name}-{lesson}
+#      - Location: your selected region
+#
+#   5. DEPLOYS RESOURCES
+#      - Sends template to Azure Resource Manager
+#      - ARM creates resources in dependency order
+#      - Progress shown in terminal
+#
+#   6. CAPTURES OUTPUTS
+#      - Resource IDs, URLs, connection strings
+#      - Stored in azd environment for later use
+#
+# COMMON DEPLOYMENT ERRORS:
+#   - "QuotaExceeded": Request more vCPU quota or try different region
+#   - "InvalidTemplateDeployment": Check Bicep syntax errors
+#   - "AuthorizationFailed": Check RBAC permissions
+#
+# DEPLOYMENT TIME:
+#   - Storage/Networking: 1-2 minutes
+#   - VMs: 3-5 minutes
+#   - AKS: 5-10 minutes
+#   - AI Foundry: 5-10 minutes
+#===============================================================================
 confirm_and_deploy() {
     print_section "🚀 Ready to Deploy"
 
+    echo -e "${CYAN}DEPLOYMENT SUMMARY:${NC}"
+    echo ""
     echo -e "  Environment:  ${BOLD}$ENV_NAME${NC}"
     echo -e "  Region:       ${BOLD}$SELECTED_REGION${NC}"
     if [ -z "$SELECTED_LESSON" ]; then
         echo -e "  Lesson:       ${BOLD}All Lessons (02-09, 11)${NC}"
         echo ""
-        echo -e "  ${CYAN}Management Groups (via Azure CLI):${NC}"
-        echo "    • 9 management groups in Landing Zone hierarchy"
+        echo -e "  ${CYAN}WHAT'S BEING DEPLOYED:${NC}"
         echo ""
-        echo -e "  ${CYAN}Resource groups to be created (via Bicep):${NC}"
-        echo "    • rg-$ENV_NAME-lesson03-storage"
-        echo "    • rg-$ENV_NAME-lesson04-networking"
-        echo "    • rg-$ENV_NAME-lesson05-compute"
-        echo "    • rg-$ENV_NAME-lesson06-linux-k8s"
-        echo "    • rg-$ENV_NAME-lesson07-containers"
-        echo "    • rg-$ENV_NAME-lesson08-serverless"
-        echo "    • rg-$ENV_NAME-lesson09-database"
-        echo "    • rg-$ENV_NAME-lesson11-ai-foundry"
+        echo -e "  ${YELLOW}Management Groups (9 total):${NC}"
+        echo "    └─ Azure Landing Zone hierarchy for governance"
+        echo ""
+        echo -e "  ${YELLOW}Resource Groups & Infrastructure:${NC}"
+        echo ""
+        echo "    📦 rg-$ENV_NAME-lesson03-storage"
+        echo "       └─ Storage Account (Blob, Files, Queues, Tables)"
+        echo ""
+        echo "    🌐 rg-$ENV_NAME-lesson04-networking"
+        echo "       └─ VNet + Subnets + NSG (network security)"
+        echo ""
+        echo "    🖥️  rg-$ENV_NAME-lesson05-compute"
+        echo "       └─ Windows Server VM + IIS + Public IP"
+        echo ""
+        echo "    🐧 rg-$ENV_NAME-lesson06-linux-k8s"
+        echo "       └─ Ubuntu VM + MicroK8s (Kubernetes)"
+        echo ""
+        echo "    🐳 rg-$ENV_NAME-lesson07-containers"
+        echo "       └─ Azure Container Registry (ACR)"
+        echo ""
+        echo "    ⚡ rg-$ENV_NAME-lesson08-serverless"
+        echo "       └─ Azure Functions (Consumption Plan)"
+        echo ""
+        echo "    🗄️  rg-$ENV_NAME-lesson09-database"
+        echo "       └─ Cosmos DB (Serverless NoSQL)"
+        echo ""
+        echo "    🤖 rg-$ENV_NAME-lesson11-ai-foundry"
+        echo "       └─ Azure AI Hub + OpenAI models"
+    elif [ "$SELECTED_LESSON" = "03" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 03 - Storage Services${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    How Azure Storage provides four types of cloud storage"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    📦 Resource Group: rg-$ENV_NAME-lesson03-storage"
+        echo "    └─ Storage Account"
+        echo "       ├─ Blob container (for unstructured data)"
+        echo "       ├─ File share (SMB protocol)"
+        echo "       ├─ Queue (message processing)"
+        echo "       └─ Table (NoSQL key-value)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/storage.bicep"
+        echo -e "  ${GREEN}COST: FREE (within free tier limits)${NC}"
+    elif [ "$SELECTED_LESSON" = "04" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 04 - Networking Services${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    How Azure Virtual Networks provide isolated networking"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🌐 Resource Group: rg-$ENV_NAME-lesson04-networking"
+        echo "    └─ Virtual Network (10.0.0.0/16)"
+        echo "       ├─ Subnet: web-subnet (10.0.1.0/24)"
+        echo "       ├─ Subnet: app-subnet (10.0.2.0/24)"
+        echo "       ├─ Subnet: data-subnet (10.0.3.0/24)"
+        echo "       └─ Network Security Group (firewall rules)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/networking.bicep"
+        echo -e "  ${GREEN}COST: FREE (VNets have no charge)${NC}"
+    elif [ "$SELECTED_LESSON" = "05" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 05 - Windows Compute${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    How to run Windows Server workloads in Azure VMs"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🖥️  Resource Group: rg-$ENV_NAME-lesson05-compute"
+        echo "    ├─ Windows Server 2022 VM (Standard_B1s)"
+        echo "    ├─ IIS Web Server (installed via extension)"
+        echo "    ├─ Public IP Address (for RDP access)"
+        echo "    └─ Network Security Group (RDP port 3389)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/compute-windows.bicep"
+        echo -e "  ${YELLOW}COST: ~\$15/month (B1s VM) - stop VM when not in use${NC}"
     elif [ "$SELECTED_LESSON" = "06" ]; then
         echo -e "  Lesson:       ${BOLD}Lesson 06 - Linux & Kubernetes${NC}"
         echo ""
-        echo -e "  ${CYAN}Resources to be created:${NC}"
-        echo "    • rg-$ENV_NAME-lesson06-linux-k8s"
-        echo "    • Ubuntu 22.04 LTS VM (Standard_B1s)"
-        echo "    • MicroK8s pre-installed via cloud-init"
-        echo "    • Public IP with SSH access"
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    How to run Linux VMs and get started with Kubernetes"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🐧 Resource Group: rg-$ENV_NAME-lesson06-linux-k8s"
+        echo "    ├─ Ubuntu 22.04 LTS VM (Standard_B1s)"
+        echo "    ├─ MicroK8s (lightweight Kubernetes) via cloud-init"
+        echo "    ├─ Public IP Address (for SSH access)"
+        echo "    └─ Network Security Group (SSH port 22)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/linux-microk8s.bicep"
+        echo -e "  ${YELLOW}COST: ~\$10/month (B1s VM) - stop VM when not in use${NC}"
+    elif [ "$SELECTED_LESSON" = "07" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 07 - Container Services${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    How to build, store, and deploy container images"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🐳 Resource Group: rg-$ENV_NAME-lesson07-containers"
+        echo "    └─ Azure Container Registry (Basic tier)"
+        echo "       └─ hello-container image (built after deployment)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/container-registry.bicep"
+        echo -e "  ${YELLOW}COST: ~\$5/month (Basic ACR tier)${NC}"
+    elif [ "$SELECTED_LESSON" = "08" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 08 - Serverless (Azure Functions)${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    Event-driven computing with pay-per-execution pricing"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    ⚡ Resource Group: rg-$ENV_NAME-lesson08-serverless"
+        echo "    ├─ Azure Functions App (Consumption Plan)"
+        echo "    ├─ Storage Account (for function state)"
+        echo "    └─ Application Insights (monitoring)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/functions.bicep"
+        echo -e "  ${GREEN}COST: FREE (1M executions/month free)${NC}"
+    elif [ "$SELECTED_LESSON" = "09" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 09 - Database Services (Cosmos DB)${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    Globally distributed NoSQL database with multi-model support"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🗄️  Resource Group: rg-$ENV_NAME-lesson09-database"
+        echo "    └─ Cosmos DB Account (Serverless capacity)"
+        echo "       └─ Database: essentials-db"
+        echo "          └─ Container: items"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/cosmosdb.bicep"
+        echo -e "  ${YELLOW}COST: Pay-per-request (very low for demos)${NC}"
+    elif [ "$SELECTED_LESSON" = "11" ]; then
+        echo -e "  Lesson:       ${BOLD}Lesson 11 - Azure AI Foundry${NC}"
+        echo ""
+        echo -e "  ${CYAN}WHAT YOU'LL LEARN:${NC}"
+        echo "    Azure's AI platform with GPT models and AI services"
+        echo ""
+        echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
+        echo "    🤖 Resource Group: rg-$ENV_NAME-lesson11-ai-foundry"
+        echo "    ├─ Azure AI Hub (central AI management)"
+        echo "    ├─ Azure OpenAI Service"
+        echo "    │  └─ GPT model deployment"
+        echo "    └─ Storage Account (for AI artifacts)"
+        echo ""
+        echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/ai-foundry.bicep"
+        echo -e "  ${RED}COST: \$1-5/day depending on usage${NC}"
     else
         echo -e "  Lesson:       ${BOLD}Lesson $SELECTED_LESSON${NC}"
         echo ""
@@ -800,16 +1600,23 @@ confirm_and_deploy() {
     # Initialize azd environment
     print_section "⚙️  Initializing Environment"
 
+    echo -e "${CYAN}WHAT'S HAPPENING:${NC}"
+    echo "  1. Creating/selecting azd environment '$ENV_NAME'"
+    echo "  2. Setting Azure subscription and region"
+    echo "  3. Configuring Bicep parameters"
+    echo ""
+
     # Get current subscription ID
     local subscription_id
     subscription_id=$(az account show --query id -o tsv 2>/dev/null)
 
     if [ -z "$subscription_id" ]; then
         echo -e "${RED}Error: Could not get Azure subscription ID${NC}"
+        echo "Please run 'az login' to authenticate."
         exit 1
     fi
 
-    echo "Using subscription: $(az account show --query name -o tsv)"
+    echo -e "Using subscription: ${BOLD}$(az account show --query name -o tsv)${NC}"
 
     # Create or select environment (use --no-prompt to avoid interactive prompts)
     if azd env list 2>/dev/null | grep -q "^$ENV_NAME "; then
@@ -844,7 +1651,18 @@ confirm_and_deploy() {
     # Run deployment
     print_section "☁️  Deploying to Azure"
 
-    echo "This may take 5-15 minutes depending on the resources..."
+    echo -e "${CYAN}WHAT 'azd up' DOES:${NC}"
+    echo "  1. Reads azure.yaml project configuration"
+    echo "  2. Compiles Bicep files to ARM templates"
+    echo "  3. Validates template with Azure Resource Manager"
+    echo "  4. Creates resource group(s) in your subscription"
+    echo "  5. Deploys resources in dependency order"
+    echo "  6. Outputs resource URLs and connection info"
+    echo ""
+    echo -e "${YELLOW}Estimated time: 5-15 minutes depending on resources...${NC}"
+    echo ""
+    echo -e "${CYAN}You can watch the deployment in Azure Portal:${NC}"
+    echo "  https://portal.azure.com/#view/HubsExtension/DeploymentDetailsBlade"
     echo ""
 
     # Deploy Lesson 2 (Management Groups) via CLI if Deploy ALL
@@ -936,24 +1754,73 @@ show_completion() {
 #===============================================================================
 # MAIN EXECUTION - Entry point for the script
 #===============================================================================
-# The flow:
-#   1. Print banner (visual confirmation script is running)
-#   2. Check prerequisites (fail early if tools missing)
-#   3. Get environment name (unique identifier)
-#   4. Select region (Azure datacenter)
-#   5. Select lesson (what to deploy)
-#   6. Setup credentials if needed (passwords/SSH keys)
-#   7. Confirm and deploy (azd up)
-#   8. Show completion (summary and next steps)
+# THE DEPLOYMENT FLOW:
+#
+#   ┌─────────────────────────────────────────────────────────────────────────┐
+#   │  STEP 1: PRINT BANNER                                                   │
+#   │          Visual confirmation script is running                          │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 2: CHECK PREREQUISITES                                            │
+#   │          Verify Azure CLI and azd are installed                         │
+#   │          Login if not authenticated                                     │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 3: SELECT SUBSCRIPTION                         ← NEW!             │
+#   │          Show all available subscriptions                               │
+#   │          Let user choose which one to deploy to                         │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 4: GET ENVIRONMENT NAME                                           │
+#   │          Unique identifier for resource naming                          │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 5: SELECT REGION                                                  │
+#   │          Choose Azure datacenter location                               │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 6: RUN PREFLIGHT CHECKS                        ← NEW!             │
+#   │          Validate subscription, quotas, providers, permissions          │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 7: SELECT LESSON                                                  │
+#   │          Choose which infrastructure to deploy                          │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 8: SETUP CREDENTIALS (if needed)                                  │
+#   │          Windows password for RDP / SSH key for Linux                   │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 9: CONFIRM AND DEPLOY                                             │
+#   │          Final confirmation, run 'azd up'                               │
+#   ├─────────────────────────────────────────────────────────────────────────┤
+#   │  STEP 10: SHOW COMPLETION                                               │
+#   │          Summary, next steps, cleanup instructions                      │
+#   └─────────────────────────────────────────────────────────────────────────┘
+#
+#===============================================================================
 main() {
+    # Step 1: Show banner
     print_banner
+
+    # Step 2: Check prerequisites (tools installed, login if needed)
     check_prerequisites
+
+    # Step 3: Select Azure subscription
+    select_subscription
+
+    # Step 4: Get environment name for resource naming
     get_environment_name
+
+    # Step 5: Select Azure region
     select_region
+
+    # Step 6: Run preflight checks (validate before deployment)
+    run_preflight_checks
+
+    # Step 7: Select which lesson to deploy
     select_lesson
+
+    # Step 8: Setup credentials if needed (Windows password, SSH key)
     setup_windows_password
     setup_ssh_key
+
+    # Step 9: Confirm and deploy via azd
     confirm_and_deploy
+
+    # Step 10: Show completion summary
     show_completion
 }
 

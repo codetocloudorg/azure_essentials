@@ -22,27 +22,56 @@ Welcome to Azure Essentials, a comprehensive two-day training course that takes 
 
 ---
 
+## 🎯 Before You Start (Learners Start Here!)
+
+Before diving into any lesson, complete these steps:
+
+### Step 1: Check Prerequisites
+
+👉 **[Prerequisites & Setup Guide](lessons/00-prerequisites/README.md)** — Install all required tools for your OS (Windows, macOS, Linux)
+
+### Step 2: Run Preflight Checks ⚡
+
+**Run this BEFORE deploying anything** to catch issues early:
+
+| Platform                 | Command                                 |
+| ------------------------ | --------------------------------------- |
+| **macOS / Linux**        | `./scripts/bash/validate-env.sh`        |
+| **Windows (PowerShell)** | `.\scripts\powershell\validate-env.ps1` |
+
+```bash
+# macOS / Linux
+./scripts/bash/validate-env.sh
+```
+
+```powershell
+# Windows (PowerShell)
+.\scripts\powershell\validate-env.ps1
+```
+
+✅ You should see **green checkmarks (✓)** for all required tools. Fix any red ✗ items before continuing.
+
+### Step 3: Review the Scripts Guide
+
+📜 **[SCRIPTS.md](SCRIPTS.md)** — Complete guide to running scripts, deployment options, and troubleshooting
+
+---
+
 ## Quick Start
 
 This course uses the [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/) for a streamlined learning experience. With two commands, you can provision all resources and tear them down when finished.
 
-### Prerequisites
+### Prerequisites Checklist
 
-Before you begin, complete the setup guide for your operating system:
-
-👉 **[Prerequisites & Setup Guide](lessons/00-prerequisites/README.md)** — Step-by-step instructions for Windows, macOS, and Linux
+| Requirement             | Description                                                                                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Azure Account**       | [Free Azure account](https://azure.microsoft.com/free/) with active subscription                                |
+| **Azure CLI**           | [Install Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) version 2.50 or later              |
+| **Azure Developer CLI** | [Install azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) version 1.5 or later |
+| **Visual Studio Code**  | [Download VS Code](https://code.visualstudio.com/) with Bicep and Azure extensions                              |
+| **Git**                 | [Install Git](https://git-scm.com/downloads) for version control                                                |
 
 📅 **[Course Agenda](lessons/00-prerequisites/agenda.md)** — Full schedule with module timings and topics
-
-#### Quick Checklist
-
-| Requirement | Description |
-|-------------|-------------|
-| **Azure Account** | [Free Azure account](https://azure.microsoft.com/free/) with active subscription |
-| **Azure CLI** | [Install Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) version 2.50 or later |
-| **Azure Developer CLI** | [Install azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) version 1.5 or later |
-| **Visual Studio Code** | [Download VS Code](https://code.visualstudio.com/) with Bicep and Azure extensions |
-| **Git** | [Install Git](https://git-scm.com/downloads) for version control |
 
 > 💡 **New to Azure?** Follow our [detailed setup guide](lessons/00-prerequisites/README.md) with platform-specific instructions.
 
@@ -58,11 +87,13 @@ Before you begin, complete the setup guide for your operating system:
 2. **Run the Interactive Deployment Script** (Recommended)
 
    **macOS / Linux:**
+
    ```bash
    ./scripts/bash/deploy.sh
    ```
 
    **Windows (PowerShell):**
+
    ```powershell
    .\scripts\powershell\deploy.ps1
    ```
@@ -103,12 +134,12 @@ rg-{your-name}-lesson11-ai-foundry   ← Lesson 11: AI Foundry
 
 Some lessons require compute quota that may not be available on free accounts:
 
-| Lesson | Quota Required | If Deployment Fails |
-|--------|---------------|---------------------|
-| 5 - Windows Compute | Basic VMs | [Request quota increase](https://aka.ms/azurequotarequest) |
-| 6 - Linux & K8s | Standard_B2s | Try a different region |
-| 8 - Serverless | Dynamic VMs | [Request quota increase](https://aka.ms/azurequotarequest) |
-| 9 - Database | Cosmos DB | Use **Central US** region (best availability) |
+| Lesson              | Quota Required | If Deployment Fails                                        |
+| ------------------- | -------------- | ---------------------------------------------------------- |
+| 5 - Windows Compute | Basic VMs      | [Request quota increase](https://aka.ms/azurequotarequest) |
+| 6 - Linux & K8s     | Standard_B2s   | Try a different region                                     |
+| 8 - Serverless      | Dynamic VMs    | [Request quota increase](https://aka.ms/azurequotarequest) |
+| 9 - Database        | Cosmos DB      | Use **Central US** region (best availability)              |
 
 > 💡 **Tip**: Lessons 2, 3, 4, and 7 work reliably on free accounts without quota issues.
 
@@ -128,13 +159,13 @@ azd down --force --purge
 
 These regions have the **best capacity** for Azure free accounts:
 
-| Region | Location | Recommendation |
-|--------|----------|----------------|
-| **eastus** | Virginia | ⭐ Largest Azure region, best availability |
-| **eastus2** | Virginia | ⭐ High capacity, good backup option |
-| **westus2** | Washington | Good for West Coast learners |
-| **centralus** | Iowa | Central location |
-| **canadacentral** | Toronto | For Canadian learners |
+| Region            | Location   | Recommendation                             |
+| ----------------- | ---------- | ------------------------------------------ |
+| **eastus**        | Virginia   | ⭐ Largest Azure region, best availability |
+| **eastus2**       | Virginia   | ⭐ High capacity, good backup option       |
+| **westus2**       | Washington | Good for West Coast learners               |
+| **centralus**     | Iowa       | Central location                           |
+| **canadacentral** | Toronto    | For Canadian learners                      |
 
 ---
 
@@ -144,25 +175,26 @@ This course is designed to be **as cost-effective as possible** for learners usi
 
 ### Free Tier Compatible Lessons
 
-| Lesson | Resources Used | Free Tier Status |
-|--------|---------------|------------------|
-| **01-03** | Storage Account (LRS) | ✅ **FREE** - 5 GB included in free tier |
-| **04** | Virtual Network, NSGs | ✅ **FREE** - Networking resources are free |
-| **05** | App Service (F1 SKU) | ✅ **FREE** - F1 tier is always free |
-| **06** | Local MicroK8s only | ✅ **FREE** - No Azure resources |
-| **08** | Azure Functions (Consumption) | ✅ **FREE** - 1M executions/month free |
+| Lesson    | Resources Used                | Free Tier Status                            |
+| --------- | ----------------------------- | ------------------------------------------- |
+| **01-03** | Storage Account (LRS)         | ✅ **FREE** - 5 GB included in free tier    |
+| **04**    | Virtual Network, NSGs         | ✅ **FREE** - Networking resources are free |
+| **05**    | App Service (F1 SKU)          | ✅ **FREE** - F1 tier is always free        |
+| **06**    | Local MicroK8s only           | ✅ **FREE** - No Azure resources            |
+| **08**    | Azure Functions (Consumption) | ✅ **FREE** - 1M executions/month free      |
 
 ### Paid Resources (Low Cost)
 
-| Lesson | Resources Used | Estimated Cost |
-|--------|---------------|----------------|
-| **07** | Container Registry (Basic) | 💵 ~$5/month (~$0.17/day) |
-| **09** | Cosmos DB (Serverless) | 💵 Pay-per-use (~$0.25 per 1M RUs) |
+| Lesson | Resources Used             | Estimated Cost                                   |
+| ------ | -------------------------- | ------------------------------------------------ |
+| **07** | Container Registry (Basic) | 💵 ~$5/month (~$0.17/day)                        |
+| **09** | Cosmos DB (Serverless)     | 💵 Pay-per-use (~$0.25 per 1M RUs)               |
 | **11** | AI Foundry (Hub + Project) | 💵 ~$1-5/day (includes Key Vault, Log Analytics) |
 
 ### Recommendations for Free Account Users
 
 1. **Deploy lessons progressively**: Use the `lessonNumber` parameter to deploy only what you need
+
    ```bash
    azd env set LESSON_NUMBER 5  # Deploy only lessons 1-5
    azd up
@@ -184,26 +216,26 @@ This course is organised into 12 progressive lessons across two days. Each lesso
 
 ### Day 1: Foundations
 
-| Lesson | Title | Duration | Description |
-|--------|-------|----------|-------------|
-| [00](lessons/00-prerequisites/README.md) | Prerequisites & Setup | 15-30 min | Set up your machine (Windows, macOS, or Linux) |
-| [01](lessons/01-introduction/README.md) | Introduction to Azure | 55 min | Azure cloud concepts, service models, portal and CLI basics |
-| [02](lessons/02-getting-started/README.md) | Getting Started with Azure | 20 min | Accounts, subscriptions, tenants, and resource groups |
-| [03](lessons/03-storage-services/README.md) | Storage Services | 55 min | Blobs, files, queues, tables, and storage redundancy |
-| [04](lessons/04-networking/README.md) | Networking Services | 35 min | Virtual networks, subnets, NSGs, and load balancers |
-| [05](lessons/05-compute-windows/README.md) | Compute: Windows | 30 min | Windows VMs, availability, and App Service deployment |
-| [06](lessons/06-compute-linux-kubernetes/README.md) | Compute: Linux and Kubernetes | 25 min | Linux workloads and Kubernetes fundamentals with MicroK8s |
-| [07](lessons/07-container-services/README.md) | Container Services | 25 min | Azure Container Registry and Azure Kubernetes Service |
+| Lesson                                              | Title                         | Duration  | Description                                                 |
+| --------------------------------------------------- | ----------------------------- | --------- | ----------------------------------------------------------- |
+| [00](lessons/00-prerequisites/README.md)            | Prerequisites & Setup         | 15-30 min | Set up your machine (Windows, macOS, or Linux)              |
+| [01](lessons/01-introduction/README.md)             | Introduction to Azure         | 55 min    | Azure cloud concepts, service models, portal and CLI basics |
+| [02](lessons/02-getting-started/README.md)          | Getting Started with Azure    | 20 min    | Accounts, subscriptions, tenants, and resource groups       |
+| [03](lessons/03-storage-services/README.md)         | Storage Services              | 55 min    | Blobs, files, queues, tables, and storage redundancy        |
+| [04](lessons/04-networking/README.md)               | Networking Services           | 35 min    | Virtual networks, subnets, NSGs, and load balancers         |
+| [05](lessons/05-compute-windows/README.md)          | Compute: Windows              | 30 min    | Windows VMs, availability, and App Service deployment       |
+| [06](lessons/06-compute-linux-kubernetes/README.md) | Compute: Linux and Kubernetes | 25 min    | Linux workloads and Kubernetes fundamentals with MicroK8s   |
+| [07](lessons/07-container-services/README.md)       | Container Services            | 25 min    | Azure Container Registry and Azure Kubernetes Service       |
 
 ### Day 2: Advanced Services
 
-| Lesson | Title | Duration | Description |
-|--------|-------|----------|-------------|
-| [08](lessons/08-serverless/README.md) | Serverless Services | 60 min | Azure Functions, triggers, bindings, and Logic Apps |
-| [09](lessons/09-database-services/README.md) | Database and Data Services | 60 min | Azure SQL, Cosmos DB, and Microsoft Fabric introduction |
-| [10](lessons/10-billing-cost/README.md) | Billing and Cost Optimisation | 20 min | Cost management, budgets, and resource tagging |
-| [11](lessons/11-ai-foundry/README.md) | Azure AI Foundry | 45 min | AI workspaces, model catalog, and chatbot development |
-| [12](lessons/12-architecture-design/README.md) | Architecture Design | 45 min | Collaborative design session for real-world scenarios |
+| Lesson                                         | Title                         | Duration | Description                                             |
+| ---------------------------------------------- | ----------------------------- | -------- | ------------------------------------------------------- |
+| [08](lessons/08-serverless/README.md)          | Serverless Services           | 60 min   | Azure Functions, triggers, bindings, and Logic Apps     |
+| [09](lessons/09-database-services/README.md)   | Database and Data Services    | 60 min   | Azure SQL, Cosmos DB, and Microsoft Fabric introduction |
+| [10](lessons/10-billing-cost/README.md)        | Billing and Cost Optimisation | 20 min   | Cost management, budgets, and resource tagging          |
+| [11](lessons/11-ai-foundry/README.md)          | Azure AI Foundry              | 45 min   | AI workspaces, model catalog, and chatbot development   |
+| [12](lessons/12-architecture-design/README.md) | Architecture Design           | 45 min   | Collaborative design session for real-world scenarios   |
 
 👉 **[View Full Lesson Index](lessons/README.md)** — Quick navigation to all lessons
 
@@ -214,6 +246,7 @@ This course is organised into 12 progressive lessons across two days. Each lesso
 ```
 azure_essentials/
 ├── README.md                 # This file - course overview and setup
+├── SCRIPTS.md                # 📜 Scripts guide - how to run everything
 ├── azure.yaml                # Azure Developer CLI configuration
 ├── LICENSE                   # MIT License
 │
@@ -243,15 +276,17 @@ azure_essentials/
 │   └── ...                   # Lessons 03-12
 │
 ├── scripts/                  # Deployment and setup scripts
-│   ├── azure-cli/            # Pure Azure CLI scripts
-│   │   ├── commands/         # Copy-paste command reference
-│   │   └── lesson-*.sh       # Per-lesson CLI scripts
-│   ├── bash/                 # Bash scripts (macOS/Linux)
-│   │   ├── deploy.sh         # Interactive deployment
+│   ├── bash/                 # macOS/Linux scripts
+│   │   ├── deploy.sh         # 🚀 Interactive deployment
+│   │   ├── validate-env.sh   # ✅ Preflight checks
 │   │   └── setup-local-tools.sh
-│   └── powershell/           # PowerShell scripts (Windows)
-│       ├── deploy.ps1        # Interactive deployment
-│       └── setup-local-tools.ps1
+│   ├── powershell/           # Windows scripts
+│   │   ├── deploy.ps1        # 🚀 Interactive deployment
+│   │   ├── validate-env.ps1  # ✅ Preflight checks
+│   │   └── setup-local-tools.ps1
+│   └── azure-cli/            # Pure Azure CLI scripts (any OS)
+│       ├── commands/         # 📋 Copy-paste command reference
+│       └── lesson-*.sh       # Per-lesson CLI scripts
 │
 ├── CHANGELOG.md              # Version history
 │
@@ -288,15 +323,26 @@ If you prefer not to use the dev container, run the setup script:
 ```bash
 # macOS and Linux
 ./scripts/bash/setup-local-tools.sh
-
-# Validate your environment
-./scripts/bash/validate-env.sh
 ```
 
 ```powershell
 # Windows (PowerShell)
 .\scripts\powershell\setup-local-tools.ps1
 ```
+
+Then **always run preflight checks** before deploying:
+
+```bash
+# macOS and Linux
+./scripts/bash/validate-env.sh
+```
+
+```powershell
+# Windows (PowerShell)
+.\scripts\powershell\validate-env.ps1
+```
+
+📜 **[See the full Scripts Guide](SCRIPTS.md)** for all deployment options and troubleshooting.
 
 ---
 
@@ -361,11 +407,11 @@ After completing this course, continue your Azure journey:
 
 This course prepares you for:
 
-| Certification | Level | Focus |
-|--------------|-------|-------|
-| [AZ-900](https://learn.microsoft.com/certifications/azure-fundamentals/) | Foundational | Azure Fundamentals |
-| [AZ-104](https://learn.microsoft.com/certifications/azure-administrator/) | Associate | Azure Administrator |
-| [AZ-204](https://learn.microsoft.com/certifications/azure-developer/) | Associate | Azure Developer |
+| Certification                                                             | Level        | Focus               |
+| ------------------------------------------------------------------------- | ------------ | ------------------- |
+| [AZ-900](https://learn.microsoft.com/certifications/azure-fundamentals/)  | Foundational | Azure Fundamentals  |
+| [AZ-104](https://learn.microsoft.com/certifications/azure-administrator/) | Associate    | Azure Administrator |
+| [AZ-204](https://learn.microsoft.com/certifications/azure-developer/)     | Associate    | Azure Developer     |
 
 ---
 

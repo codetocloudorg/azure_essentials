@@ -10,23 +10,25 @@ This guide will help you set up everything you need to complete the Azure Essent
 
 **Time Required**: 15-30 minutes
 
+📜 **[Scripts Guide](../../SCRIPTS.md)** — Complete reference for all scripts and deployment options
+
 ---
 
 ## ✅ What You Need
 
-| Tool | Purpose | Required? |
-|------|---------|-----------|
-| **Azure Account** | Access to Azure cloud services | ✅ Yes |
-| **Azure CLI** | Command-line tool for Azure | ✅ Yes |
-| **Azure Developer CLI (azd)** | Simplified deployment tool | ✅ Yes |
-| **Git** | Clone the course repository | ✅ Yes |
-| **Visual Studio Code** | Code editor with Azure extensions | ✅ Yes |
-| **kubectl** | Kubernetes CLI for Lesson 06 | 📌 Recommended |
-| **Docker Desktop** | Container development (Lesson 07) | 📌 Recommended |
-| **Python 3.11+** | For serverless and AI lessons | 📌 Recommended |
-| **jq** | JSON processor for CLI workflows | 📌 Recommended |
-| **Bicep CLI** | Infrastructure as Code (via Azure CLI) | 📌 Recommended |
-| **Azure Storage Explorer** | GUI for storage management | 📌 Optional |
+| Tool                          | Purpose                                | Required?      |
+| ----------------------------- | -------------------------------------- | -------------- |
+| **Azure Account**             | Access to Azure cloud services         | ✅ Yes         |
+| **Azure CLI**                 | Command-line tool for Azure            | ✅ Yes         |
+| **Azure Developer CLI (azd)** | Simplified deployment tool             | ✅ Yes         |
+| **Git**                       | Clone the course repository            | ✅ Yes         |
+| **Visual Studio Code**        | Code editor with Azure extensions      | ✅ Yes         |
+| **kubectl**                   | Kubernetes CLI for Lesson 06           | 📌 Recommended |
+| **Docker Desktop**            | Container development (Lesson 07)      | 📌 Recommended |
+| **Python 3.11+**              | For serverless and AI lessons          | 📌 Recommended |
+| **jq**                        | JSON processor for CLI workflows       | 📌 Recommended |
+| **Bicep CLI**                 | Infrastructure as Code (via Azure CLI) | 📌 Recommended |
+| **Azure Storage Explorer**    | GUI for storage management             | 📌 Optional    |
 
 ---
 
@@ -100,15 +102,15 @@ cd azure_essentials
 
 #### Option C: Manual Installation
 
-| Tool | Download Link |
-|------|--------------|
-| Git | [git-scm.com/download/win](https://git-scm.com/download/win) |
-| VS Code | [code.visualstudio.com](https://code.visualstudio.com/) |
-| Azure CLI | [aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows) |
+| Tool                | Download Link                                                                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Git                 | [git-scm.com/download/win](https://git-scm.com/download/win)                                                                                       |
+| VS Code             | [code.visualstudio.com](https://code.visualstudio.com/)                                                                                            |
+| Azure CLI           | [aka.ms/installazurecliwindows](https://aka.ms/installazurecliwindows)                                                                             |
 | Azure Developer CLI | [learn.microsoft.com/azure/developer/azure-developer-cli/install-azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) |
-| kubectl | [kubernetes.io/docs/tasks/tools/install-kubectl-windows](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/) |
-| Python | [python.org/downloads](https://www.python.org/downloads/) |
-| Docker Desktop | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) |
+| kubectl             | [kubernetes.io/docs/tasks/tools/install-kubectl-windows](https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/)                          |
+| Python              | [python.org/downloads](https://www.python.org/downloads/)                                                                                          |
+| Docker Desktop      | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)                                                              |
 
 ---
 
@@ -262,23 +264,24 @@ Open VS Code and install these extensions for the best experience:
 
 ### Required Extensions
 
-| Extension | What It Does | Install Command |
-|-----------|-------------|-----------------|
-| **Bicep** | Azure infrastructure as code | `code --install-extension ms-azuretools.vscode-bicep` |
-| **Azure Tools** | Azure resource management | `code --install-extension ms-vscode.vscode-node-azure-pack` |
+| Extension       | What It Does                 | Install Command                                             |
+| --------------- | ---------------------------- | ----------------------------------------------------------- |
+| **Bicep**       | Azure infrastructure as code | `code --install-extension ms-azuretools.vscode-bicep`       |
+| **Azure Tools** | Azure resource management    | `code --install-extension ms-vscode.vscode-node-azure-pack` |
 
 ### Recommended Extensions
 
-| Extension | What It Does | Install Command |
-|-----------|-------------|-----------------|
-| **Python** | Python language support | `code --install-extension ms-python.python` |
-| **Docker** | Container development | `code --install-extension ms-azuretools.vscode-docker` |
-| **YAML** | YAML file support | `code --install-extension redhat.vscode-yaml` |
-| **Kubernetes** | K8s support | `code --install-extension ms-kubernetes-tools.vscode-kubernetes-tools` |
+| Extension      | What It Does            | Install Command                                                        |
+| -------------- | ----------------------- | ---------------------------------------------------------------------- |
+| **Python**     | Python language support | `code --install-extension ms-python.python`                            |
+| **Docker**     | Container development   | `code --install-extension ms-azuretools.vscode-docker`                 |
+| **YAML**       | YAML file support       | `code --install-extension redhat.vscode-yaml`                          |
+| **Kubernetes** | K8s support             | `code --install-extension ms-kubernetes-tools.vscode-kubernetes-tools` |
 
 #### Install All Extensions at Once
 
 **Windows (PowerShell):**
+
 ```powershell
 code --install-extension ms-azuretools.vscode-bicep
 code --install-extension ms-vscode.vscode-node-azure-pack
@@ -288,6 +291,7 @@ code --install-extension redhat.vscode-yaml
 ```
 
 **macOS/Linux (Terminal):**
+
 ```bash
 code --install-extension ms-azuretools.vscode-bicep
 code --install-extension ms-vscode.vscode-node-azure-pack
@@ -355,11 +359,13 @@ code .
 Run our validation script to confirm everything is working:
 
 **macOS/Linux:**
+
 ```bash
 ./scripts/bash/validate-env.sh
 ```
 
 **Windows (Git Bash or WSL):**
+
 ```bash
 bash ./scripts/bash/validate-env.sh
 ```
@@ -384,16 +390,19 @@ You should see green checkmarks (✓) for all required tools:
 To verify everything works, use our interactive deployment script:
 
 **macOS/Linux:**
+
 ```bash
 ./scripts/bash/deploy.sh
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 .\scripts\powershell\deploy.ps1
 ```
 
 The script will guide you through:
+
 - Checking prerequisites
 - Selecting a region
 - Choosing a lesson to deploy
@@ -465,12 +474,12 @@ If you have an older version, install Python 3.11 using the instructions above.
 
 ## 🆘 Getting Help
 
-| Issue | Where to Get Help |
-|-------|------------------|
-| Course content questions | Ask your instructor |
-| Repository issues | Open a GitHub issue |
-| Azure documentation | [learn.microsoft.com/azure](https://learn.microsoft.com/azure/) |
-| Azure CLI help | [learn.microsoft.com/cli/azure](https://learn.microsoft.com/cli/azure/) |
+| Issue                    | Where to Get Help                                                       |
+| ------------------------ | ----------------------------------------------------------------------- |
+| Course content questions | Ask your instructor                                                     |
+| Repository issues        | Open a GitHub issue                                                     |
+| Azure documentation      | [learn.microsoft.com/azure](https://learn.microsoft.com/azure/)         |
+| Azure CLI help           | [learn.microsoft.com/cli/azure](https://learn.microsoft.com/cli/azure/) |
 
 ---
 

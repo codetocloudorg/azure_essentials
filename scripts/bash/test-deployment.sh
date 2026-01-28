@@ -6,8 +6,27 @@
 #
 # PURPOSE:
 #   Validates that lesson deployments completed successfully by checking
-#   for expected resources. Use this during live training to verify
-#   deployments are working correctly.
+#   for expected Azure resources. Use this during live training to verify
+#   deployments are working correctly before moving to the next lesson.
+#
+# HOW IT WORKS:
+#   This script uses Azure CLI (az) to query your subscription and verify
+#   that the expected resources exist. Each lesson has its own validation
+#   function that checks for specific resource types.
+#
+# AZURE CLI QUERIES USED:
+#   - az group list          : Find resource groups by pattern
+#   - az resource list       : List resources in a resource group
+#   - az storage account list: Verify storage accounts
+#   - az network vnet list   : Verify virtual networks
+#   - az vm list             : Verify virtual machines
+#   - az aks list            : Verify Kubernetes clusters
+#
+# WHY VALIDATION MATTERS:
+#   - Confirms Bicep deployments succeeded
+#   - Catches partial failures (some resources created, others failed)
+#   - Helps troubleshoot deployment issues
+#   - Provides confidence before moving to next lesson
 #
 # USAGE:
 #   ./test-deployment.sh                    # Test all lessons
@@ -17,34 +36,66 @@
 # REQUIREMENTS:
 #   - Azure CLI installed and logged in
 #   - Resources deployed via deploy.sh or azure-cli scripts
+#
+# WHAT EACH LESSON DEPLOYS:
+#   Lesson 02: Management Groups (tenant-level hierarchy)
+#   Lesson 03: Storage Services (Blob, Files, Queues, Tables)
+#   Lesson 04: Networking (VNet, Subnets, NSGs, Bastion)
+#   Lesson 05: Compute - Windows (Windows VM, IIS, ASP.NET)
+#   Lesson 06: Compute - Linux (Linux VM, MicroK8s)
+#   Lesson 07: Container Services (ACR, ACI, AKS)
+#   Lesson 08: Serverless (Azure Functions, Logic Apps)
+#   Lesson 09: Database Services (Cosmos DB, SQL)
+#   Lesson 11: AI Foundry (Azure OpenAI, AI Hub)
+#
 #===============================================================================
 
 # Don't exit on error - we need to continue validating even if some fail
 # set -e
 
 #===============================================================================
-# CONFIGURATION - Customize these for your environment
+# CONFIGURATION
+#===============================================================================
+# The ENV_NAME is used to find resource groups created by azd.
+# azd names resources using the pattern: rg-<env-name>-<lesson>
+#
+# You can override this with:
+#   export AZURE_ENV_NAME=myenv
+# Or use the --env flag:
+#   ./test-deployment.sh --env myenv
 #===============================================================================
 
 # Default environment name pattern (used to find resource groups)
 ENV_NAME="${AZURE_ENV_NAME:-azlearn}"
 
-# Colors for terminal output (makes live training easier to follow)
-RED='\033[0;31m'      # Errors
-GREEN='\033[0;32m'    # Success
-YELLOW='\033[1;33m'   # Warnings
-BLUE='\033[0;34m'     # Info headers
-CYAN='\033[0;36m'     # Details
+#===============================================================================
+# TERMINAL COLORS - Visual feedback for validation results
+#===============================================================================
+# Color coding makes it easy to scan results during live training:
+#   GREEN  = Resource found, validation passed
+#   RED    = Resource missing, validation failed
+#   YELLOW = Warning (optional resource missing)
+#   BLUE   = Section headers
+#   CYAN   = Informational details
+#===============================================================================
+RED='\033[0;31m'      # Errors - resource missing or failed
+GREEN='\033[0;32m'    # Success - resource found and valid
+YELLOW='\033[1;33m'   # Warnings - optional items
+BLUE='\033[0;34m'     # Section headers
+CYAN='\033[0;36m'     # Details and resource names
 MAGENTA='\033[0;35m'  # Highlights
 BOLD='\033[1m'        # Emphasis
 DIM='\033[2m'         # De-emphasis
 NC='\033[0m'          # Reset color
 
 #===============================================================================
-# HELPER FUNCTIONS - Reusable output formatting
+# HELPER FUNCTIONS - Consistent output formatting
+#===============================================================================
+# These functions provide consistent visual output across all validations.
+# Reusable patterns like this are common in production scripts.
 #===============================================================================
 
-# Print a section header with visual separation
+# Print a major section header
 print_header() {
     echo ""
     echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
@@ -80,22 +131,34 @@ print_info() {
     echo -e "  ${CYAN}●${NC} $1"
 }
 
-# Detail message (indented)
+# Detail message (indented, used for sub-items)
 print_detail() {
     echo -e "    ${DIM}└─${NC} $1"
 }
 
 #===============================================================================
-# VALIDATION FUNCTIONS - One per lesson
+# AZURE CLI HELPER FUNCTIONS
+#===============================================================================
+# These functions wrap Azure CLI commands for common validation tasks.
+# They demonstrate JMESPath queries for filtering Azure resources.
+#
+# KEY CONCEPT: JMESPath Queries
+#   Azure CLI uses JMESPath for querying JSON output.
+#   Examples:
+#     --query "[0].name"              # Get name of first item
+#     --query "[?name=='foo']"        # Filter by name
+#     --query "length(@)"             # Count items
+#     --query "[].{name:name,sku:sku.name}" # Select specific fields
 #===============================================================================
 
-# Find resource groups matching our pattern
+# Find resource groups matching a pattern
 find_resource_groups() {
     local pattern="$1"
     az group list --query "[?contains(name, '${pattern}')].name" -o tsv 2>/dev/null
 }
 
-# Check if a resource exists in a resource group
+# Check if a specific resource type exists in a resource group
+# Uses JMESPath to filter by resource type and name pattern
 check_resource() {
     local rg="$1"
     local type="$2"
@@ -110,12 +173,34 @@ check_resource() {
     [[ "$count" -gt 0 ]]
 }
 
-# Validate Lesson 02: Management Groups
+#===============================================================================
+# LESSON VALIDATION FUNCTIONS
+#===============================================================================
+# Each lesson has a dedicated validation function.
+# These demonstrate different Azure resource types and CLI commands.
+#===============================================================================
+
+#-------------------------------------------------------------------------------
+# Lesson 02: Management Groups
+#-------------------------------------------------------------------------------
+# Management Groups are tenant-level (not subscription-level) resources.
+# They provide hierarchical organization for subscriptions.
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - targetScope = 'managementGroup' or 'tenant'
+#   - Hierarchical resource relationships
+#
+# AZURE CLI:
+#   az account management-group list
+#   az account management-group show -n <name>
+#-------------------------------------------------------------------------------
 validate_lesson_02() {
     print_section "🏢 Lesson 02: Management Groups"
+    echo -e "  ${CYAN}Checking for management group hierarchy...${NC}"
+    echo -e "  ${CYAN}(Management Groups organize subscriptions at the tenant level)${NC}"
+    echo ""
 
     # Management Groups are tenant-level resources
-    # Note: az account management-group list only shows root, so we check each expected group directly
     local expected_groups=("mg-essentials-root" "mg-essentials-production" "mg-essentials-development" "mg-essentials-sandbox")
     local mg_count=0
     local found_groups=""
@@ -149,9 +234,30 @@ validate_lesson_02() {
     return 0
 }
 
-# Validate Lesson 03: Storage Services
+#-------------------------------------------------------------------------------
+# Lesson 03: Storage Services
+#-------------------------------------------------------------------------------
+# Azure Storage is one of the most fundamental Azure services.
+# It provides four types of storage:
+#   - Blobs: Unstructured data (files, images, videos)
+#   - Files: SMB file shares (lift-and-shift scenarios)
+#   - Queues: Message queuing for async processing
+#   - Tables: NoSQL key-value storage
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - Resource naming with uniqueString()
+#   - Storage account SKU tiers (Standard_LRS, Standard_GRS)
+#   - Nested resources (containers within storage accounts)
+#
+# AZURE CLI:
+#   az storage account list -g <rg>
+#   az storage container list --account-name <name>
+#-------------------------------------------------------------------------------
 validate_lesson_03() {
     print_section "📦 Lesson 03: Storage Services"
+    echo -e "  ${CYAN}Verifying Azure Storage resources...${NC}"
+    echo -e "  ${CYAN}(Storage Accounts provide Blob, File, Queue, and Table storage)${NC}"
+    echo ""
 
     # Look for resource groups matching various naming patterns
     local rg=$(az group list --query "[?contains(name, 'storage') || contains(name, 'lesson03') || contains(name, 'lesson-03')].name" -o tsv 2>/dev/null | head -1)
@@ -196,9 +302,36 @@ validate_lesson_03() {
     fi
 }
 
-# Validate Lesson 04: Networking
+#-------------------------------------------------------------------------------
+# Lesson 04: Networking
+#-------------------------------------------------------------------------------
+# Azure Networking is the foundation for all cloud architectures.
+# Key components:
+#   - Virtual Network (VNet): Isolated network in Azure
+#   - Subnets: Segments within a VNet for resource organization
+#   - NSG: Network Security Groups (firewall rules)
+#   - Azure Bastion: Secure RDP/SSH without public IPs
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - dependsOn for resource ordering
+#   - Resource properties and child resources
+#   - Security rules as nested resources
+#
+# NETWORKING BEST PRACTICES:
+#   - Use address spaces that don't overlap with on-premises
+#   - Segment workloads into subnets (web, app, data tiers)
+#   - Apply NSG rules at subnet level
+#
+# AZURE CLI:
+#   az network vnet list -g <rg>
+#   az network nsg list -g <rg>
+#   az network nsg rule list -g <rg> --nsg-name <name>
+#-------------------------------------------------------------------------------
 validate_lesson_04() {
     print_section "🌐 Lesson 04: Networking Services"
+    echo -e "  ${CYAN}Verifying Virtual Network infrastructure...${NC}"
+    echo -e "  ${CYAN}(VNets provide isolated networking for Azure resources)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'networking') || contains(name, 'lesson04') || contains(name, 'lesson-04')].name" -o tsv 2>/dev/null | head -1)
 
@@ -245,9 +378,34 @@ validate_lesson_04() {
     fi
 }
 
-# Validate Lesson 05: Windows Compute
+#-------------------------------------------------------------------------------
+# Lesson 05: Windows Compute
+#-------------------------------------------------------------------------------
+# Azure Virtual Machines provide IaaS compute resources.
+# This lesson focuses on Windows Server workloads.
+#
+# KEY CONCEPTS:
+#   - VM Sizes: Different CPU/RAM configurations (e.g., Standard_D2s_v3)
+#   - VM Images: Pre-built OS images (Windows Server, SQL Server)
+#   - Disks: OS disk and optional data disks (Standard/Premium SSD)
+#   - Extensions: Post-deployment configuration (IIS, custom scripts)
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - VM resource with imageReference
+#   - VM Extensions for IIS installation
+#   - Secure parameter handling for passwords
+#   - dependsOn chains (VM → NIC → VNet)
+#
+# AZURE CLI:
+#   az vm list -g <rg>
+#   az vm get-instance-view -g <rg> -n <name>  # Get power state
+#   az vm list-ip-addresses -g <rg> -n <name>  # Get public IP
+#-------------------------------------------------------------------------------
 validate_lesson_05() {
     print_section "🖥️ Lesson 05: Windows Compute"
+    echo -e "  ${CYAN}Verifying Windows VM and web server resources...${NC}"
+    echo -e "  ${CYAN}(VMs run Windows Server with IIS for web hosting)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'compute') || contains(name, 'windows') || contains(name, 'lesson05') || contains(name, 'lesson-05')].name" -o tsv 2>/dev/null | head -1)
 
@@ -299,9 +457,32 @@ validate_lesson_05() {
     fi
 }
 
-# Validate Lesson 06: Linux & Kubernetes
+#-------------------------------------------------------------------------------
+# Lesson 06: Linux & Kubernetes
+#-------------------------------------------------------------------------------
+# Linux VMs are common for open-source workloads and containers.
+# This lesson demonstrates MicroK8s - a lightweight Kubernetes distribution.
+#
+# KEY CONCEPTS:
+#   - Linux images (Ubuntu, RHEL, Debian)
+#   - SSH key authentication (more secure than passwords)
+#   - Cloud-init for automated configuration
+#   - MicroK8s: Single-node Kubernetes for learning
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - Linux-specific VM configuration
+#   - SSH public key deployment
+#   - Custom script extensions for cloud-init
+#
+# AZURE CLI:
+#   az vm list -g <rg> --query "[?osType=='Linux']"
+#   az vm run-command invoke  # Run commands inside VM
+#-------------------------------------------------------------------------------
 validate_lesson_06() {
     print_section "🐧 Lesson 06: Linux & Kubernetes"
+    echo -e "  ${CYAN}Verifying Linux VM with MicroK8s...${NC}"
+    echo -e "  ${CYAN}(MicroK8s provides a lightweight Kubernetes environment)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'linux') || contains(name, 'k8s') || contains(name, 'lesson06') || contains(name, 'lesson-06')].name" -o tsv 2>/dev/null | head -1)
 
@@ -335,9 +516,35 @@ validate_lesson_06() {
     fi
 }
 
-# Validate Lesson 07: Container Services
+#-------------------------------------------------------------------------------
+# Lesson 07: Container Services
+#-------------------------------------------------------------------------------
+# Azure provides multiple container hosting options:
+#   - ACR (Azure Container Registry): Private Docker image storage
+#   - ACI (Azure Container Instances): Serverless container hosting
+#   - AKS (Azure Kubernetes Service): Managed Kubernetes clusters
+#
+# KEY CONCEPTS:
+#   - Container images are stored in registries (ACR)
+#   - ACI is perfect for simple, single-container workloads
+#   - AKS is for production orchestration with multiple containers
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - ACR resource with admin credentials
+#   - ACI container group with environment variables
+#   - ACR integration with ACI/AKS (pull secrets)
+#
+# AZURE CLI:
+#   az acr list -g <rg>
+#   az acr repository list -n <acr-name>
+#   az container list -g <rg>
+#   az aks list -g <rg>
+#-------------------------------------------------------------------------------
 validate_lesson_07() {
     print_section "🐳 Lesson 07: Container Services"
+    echo -e "  ${CYAN}Verifying container infrastructure...${NC}"
+    echo -e "  ${CYAN}(ACR stores images, ACI/AKS run containers)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'container') || contains(name, 'lesson07') || contains(name, 'lesson-07')].name" -o tsv 2>/dev/null | head -1)
 
@@ -370,9 +577,34 @@ validate_lesson_07() {
     fi
 }
 
-# Validate Lesson 08: Serverless
+#-------------------------------------------------------------------------------
+# Lesson 08: Serverless
+#-------------------------------------------------------------------------------
+# Serverless computing eliminates server management:
+#   - Azure Functions: Event-driven code execution
+#   - Logic Apps: Visual workflow automation
+#   - Event Grid: Event routing and delivery
+#
+# KEY CONCEPTS:
+#   - Consumption Plan: Pay only for execution time
+#   - Triggers: HTTP, Timer, Queue, Blob, etc.
+#   - Bindings: Declarative input/output connections
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - Function App with consumption plan
+#   - Storage account for function state
+#   - App settings for configuration
+#
+# AZURE CLI:
+#   az functionapp list -g <rg>
+#   az functionapp function list -g <rg> -n <app>
+#   az functionapp config appsettings list
+#-------------------------------------------------------------------------------
 validate_lesson_08() {
     print_section "⚡ Lesson 08: Serverless Services"
+    echo -e "  ${CYAN}Verifying Azure Functions deployment...${NC}"
+    echo -e "  ${CYAN}(Functions provide event-driven, pay-per-execution compute)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'serverless') || contains(name, 'function') || contains(name, 'lesson08') || contains(name, 'lesson-08')].name" -o tsv 2>/dev/null | head -1)
 
@@ -401,9 +633,34 @@ validate_lesson_08() {
     fi
 }
 
-# Validate Lesson 09: Database Services
+#-------------------------------------------------------------------------------
+# Lesson 09: Database Services
+#-------------------------------------------------------------------------------
+# Azure provides fully managed database options:
+#   - Cosmos DB: Multi-model, globally distributed NoSQL
+#   - Azure SQL: Managed SQL Server
+#   - PostgreSQL/MySQL: Managed open-source databases
+#
+# KEY CONCEPTS:
+#   - RU/s (Request Units): Cosmos DB throughput measure
+#   - Consistency Levels: Trade-off between consistency and latency
+#   - Partition Keys: Data distribution strategy
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - Cosmos DB account with multiple regions
+#   - Database and container as child resources
+#   - Throughput configuration
+#
+# AZURE CLI:
+#   az cosmosdb list -g <rg>
+#   az cosmosdb sql database list --account-name <name>
+#   az cosmosdb keys list --name <name>
+#-------------------------------------------------------------------------------
 validate_lesson_09() {
     print_section "🗄️ Lesson 09: Database Services"
+    echo -e "  ${CYAN}Verifying Cosmos DB deployment...${NC}"
+    echo -e "  ${CYAN}(Cosmos DB provides globally distributed NoSQL storage)${NC}"
+    echo ""
 
     local rg=$(az group list --query "[?contains(name, 'database') || contains(name, 'cosmos') || contains(name, 'lesson09') || contains(name, 'lesson-09')].name" -o tsv 2>/dev/null | head -1)
 
@@ -432,9 +689,34 @@ validate_lesson_09() {
     fi
 }
 
-# Validate Lesson 11: AI Foundry
+#-------------------------------------------------------------------------------
+# Lesson 11: AI Foundry
+#-------------------------------------------------------------------------------
+# Azure AI Foundry provides a unified platform for AI development:
+#   - Azure OpenAI: GPT models, embeddings, DALL-E
+#   - AI Hub: Central management for AI projects
+#   - Cognitive Services: Pre-built AI APIs
+#
+# KEY CONCEPTS:
+#   - Model Deployments: Deploy specific models (gpt-4, gpt-35-turbo)
+#   - Tokens: AI usage is measured in tokens
+#   - Prompt Engineering: Crafting effective prompts
+#
+# BICEP CONCEPTS DEMONSTRATED:
+#   - Cognitive Services account resource
+#   - Deployment of AI models
+#   - Key management for API access
+#
+# AZURE CLI:
+#   az cognitiveservices account list -g <rg>
+#   az cognitiveservices account deployment list
+#   az cognitiveservices account keys list
+#-------------------------------------------------------------------------------
 validate_lesson_11() {
     print_section "🤖 Lesson 11: Azure AI Foundry"
+    echo -e "  ${CYAN}Verifying AI and Machine Learning resources...${NC}"
+    echo -e "  ${CYAN}(AI Foundry provides Azure OpenAI and ML capabilities)${NC}"
+    echo ""
 
     # Be specific with '-ai' suffix to avoid matching 'containers' which contains 'ai'
     local rg=$(az group list --query "[?contains(name, '-ai') || contains(name, 'foundry') || contains(name, 'lesson11') || contains(name, 'lesson-11')].name" -o tsv 2>/dev/null | head -1)
