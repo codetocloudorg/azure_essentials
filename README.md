@@ -1,3 +1,19 @@
+```
+   ██████╗ ██████╗ ██████╗ ███████╗    ████████╗ ██████╗
+  ██╔════╝██╔═══██╗██╔══██╗██╔════╝    ╚══██╔══╝██╔═══██╗
+  ██║     ██║   ██║██║  ██║█████╗         ██║   ██║   ██║
+  ██║     ██║   ██║██║  ██║██╔══╝         ██║   ██║   ██║
+  ╚██████╗╚██████╔╝██████╔╝███████╗       ██║   ╚██████╔╝
+   ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝       ╚═╝    ╚═════╝
+
+   ██████╗██╗      ██████╗ ██╗   ██╗██████╗
+  ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗
+  ██║     ██║     ██║   ██║██║   ██║██║  ██║
+  ██║     ██║     ██║   ██║██║   ██║██║  ██║
+  ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝
+   ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝
+```
+
 # Azure Essentials Live Training
 
 > **Code to Cloud** | A hands-on journey from local development to Azure mastery
@@ -147,11 +163,31 @@ Some lessons require compute quota that may not be available on free accounts:
 
 When you finish a session or the course, remove all resources to avoid charges:
 
+**Option 1: Interactive Cleanup (Recommended)**
+
+```bash
+# macOS / Linux - Run deploy script and choose 'c' for cleanup
+./scripts/bash/deploy.sh
+
+# Or use direct cleanup command
+./scripts/bash/deploy.sh --cleanup --env azlearn-yourname --yes
+```
+
+```powershell
+# Windows - Run deploy script and choose 'c' for cleanup
+.\scripts\powershell\deploy.ps1
+
+# Or use direct cleanup command
+.\scripts\powershell\deploy.ps1 -Cleanup -Environment azlearn-yourname -Yes
+```
+
+**Option 2: Using azd**
+
 ```bash
 azd down --force --purge
 ```
 
-> **Important**: Always run `azd down` when you finish working to prevent unexpected Azure charges.
+> **Important**: Always run cleanup when you finish working to prevent unexpected Azure charges.
 
 ---
 

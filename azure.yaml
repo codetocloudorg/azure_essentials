@@ -60,6 +60,185 @@ hooks:
       echo "⚠️  Remember: Run 'azd down' when done to avoid charges!"
       echo ""
 
+  # Pre-down: Clean up all resource groups before azd down
+  # This is necessary because azd down doesn't properly handle subscription-scoped
+  # deployments with multiple resource groups. We explicitly delete all lesson
+  # resource groups to ensure complete teardown.
+  predown:
+    shell: sh
+    run: |
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   Azure Essentials - Cleaning Up Resources                   ║"
+      echo "║   Code to Cloud                                              ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+      echo "  Environment: ${AZURE_ENV_NAME}"
+      echo ""
+
+      # Find all resource groups matching this environment
+      echo "Finding resource groups for environment '${AZURE_ENV_NAME}'..."
+      RESOURCE_GROUPS=$(az group list --query "[?contains(name, '${AZURE_ENV_NAME}') && contains(tags.azdEnvName, '${AZURE_ENV_NAME}')].name" -o tsv 2>/dev/null)
+
+      if [ -z "$RESOURCE_GROUPS" ]; then
+        # Try without tag filter in case tags weren't applied
+        RESOURCE_GROUPS=$(az group list --query "[?contains(name, 'rg-${AZURE_ENV_NAME}-lesson')].name" -o tsv 2>/dev/null)
+      fi
+
+      if [ -z "$RESOURCE_GROUPS" ]; then
+        echo "  No resource groups found for environment '${AZURE_ENV_NAME}'"
+        echo ""
+      else
+        echo ""
+        echo "Resource groups to delete:"
+        echo "$RESOURCE_GROUPS" | while read rg; do
+          echo "  • $rg"
+        done
+        echo ""
+
+        # Delete each resource group (run in parallel for speed)
+        echo "Deleting resource groups (this may take several minutes)..."
+        echo ""
+
+        # Delete resource groups in parallel using background jobs
+        for rg in $RESOURCE_GROUPS; do
+          echo "  Deleting: $rg"
+          az group delete --name "$rg" --yes --no-wait 2>/dev/null &
+        done
+
+        # Wait for all background deletions to start
+        sleep 2
+
+        echo ""
+        echo "  ℹ️  Resource group deletions initiated."
+        echo "  ℹ️  Azure will continue deleting resources in the background."
+        echo "  ℹ️  This typically takes 2-5 minutes per resource group."
+        echo ""
+
+        # Wait for resource groups to be fully deleted (with timeout)
+        echo "Waiting for resource groups to be deleted..."
+        TIMEOUT=300  # 5 minute timeout
+        ELAPSED=0
+        INTERVAL=10
+
+        while [ $ELAPSED -lt $TIMEOUT ]; do
+          REMAINING=$(az group list --query "[?contains(name, 'rg-${AZURE_ENV_NAME}-lesson')].name" -o tsv 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$REMAINING" -eq 0 ]; then
+            echo "  ✅ All resource groups deleted successfully!"
+            break
+          fi
+          echo "  ⏳ $REMAINING resource group(s) still deleting... (${ELAPSED}s elapsed)"
+          sleep $INTERVAL
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
+
+        if [ $ELAPSED -ge $TIMEOUT ]; then
+          echo ""
+          echo "  ⚠️  Timeout reached. Some resource groups may still be deleting."
+          echo "  ⚠️  Check Azure Portal for status: https://portal.azure.com"
+        fi
+      fi
+
+      # Clean up management groups if they exist
+      MG_PREFIX="mg-${AZURE_ENV_NAME}"
+      MG_ROOT=$(az account management-group list --query "[?name=='${MG_PREFIX}-root'].name" -o tsv 2>/dev/null)
+
+      if [ -n "$MG_ROOT" ]; then
+        echo ""
+        echo "Found management groups. Cleaning up hierarchy..."
+        echo ""
+
+        # Delete leaf nodes first (deepest children)
+        for mg in "identity" "connectivity" "management"; do
+          az account management-group delete --name "${MG_PREFIX}-${mg}" 2>/dev/null && echo "  ✓ Deleted ${MG_PREFIX}-${mg}" || true
+        done
+
+        for mg in "prod" "nonprod"; do
+          az account management-group delete --name "${MG_PREFIX}-${mg}" 2>/dev/null && echo "  ✓ Deleted ${MG_PREFIX}-${mg}" || true
+        done
+
+        # Delete second level
+        for mg in "platform" "workloads" "sandbox"; do
+          az account management-group delete --name "${MG_PREFIX}-${mg}" 2>/dev/null && echo "  ✓ Deleted ${MG_PREFIX}-${mg}" || true
+        done
+
+        # Delete root last
+        az account management-group delete --name "${MG_PREFIX}-root" 2>/dev/null && echo "  ✓ Deleted ${MG_PREFIX}-root" || true
+      fi
+
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   ✅ Pre-cleanup Complete                                    ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+
+  # Post-down: Verify cleanup and purge soft-deleted resources
+  postdown:
+    shell: sh
+    run: |
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   Verifying Cleanup & Purging Soft-Deleted Resources         ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+
+      # Check for any remaining resource groups
+      REMAINING=$(az group list --query "[?contains(name, 'rg-${AZURE_ENV_NAME}-lesson')].name" -o tsv 2>/dev/null)
+
+      if [ -n "$REMAINING" ]; then
+        echo "⚠️  Some resource groups are still being deleted:"
+        echo "$REMAINING" | while read rg; do
+          echo "  • $rg"
+        done
+        echo ""
+        echo "Check Azure Portal for deletion status:"
+        echo "  https://portal.azure.com/#view/HubsExtension/BrowseResourceGroups"
+      else
+        echo "✅ All lesson resource groups have been deleted."
+      fi
+
+      # Purge soft-deleted Key Vaults (AI Foundry creates these)
+      echo ""
+      echo "Checking for soft-deleted Key Vaults..."
+      DELETED_KVS=$(az keyvault list-deleted --query "[?contains(name, '${AZURE_ENV_NAME}')].name" -o tsv 2>/dev/null)
+
+      if [ -n "$DELETED_KVS" ]; then
+        echo "Purging soft-deleted Key Vaults..."
+        for kv in $DELETED_KVS; do
+          echo "  Purging: $kv"
+          az keyvault purge --name "$kv" 2>/dev/null || true
+        done
+      else
+        echo "  No soft-deleted Key Vaults found."
+      fi
+
+      # Purge soft-deleted Cognitive Services (AI Foundry)
+      echo ""
+      echo "Checking for soft-deleted Cognitive Services..."
+      DELETED_COG=$(az cognitiveservices account list-deleted --query "[?contains(name, '${AZURE_ENV_NAME}')].name" -o tsv 2>/dev/null)
+
+      if [ -n "$DELETED_COG" ]; then
+        echo "Purging soft-deleted Cognitive Services accounts..."
+        for cog in $DELETED_COG; do
+          LOCATION=$(az cognitiveservices account list-deleted --query "[?name=='$cog'].location" -o tsv 2>/dev/null)
+          echo "  Purging: $cog"
+          az cognitiveservices account purge --name "$cog" --resource-group "placeholder" --location "$LOCATION" 2>/dev/null || true
+        done
+      else
+        echo "  No soft-deleted Cognitive Services found."
+      fi
+
+      echo ""
+      echo "╔══════════════════════════════════════════════════════════════╗"
+      echo "║   ✅ Cleanup Complete!                                       ║"
+      echo "╚══════════════════════════════════════════════════════════════╝"
+      echo ""
+      echo "All Azure Essentials resources have been removed."
+      echo ""
+      echo "To verify, check the Azure Portal:"
+      echo "  https://portal.azure.com/#view/HubsExtension/BrowseResourceGroups"
+      echo ""
+
 # Note: Services are deployed manually during lessons
 # This template focuses on infrastructure provisioning only
 # Learners will deploy apps as part of hands-on exercises

@@ -221,16 +221,63 @@ chmod +x scripts/azure-cli/*.sh
 
 **Always clean up resources when done** to avoid charges:
 
+### Option 1: Interactive Cleanup (Recommended)
+
+The deploy scripts have a built-in cleanup option:
+
 ```bash
-# Using azd (removes everything)
-azd down --force --purge
+# macOS / Linux - Interactive menu (choose 'c' for cleanup)
+./scripts/bash/deploy.sh
 
-# Using Azure CLI scripts
-./scripts/azure-cli/lesson-03-storage.sh --cleanup
+# macOS / Linux - Direct cleanup command
+./scripts/bash/deploy.sh --cleanup
 
-# Manual cleanup
-az group delete --name rg-yourname-lesson03-storage --yes --no-wait
+# Non-interactive (for scripting)
+./scripts/bash/deploy.sh --cleanup --env azlearn-yourname --yes
 ```
+
+```powershell
+# Windows - Interactive menu (choose 'c' for cleanup)
+.\scripts\powershell\deploy.ps1
+
+# Windows - Direct cleanup command
+.\scripts\powershell\deploy.ps1 -Cleanup
+
+# Non-interactive (for scripting)
+.\scripts\powershell\deploy.ps1 -Cleanup -Environment azlearn-yourname -Yes
+```
+
+### Option 2: Using azd
+
+```bash
+# Removes all resources deployed via azd
+azd down --force --purge
+```
+
+### Option 3: Using Azure CLI scripts
+
+```bash
+./scripts/azure-cli/lesson-03-storage.sh --cleanup
+```
+
+### Option 4: Manual cleanup
+
+```bash
+# Delete a specific resource group
+az group delete --name rg-yourname-lesson03-storage --yes --no-wait
+
+# List all your resource groups
+az group list --query "[?contains(name, 'yourname')].name" -o tsv
+```
+
+### What Gets Cleaned Up
+
+The cleanup process removes:
+
+- ✅ All lesson resource groups (rg-_-lesson_)
+- ✅ Management groups (if Lesson 02 was deployed)
+- ✅ Soft-deleted Key Vaults (purges them)
+- ✅ Soft-deleted Cognitive Services (AI Foundry resources)
 
 ---
 

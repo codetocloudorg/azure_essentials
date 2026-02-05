@@ -112,6 +112,22 @@ BOLD='\033[1m'        # Emphasis (works with colors too)
 NC='\033[0m'          # No Color (reset to terminal default)
 
 #===============================================================================
+# PROMPT HELPER - Ensures prompts are visible in all terminal environments
+#===============================================================================
+# Some terminals (especially VS Code integrated terminal) may buffer output.
+# This function ensures the prompt is visible before waiting for input.
+prompt_user() {
+    local prompt_text="$1"
+    local var_name="$2"
+
+    # Print prompt to stderr to ensure it's not buffered
+    echo -ne "${CYAN}${prompt_text}${NC}" >&2
+
+    # Read into the specified variable
+    read "$var_name"
+}
+
+#===============================================================================
 # BANNER FUNCTION - Creates visual separation for live training
 #===============================================================================
 # ASCII art banner helps attendees know they're in the right place
@@ -367,7 +383,8 @@ select_subscription() {
         done < <(echo "$subs" | jq -c '.[]')
 
         while true; do
-            read -p "Select subscription [1-$sub_count] (default: $default_num): " sub_choice
+            echo -n "Select subscription [1-$sub_count] (default: $default_num): "
+            read sub_choice
 
             # Use default if empty
             if [ -z "$sub_choice" ]; then
@@ -568,7 +585,8 @@ run_preflight_checks() {
         echo "  Please address the issues above before continuing."
         echo "  Some resources may not deploy correctly."
         echo ""
-        read -p "  Continue anyway? (y/n): " continue_anyway
+        echo -n "  Continue anyway? (y/n): "
+        read continue_anyway
         if [ "$continue_anyway" != "y" ] && [ "$continue_anyway" != "Y" ]; then
             echo ""
             echo -e "${YELLOW}Deployment cancelled. Please fix the issues and try again.${NC}"
@@ -580,7 +598,8 @@ run_preflight_checks() {
         echo "  Some checks had warnings. Deployment should work, but"
         echo "  certain lessons (especially VMs) may have issues."
         echo ""
-        read -p "  Continue with deployment? (y/n) [y]: " continue_deploy
+        echo -n "  Continue with deployment? (y/n) [y]: "
+        read continue_deploy
         if [ "$continue_deploy" = "n" ] || [ "$continue_deploy" = "N" ]; then
             echo ""
             echo -e "${YELLOW}Deployment cancelled.${NC}"
@@ -641,7 +660,8 @@ select_region() {
     echo ""
 
     while true; do
-        read -p "Select region [1-5]: " region_choice
+        echo -n "Select region [1-5]: "
+        read region_choice
         case $region_choice in
             1) SELECTED_REGION="eastus"; break;;
             2) SELECTED_REGION="eastus2"; break;;
@@ -761,6 +781,10 @@ select_lesson() {
     echo -e "   ${CYAN}0)${NC} Deploy ALL Resources       ${RED}[ALL QUOTAS]${NC}   Lessons 2-9,11"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "   ${CYAN}c)${NC} 🧹 Cleanup Resources       ${RED}[DELETE ALL]${NC}   Remove deployed resources"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
     echo -e "${MAGENTA}┌─────────────────────────────────────────────────────────────────────────────┐${NC}"
     echo -e "${MAGENTA}│${NC} ${BOLD}💡 RESOURCE AVAILABILITY INFO:${NC}                                            ${MAGENTA}│${NC}"
     echo -e "${MAGENTA}│${NC}                                                                           ${MAGENTA}│${NC}"
@@ -774,7 +798,8 @@ select_lesson() {
     echo ""
 
     while true; do
-        read -p "Select lesson [0-12]: " lesson_choice
+        echo -n "Select lesson [0-12, c=cleanup]: "
+        read lesson_choice
         case $lesson_choice in
             0) SELECTED_LESSON=""; SSH_REQUIRED=1; WIN_PASSWORD_REQUIRED=1; DEPLOY_ALL=1; break;;
             1) SELECTED_LESSON="01"; NO_RESOURCES=1; break;;
@@ -789,9 +814,16 @@ select_lesson() {
             10) SELECTED_LESSON="10"; NO_RESOURCES=1; break;;
             11) SELECTED_LESSON="11"; break;;
             12) SELECTED_LESSON="12"; NO_RESOURCES=1; break;;
-            *) echo -e "${RED}Invalid choice. Please enter 0-12.${NC}";;
+            c|C|cleanup) CLEANUP_MODE=1; break;;
+            *) echo -e "${RED}Invalid choice. Please enter 0-12 or 'c' for cleanup.${NC}";;
         esac
     done
+
+    # Handle cleanup from menu
+    if [ "${CLEANUP_MODE:-0}" -eq 1 ]; then
+        cleanup_resources
+        exit 0
+    fi
 
     # Handle lessons that don't need Azure resources
     if [ "${NO_RESOURCES:-0}" -eq 1 ]; then
@@ -817,7 +849,8 @@ select_lesson() {
 
     if [ -z "$SELECTED_LESSON" ]; then
         echo -e "${YELLOW}⚠️  Deploying ALL lessons will create multiple resource groups and may incur costs.${NC}"
-        read -p "Are you sure? (y/n): " confirm
+        echo -n "Are you sure? (y/n): "
+        read confirm
         if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
             select_lesson
             return
@@ -873,7 +906,8 @@ get_environment_name() {
     echo ""
 
     local default_name="azlearn-$(whoami | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]//g' | cut -c1-8)"
-    read -p "Environment name [$default_name]: " env_name
+    echo -n "Environment name [$default_name]: "
+    read env_name
 
     if [ -z "$env_name" ]; then
         ENV_NAME="$default_name"
@@ -941,7 +975,8 @@ deploy_management_groups() {
     echo "  └── 📁 mg-${ENV_NAME}-sandbox      ← Experimentation"
     echo ""
 
-    read -p "Deploy Management Groups? (y/n): " confirm
+    echo -n "Deploy Management Groups? (y/n): "
+    read confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo -e "${YELLOW}Deployment cancelled.${NC}"
         exit 0
@@ -1591,7 +1626,8 @@ confirm_and_deploy() {
     fi
     echo ""
 
-    read -p "Proceed with deployment? (y/n): " confirm
+    echo -n "Proceed with deployment? (y/n): "
+    read confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo -e "${YELLOW}Deployment cancelled.${NC}"
         exit 0
@@ -1791,6 +1827,224 @@ show_completion() {
 #   └─────────────────────────────────────────────────────────────────────────┘
 #
 #===============================================================================
+
+#===============================================================================
+# CLEANUP FUNCTION - Properly tear down all Azure resources
+#===============================================================================
+# WHY THIS EXISTS:
+#   `azd down` has a known limitation with subscription-scoped deployments.
+#   When main.bicep uses `targetScope = 'subscription'` and creates multiple
+#   resource groups, azd down may fail to delete them properly.
+#
+# WHAT THIS DOES:
+#   1. Finds all resource groups matching the environment name
+#   2. Deletes them in parallel for faster cleanup
+#   3. Cleans up management groups (Lesson 02)
+#   4. Purges soft-deleted resources (Key Vaults, Cognitive Services)
+#
+# USAGE:
+#   ./deploy.sh --cleanup                    # Interactive cleanup
+#   ./deploy.sh --cleanup --env myenv        # Cleanup specific environment
+#   ./deploy.sh --cleanup --env myenv --yes  # Non-interactive cleanup
+#===============================================================================
+cleanup_resources() {
+    local force_yes="${FORCE_YES:-0}"
+
+    print_banner
+    print_section "🧹 Cleanup Azure Resources"
+
+    echo -e "${CYAN}This will delete ALL Azure resources for environment '${ENV_NAME}'${NC}"
+    echo ""
+
+    # Find all resource groups matching this environment
+    echo -e "${CYAN}Finding resource groups...${NC}"
+    local resource_groups
+    resource_groups=$(az group list --query "[?contains(name, 'rg-${ENV_NAME}-lesson')].name" -o tsv 2>/dev/null)
+
+    # Find management groups
+    local mg_root
+    mg_root=$(az account management-group list --query "[?name=='mg-${ENV_NAME}-root'].name" -o tsv 2>/dev/null)
+
+    if [ -z "$resource_groups" ] && [ -z "$mg_root" ]; then
+        echo -e "${YELLOW}No resources found for environment '${ENV_NAME}'${NC}"
+        echo ""
+        echo "Tips:"
+        echo "  • Check if you're logged into the correct subscription"
+        echo "  • Verify the environment name is correct"
+        echo "  • Run 'az group list' to see all resource groups"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${BOLD}Resources to delete:${NC}"
+
+    if [ -n "$resource_groups" ]; then
+        echo ""
+        echo -e "  ${YELLOW}Resource Groups:${NC}"
+        echo "$resource_groups" | while read rg; do
+            echo "    • $rg"
+        done
+    fi
+
+    if [ -n "$mg_root" ]; then
+        echo ""
+        echo -e "  ${YELLOW}Management Groups:${NC}"
+        echo "    • mg-${ENV_NAME}-root (and all children)"
+    fi
+
+    echo ""
+
+    # Confirm deletion
+    if [ "$force_yes" != "1" ]; then
+        echo -e "${RED}⚠️  WARNING: This action cannot be undone!${NC}"
+        echo ""
+        echo -n "Are you sure you want to delete these resources? (yes/no): "
+        read confirm
+        if [ "$confirm" != "yes" ]; then
+            echo ""
+            echo -e "${YELLOW}Cleanup cancelled.${NC}"
+            return 0
+        fi
+    fi
+
+    echo ""
+
+    # Delete resource groups in parallel
+    if [ -n "$resource_groups" ]; then
+        echo -e "${CYAN}Deleting resource groups (this may take several minutes)...${NC}"
+        echo ""
+
+        for rg in $resource_groups; do
+            echo -e "  ${YELLOW}Deleting:${NC} $rg"
+            az group delete --name "$rg" --yes --no-wait 2>/dev/null &
+        done
+
+        # Wait briefly for deletions to initiate
+        sleep 3
+
+        echo ""
+        echo -e "${CYAN}Resource group deletions initiated. Waiting for completion...${NC}"
+        echo ""
+
+        # Wait for resource groups to be deleted (with timeout)
+        local timeout=300  # 5 minutes
+        local elapsed=0
+        local interval=15
+
+        while [ $elapsed -lt $timeout ]; do
+            local remaining
+            remaining=$(az group list --query "[?contains(name, 'rg-${ENV_NAME}-lesson')].name" -o tsv 2>/dev/null | wc -l | tr -d ' ')
+
+            if [ "$remaining" -eq 0 ]; then
+                echo -e "  ${GREEN}✅ All resource groups deleted!${NC}"
+                break
+            fi
+
+            echo -e "  ⏳ $remaining resource group(s) still deleting... (${elapsed}s elapsed)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+        done
+
+        if [ $elapsed -ge $timeout ]; then
+            echo ""
+            echo -e "${YELLOW}⚠️  Timeout reached. Some resource groups may still be deleting.${NC}"
+            echo -e "${YELLOW}    Check Azure Portal for status.${NC}"
+        fi
+    fi
+
+    # Delete management groups
+    if [ -n "$mg_root" ]; then
+        echo ""
+        echo -e "${CYAN}Deleting management groups...${NC}"
+        echo ""
+
+        local mg_prefix="mg-${ENV_NAME}"
+
+        # Delete leaf nodes first
+        for mg in "identity" "connectivity" "management" "prod" "nonprod"; do
+            az account management-group delete --name "${mg_prefix}-${mg}" 2>/dev/null && \
+                echo -e "  ${GREEN}✓${NC} Deleted ${mg_prefix}-${mg}" || true
+        done
+
+        # Delete second level
+        for mg in "platform" "workloads" "sandbox"; do
+            az account management-group delete --name "${mg_prefix}-${mg}" 2>/dev/null && \
+                echo -e "  ${GREEN}✓${NC} Deleted ${mg_prefix}-${mg}" || true
+        done
+
+        # Delete root
+        az account management-group delete --name "${mg_prefix}-root" 2>/dev/null && \
+            echo -e "  ${GREEN}✓${NC} Deleted ${mg_prefix}-root" || true
+    fi
+
+    # Purge soft-deleted resources
+    echo ""
+    echo -e "${CYAN}Checking for soft-deleted resources to purge...${NC}"
+    echo ""
+
+    # Key Vaults
+    local deleted_kvs
+    deleted_kvs=$(az keyvault list-deleted --query "[?contains(name, '${ENV_NAME}')].name" -o tsv 2>/dev/null)
+
+    if [ -n "$deleted_kvs" ]; then
+        echo "  Purging soft-deleted Key Vaults..."
+        for kv in $deleted_kvs; do
+            az keyvault purge --name "$kv" 2>/dev/null && \
+                echo -e "    ${GREEN}✓${NC} Purged $kv" || true
+        done
+    fi
+
+    # Cognitive Services (AI Foundry)
+    local deleted_cog
+    deleted_cog=$(az cognitiveservices account list-deleted --query "[?contains(name, '${ENV_NAME}')].name" -o tsv 2>/dev/null)
+
+    if [ -n "$deleted_cog" ]; then
+        echo "  Purging soft-deleted Cognitive Services..."
+        for cog in $deleted_cog; do
+            local location
+            location=$(az cognitiveservices account list-deleted --query "[?name=='$cog'].location" -o tsv 2>/dev/null)
+            az cognitiveservices account purge --name "$cog" --resource-group "placeholder" --location "$location" 2>/dev/null && \
+                echo -e "    ${GREEN}✓${NC} Purged $cog" || true
+        done
+    fi
+
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}  ✅ Cleanup Complete!${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo "Verify cleanup in Azure Portal:"
+    echo "  https://portal.azure.com/#view/HubsExtension/BrowseResourceGroups"
+    echo ""
+}
+
+#===============================================================================
+# SHOW USAGE - Help text for command-line arguments
+#===============================================================================
+show_usage() {
+    echo ""
+    echo -e "${BOLD}Azure Essentials - Deployment Script${NC}"
+    echo -e "${CYAN}Code to Cloud | www.codetocloud.io${NC}"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --help, -h           Show this help message"
+    echo "  --cleanup            Remove all Azure resources for an environment"
+    echo "  --env NAME           Specify environment name (default: azlearn-<username>)"
+    echo "  --yes, -y            Skip confirmation prompts (use with --cleanup)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                   # Interactive deployment"
+    echo "  $0 --cleanup         # Interactive cleanup (will prompt for env name)"
+    echo "  $0 --cleanup --env myenv --yes  # Non-interactive cleanup"
+    echo ""
+    echo "For more information, see:"
+    echo "  lessons/00-prerequisites/README.md"
+    echo "  SCRIPTS.md"
+    echo ""
+}
+
 main() {
     # Step 1: Show banner
     print_banner
@@ -1827,5 +2081,62 @@ main() {
 #===============================================================================
 # SCRIPT ENTRY POINT
 #===============================================================================
-# Pass all command-line arguments to main function
+# Parse command-line arguments
+CLEANUP_MODE=0
+FORCE_YES=0
+CUSTOM_ENV=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        --cleanup)
+            CLEANUP_MODE=1
+            shift
+            ;;
+        --env)
+            CUSTOM_ENV="$2"
+            shift 2
+            ;;
+        --yes|-y)
+            FORCE_YES=1
+            shift
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            show_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Handle cleanup mode
+if [ "$CLEANUP_MODE" -eq 1 ]; then
+    print_banner
+    check_prerequisites
+
+    # If --yes flag is set, use current subscription without prompting
+    if [ "$FORCE_YES" -eq 1 ]; then
+        SELECTED_SUBSCRIPTION_NAME=$(az account show --query name -o tsv 2>/dev/null)
+        SELECTED_SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>/dev/null)
+        echo -e "${GREEN}Using current subscription: ${BOLD}$SELECTED_SUBSCRIPTION_NAME${NC}"
+    else
+        select_subscription
+    fi
+
+    if [ -n "$CUSTOM_ENV" ]; then
+        ENV_NAME="$CUSTOM_ENV"
+        echo -e "${GREEN}Using environment: ${BOLD}$ENV_NAME${NC}"
+    else
+        get_environment_name
+    fi
+
+    export FORCE_YES
+    cleanup_resources
+    exit 0
+fi
+
+# Normal deployment flow
 main "$@"

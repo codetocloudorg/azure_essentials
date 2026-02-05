@@ -14,8 +14,29 @@
 
     Code to Cloud - www.codetocloud.io
 
+.PARAMETER Help
+    Show usage information.
+
+.PARAMETER Cleanup
+    Remove all Azure resources for an environment instead of deploying.
+
+.PARAMETER Environment
+    Specify the environment name (default: azlearn-<username>).
+
+.PARAMETER Yes
+    Skip confirmation prompts (use with -Cleanup for non-interactive cleanup).
+
 .EXAMPLE
     .\deploy.ps1
+    Interactive deployment.
+
+.EXAMPLE
+    .\deploy.ps1 -Cleanup
+    Interactive cleanup of resources.
+
+.EXAMPLE
+    .\deploy.ps1 -Cleanup -Environment myenv -Yes
+    Non-interactive cleanup of a specific environment.
 
 .NOTES
     HOW DEPLOYMENT WORKS (THE TECHNOLOGY STACK):
@@ -42,6 +63,12 @@
          └─> Resource groups, VMs, storage, networking, etc.
          └─> All tagged and organized by lesson
 #>
+param(
+    [switch]$Help,
+    [switch]$Cleanup,
+    [string]$Environment,
+    [switch]$Yes
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -614,6 +641,10 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "0)" Cyan -NoNewline; Write-Host " Deploy ALL Resources       " -NoNewline; Write-ColorOutput "[ALL QUOTAS]" Red -NoNewline; Write-Host "   Lessons 2-9,11"
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
     Write-Host ""
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Red
+    Write-Host "     " -NoNewline; Write-ColorOutput "c)" Cyan -NoNewline; Write-Host " 🧹 Cleanup Resources       " -NoNewline; Write-ColorOutput "[DELETE ALL]" Red -NoNewline; Write-Host "   Remove deployed resources"
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Red
+    Write-Host ""
     Write-ColorOutput "  ┌─────────────────────────────────────────────────────────────────────────────┐" Magenta
     Write-ColorOutput "  │" Magenta -NoNewline; Write-Host " 💡 RESOURCE AVAILABILITY INFO:" -ForegroundColor White -NoNewline; Write-ColorOutput "                                            │" Magenta
     Write-ColorOutput "  │                                                                             │" Magenta
@@ -627,7 +658,7 @@ function Select-Lesson {
     Write-Host ""
 
     while ($true) {
-        $choice = Read-Host "  Select lesson [0-12]"
+        $choice = Read-Host "  Select lesson [0-12, c=cleanup]"
         switch ($choice) {
             "0" { $script:SelectedLesson = ""; $script:SshRequired = $true; $script:WinPasswordRequired = $true; $script:DeployAll = $true; break }
             "1" { $script:SelectedLesson = "01"; $script:NoResources = $true; break }
@@ -642,8 +673,12 @@ function Select-Lesson {
             "10" { $script:SelectedLesson = "10"; $script:NoResources = $true; break }
             "11" { $script:SelectedLesson = "11"; break }
             "12" { $script:SelectedLesson = "12"; $script:NoResources = $true; break }
+            { $_ -in @("c", "C", "cleanup") } {
+                Invoke-Cleanup
+                exit 0
+            }
             default {
-                Write-ColorOutput "  Invalid choice. Please enter 0-12." Red
+                Write-ColorOutput "  Invalid choice. Please enter 0-12 or 'c' for cleanup." Red
                 continue
             }
         }
@@ -1108,6 +1143,238 @@ function Build-HelloContainer {
 }
 
 #===============================================================================
+# CLEANUP FUNCTION - Properly tear down all Azure resources
+#===============================================================================
+# WHY THIS EXISTS:
+#   `azd down` has a known limitation with subscription-scoped deployments.
+#   When main.bicep uses `targetScope = 'subscription'` and creates multiple
+#   resource groups, azd down may fail to delete them properly.
+#
+# USAGE:
+#   .\deploy.ps1 -Cleanup                    # Interactive cleanup
+#   .\deploy.ps1 -Cleanup -EnvName myenv     # Cleanup specific environment
+#   .\deploy.ps1 -Cleanup -EnvName myenv -Yes  # Non-interactive cleanup
+#===============================================================================
+function Invoke-Cleanup {
+    param(
+        [switch]$ForceYes
+    )
+
+    Show-Banner
+    Show-Section "🧹 Cleanup Azure Resources"
+
+    Write-ColorOutput "  This will delete ALL Azure resources for environment '$($script:EnvName)'" Cyan
+    Write-Host ""
+
+    # Find all resource groups matching this environment
+    Write-ColorOutput "  Finding resource groups..." Cyan
+    $resourceGroups = @()
+    try {
+        $rgJson = az group list --query "[?contains(name, 'rg-$($script:EnvName)-lesson')].name" -o json 2>$null
+        if ($rgJson) {
+            $resourceGroups = $rgJson | ConvertFrom-Json
+        }
+    } catch {}
+
+    # Find management groups
+    $mgRoot = $null
+    try {
+        $mgRoot = az account management-group list --query "[?name=='mg-$($script:EnvName)-root'].name" -o tsv 2>$null
+    } catch {}
+
+    if (($resourceGroups.Count -eq 0) -and (-not $mgRoot)) {
+        Write-ColorOutput "  No resources found for environment '$($script:EnvName)'" Yellow
+        Write-Host ""
+        Write-Host "  Tips:"
+        Write-Host "    • Check if you're logged into the correct subscription"
+        Write-Host "    • Verify the environment name is correct"
+        Write-Host "    • Run 'az group list' to see all resource groups"
+        return
+    }
+
+    Write-Host ""
+    Write-Host "  Resources to delete:" -ForegroundColor White
+
+    if ($resourceGroups.Count -gt 0) {
+        Write-Host ""
+        Write-ColorOutput "    Resource Groups:" Yellow
+        foreach ($rg in $resourceGroups) {
+            Write-Host "      • $rg"
+        }
+    }
+
+    if ($mgRoot) {
+        Write-Host ""
+        Write-ColorOutput "    Management Groups:" Yellow
+        Write-Host "      • mg-$($script:EnvName)-root (and all children)"
+    }
+
+    Write-Host ""
+
+    # Confirm deletion
+    if (-not $ForceYes) {
+        Write-ColorOutput "  ⚠️  WARNING: This action cannot be undone!" Red
+        Write-Host ""
+        $confirm = Read-Host "  Are you sure you want to delete these resources? (yes/no)"
+        if ($confirm -ne "yes") {
+            Write-Host ""
+            Write-ColorOutput "  Cleanup cancelled." Yellow
+            return
+        }
+    }
+
+    Write-Host ""
+
+    # Delete resource groups
+    if ($resourceGroups.Count -gt 0) {
+        Write-ColorOutput "  Deleting resource groups (this may take several minutes)..." Cyan
+        Write-Host ""
+
+        # Start deletions (--no-wait makes them run in background)
+        foreach ($rg in $resourceGroups) {
+            Write-Host "    Deleting: $rg" -ForegroundColor Yellow
+            az group delete --name $rg --yes --no-wait 2>$null
+        }
+
+        Start-Sleep -Seconds 3
+
+        Write-Host ""
+        Write-ColorOutput "  Resource group deletions initiated. Waiting for completion..." Cyan
+        Write-Host ""
+
+        # Wait for resource groups to be deleted
+        $timeout = 300  # 5 minutes
+        $elapsed = 0
+        $interval = 15
+
+        while ($elapsed -lt $timeout) {
+            $remaining = @()
+            try {
+                $remainingJson = az group list --query "[?contains(name, 'rg-$($script:EnvName)-lesson')].name" -o json 2>$null
+                if ($remainingJson) {
+                    $remaining = $remainingJson | ConvertFrom-Json
+                }
+            } catch {}
+
+            if ($remaining.Count -eq 0) {
+                Write-ColorOutput "    ✅ All resource groups deleted!" Green
+                break
+            }
+
+            Write-Host "    ⏳ $($remaining.Count) resource group(s) still deleting... (${elapsed}s elapsed)"
+            Start-Sleep -Seconds $interval
+            $elapsed += $interval
+        }
+
+        if ($elapsed -ge $timeout) {
+            Write-Host ""
+            Write-ColorOutput "  ⚠️  Timeout reached. Some resource groups may still be deleting." Yellow
+            Write-ColorOutput "      Check Azure Portal for status." Yellow
+        }
+    }
+
+    # Delete management groups
+    if ($mgRoot) {
+        Write-Host ""
+        Write-ColorOutput "  Deleting management groups..." Cyan
+        Write-Host ""
+
+        $mgPrefix = "mg-$($script:EnvName)"
+
+        # Delete leaf nodes first
+        foreach ($mg in @("identity", "connectivity", "management", "prod", "nonprod")) {
+            $result = az account management-group delete --name "${mgPrefix}-${mg}" 2>$null
+            if ($?) {
+                Write-ColorOutput "    ✓ Deleted ${mgPrefix}-${mg}" Green
+            }
+        }
+
+        # Delete second level
+        foreach ($mg in @("platform", "workloads", "sandbox")) {
+            $result = az account management-group delete --name "${mgPrefix}-${mg}" 2>$null
+            if ($?) {
+                Write-ColorOutput "    ✓ Deleted ${mgPrefix}-${mg}" Green
+            }
+        }
+
+        # Delete root
+        $result = az account management-group delete --name "${mgPrefix}-root" 2>$null
+        if ($?) {
+            Write-ColorOutput "    ✓ Deleted ${mgPrefix}-root" Green
+        }
+    }
+
+    # Purge soft-deleted resources
+    Write-Host ""
+    Write-ColorOutput "  Checking for soft-deleted resources to purge..." Cyan
+    Write-Host ""
+
+    # Key Vaults
+    try {
+        $deletedKvs = az keyvault list-deleted --query "[?contains(name, '$($script:EnvName)')].name" -o json 2>$null | ConvertFrom-Json
+        if ($deletedKvs -and $deletedKvs.Count -gt 0) {
+            Write-Host "    Purging soft-deleted Key Vaults..."
+            foreach ($kv in $deletedKvs) {
+                az keyvault purge --name $kv 2>$null
+                if ($?) {
+                    Write-ColorOutput "      ✓ Purged $kv" Green
+                }
+            }
+        }
+    } catch {}
+
+    # Cognitive Services (AI Foundry)
+    try {
+        $deletedCog = az cognitiveservices account list-deleted --query "[?contains(name, '$($script:EnvName)')]" -o json 2>$null | ConvertFrom-Json
+        if ($deletedCog -and $deletedCog.Count -gt 0) {
+            Write-Host "    Purging soft-deleted Cognitive Services..."
+            foreach ($cog in $deletedCog) {
+                az cognitiveservices account purge --name $cog.name --resource-group "placeholder" --location $cog.location 2>$null
+                if ($?) {
+                    Write-ColorOutput "      ✓ Purged $($cog.name)" Green
+                }
+            }
+        }
+    } catch {}
+
+    Write-Host ""
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
+    Write-ColorOutput "    ✅ Cleanup Complete!" Green
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
+    Write-Host ""
+    Write-Host "  Verify cleanup in Azure Portal:"
+    Write-Host "    https://portal.azure.com/#view/HubsExtension/BrowseResourceGroups"
+    Write-Host ""
+}
+
+#===============================================================================
+# SHOW USAGE - Help text for command-line arguments
+#===============================================================================
+function Show-Usage {
+    Write-Host ""
+    Write-Host "Azure Essentials - Deployment Script" -ForegroundColor White
+    Write-ColorOutput "Code to Cloud | www.codetocloud.io" Cyan
+    Write-Host ""
+    Write-Host "Usage: .\deploy.ps1 [OPTIONS]"
+    Write-Host ""
+    Write-Host "Options:"
+    Write-Host "  -Help              Show this help message"
+    Write-Host "  -Cleanup           Remove all Azure resources for an environment"
+    Write-Host "  -Environment NAME  Specify environment name (default: azlearn-<username>)"
+    Write-Host "  -Yes               Skip confirmation prompts (use with -Cleanup)"
+    Write-Host ""
+    Write-Host "Examples:"
+    Write-Host "  .\deploy.ps1                                   # Interactive deployment"
+    Write-Host "  .\deploy.ps1 -Cleanup                          # Interactive cleanup"
+    Write-Host "  .\deploy.ps1 -Cleanup -Environment myenv -Yes  # Non-interactive cleanup"
+    Write-Host ""
+    Write-Host "For more information, see:"
+    Write-Host "  lessons\00-prerequisites\README.md"
+    Write-Host "  SCRIPTS.md"
+    Write-Host ""
+}
+
+#===============================================================================
 # COMPLETION MESSAGE
 #===============================================================================
 function Show-Completion {
@@ -1175,4 +1442,39 @@ function Main {
 #===============================================================================
 # SCRIPT ENTRY POINT
 #===============================================================================
+
+# Handle help
+if ($Help) {
+    Show-Usage
+    exit 0
+}
+
+# Handle cleanup mode
+if ($Cleanup) {
+    Show-Banner
+    Test-Prerequisites
+
+    # If -Yes flag is set, use current subscription without prompting
+    if ($Yes) {
+        $script:SelectedSubscriptionName = az account show --query name -o tsv 2>$null
+        $script:SelectedSubscriptionId = az account show --query id -o tsv 2>$null
+        Write-Host ""
+        Write-ColorOutput "  Using current subscription: $($script:SelectedSubscriptionName)" Green
+    } else {
+        Select-Subscription
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($Environment)) {
+        $script:EnvName = $Environment
+        Write-Host ""
+        Write-ColorOutput "  Using environment: $($script:EnvName)" Green
+    } else {
+        Get-EnvironmentName
+    }
+
+    Invoke-Cleanup -ForceYes:$Yes
+    exit 0
+}
+
+# Normal deployment flow
 Main
