@@ -268,6 +268,66 @@ if (Test-Command "az") {
     }
 }
 
+# Install Azure CLI Extensions
+Write-Host ""
+Write-ColorOutput "  ==========================================" Blue
+Write-ColorOutput "    Azure CLI Extensions                   " Blue
+Write-ColorOutput "  ==========================================" Blue
+Write-Host ""
+
+Write-ColorOutput "  Installing containerapp extension (Lesson 07)..." Yellow
+if (Test-Command "az") {
+    try {
+        az extension add --name containerapp --upgrade -y 2>$null
+        Write-ColorOutput "  ✓ containerapp extension ready" Green
+    } catch {
+        Write-ColorOutput "  ○ containerapp extension (install manually)" Yellow
+        Write-Host "    Run: az extension add --name containerapp -y"
+    }
+}
+
+# Register Azure Resource Providers
+Write-Host ""
+Write-ColorOutput "  ==========================================" Blue
+Write-ColorOutput "    Azure Resource Providers               " Blue
+Write-ColorOutput "  ==========================================" Blue
+Write-Host ""
+
+Write-ColorOutput "  Registering required resource providers..." Yellow
+
+if (Test-Command "az") {
+    try {
+        $account = az account show 2>$null | ConvertFrom-Json
+        if ($account) {
+            $providers = @(
+                "Microsoft.Compute",
+                "Microsoft.Storage",
+                "Microsoft.Network",
+                "Microsoft.Web",
+                "Microsoft.App",
+                "Microsoft.ContainerRegistry"
+            )
+
+            foreach ($provider in $providers) {
+                $state = az provider show --namespace $provider --query registrationState -o tsv 2>$null
+                if ($state -eq "Registered") {
+                    Write-ColorOutput "  ✓ $provider - Already registered" Green
+                } else {
+                    Write-ColorOutput "  ○ Registering $provider..." Yellow
+                    Start-Job -ScriptBlock { param($p) az provider register --namespace $p } -ArgumentList $provider | Out-Null
+                }
+            }
+            Write-Host ""
+            Write-ColorOutput "  Note: Provider registration may take a few minutes." Cyan
+        } else {
+            Write-ColorOutput "  ○ Not logged in - skipping provider registration" Yellow
+            Write-Host "    After 'az login', run this script again"
+        }
+    } catch {
+        Write-ColorOutput "  ○ Not logged in - skipping provider registration" Yellow
+    }
+}
+
 # Summary
 Write-Host ""
 Write-ColorOutput "  ==========================================" Blue

@@ -53,6 +53,8 @@ WINDOWS_VM_FQDN=<your-vm-fqdn>
 - **Password**: The password you entered during deployment
 - **Port**: 3389 (RDP)
 
+> ✅ **RDP Access Ready**: The deployment automatically creates an NSG rule allowing RDP (port 3389) from any IP. You can connect immediately after deployment completes. In production, restrict this to specific IP addresses or use Azure Bastion.
+
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:

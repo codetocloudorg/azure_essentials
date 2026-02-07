@@ -43,6 +43,7 @@ scripts/
 │   ├── validate-env.sh        # ✅ Preflight environment check
 │   ├── setup-local-tools.sh   # 🔧 Install all required tools
 │   ├── test-all-lessons.sh    # 🧪 Test all lesson deployments
+│   ├── test-lessons-e2e.sh    # 🧪 End-to-end lesson validation
 │   └── test-deployment.sh     # 🧪 Test a specific deployment
 │
 ├── powershell/                # Windows scripts
@@ -83,6 +84,32 @@ This installs:
 - ✅ kubectl
 - ✅ Docker (guided)
 - ✅ VS Code extensions
+
+---
+
+## 🧪 Testing & Validation (For Trainers)
+
+### End-to-End Lesson Tests
+
+Before teaching, validate that lessons work correctly with live Azure resources:
+
+```bash
+# Test all lessons (06 + 07)
+./scripts/bash/test-lessons-e2e.sh
+
+# Test only Lesson 06 (Linux/MicroK8s)
+./scripts/bash/test-lessons-e2e.sh 06
+
+# Test only Lesson 07 (Containers/ACR/Container Apps)
+./scripts/bash/test-lessons-e2e.sh 07
+```
+
+| What It Tests | Duration | Cost Estimate |
+|---------------|----------|---------------|
+| **Lesson 06**: VM → SSH → MicroK8s → Deploy nginx → NodePort → Browser access | ~10 min | ~$2 |
+| **Lesson 07**: ACR → Build image → Container Apps → Public HTTPS URL | ~8 min | ~$3 |
+
+> ⚠️ **Cost Warning**: This creates real Azure resources. Cleanup is offered at the end of the test.
 
 ---
 

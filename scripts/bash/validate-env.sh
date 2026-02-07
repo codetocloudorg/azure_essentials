@@ -19,17 +19,20 @@
 #      - jq                  - JSON parsing
 #      - Bicep CLI          - Infrastructure as Code compiler
 #
-#   2. Authentication Status
+#   2. Azure CLI Extensions
+#      - containerapp       - Required for Container Apps (Lesson 07)
+#
+#   3. Authentication Status
 #      - Azure CLI login    - Connected to your subscription?
 #      - azd login          - Authenticated for deployments?
 #
-#   3. Container Environment
+#   4. Container Environment
 #      - Docker daemon      - Is Docker Desktop running?
 #
-#   4. Development Environment (Optional)
+#   5. Development Environment (Optional)
 #      - VS Code extensions - Recommended extensions installed?
 #
-#   5. Azure Subscription
+#   6. Azure Subscription
 #      - Resource providers - Are required providers registered?
 #
 # WHY VALIDATION MATTERS:
@@ -302,7 +305,7 @@ check_azure_quotas() {
         echo ""
 
         # Check resource providers
-        local providers=("Microsoft.Compute" "Microsoft.Storage" "Microsoft.Network" "Microsoft.Web")
+        local providers=("Microsoft.Compute" "Microsoft.Storage" "Microsoft.Network" "Microsoft.Web" "Microsoft.App" "Microsoft.ContainerRegistry")
 
         echo -e "  ${CYAN}Checking resource provider registration:${NC}"
         for provider in "${providers[@]}"; do
@@ -311,7 +314,7 @@ check_azure_quotas() {
                 echo -e "${GREEN}  ✓ $provider${NC} - Ready"
             else
                 echo -e "${YELLOW}  ⚠ $provider: $state${NC}"
-                echo -e "    ${CYAN}Register with:${NC} az provider register --namespace $provider"
+                echo -e "    ${CYAN}Register with:${NC} az provider register --namespace $provider --wait"
             fi
         done
     fi
@@ -360,6 +363,28 @@ else
     echo -e "  ${CYAN}Fix:${NC} Run 'az bicep install'"
 fi
 
+#===============================================================================
+# AZURE CLI EXTENSIONS CHECK
+#===============================================================================
+# Some Azure services require CLI extensions to be installed.
+# Extensions add commands for newer/preview services.
+#===============================================================================
+echo ""
+echo -e "${BLUE}━━━ Azure CLI Extensions ━━━${NC}"
+echo -e "${CYAN}Checking required extensions for lessons:${NC}"
+echo ""
+
+# containerapp extension - Required for Lesson 07 (Container Apps)
+if az extension show --name containerapp >/dev/null 2>&1; then
+    containerapp_ver=$(az extension show --name containerapp --query version -o tsv 2>/dev/null || echo "installed")
+    echo -e "${GREEN}✓ containerapp extension${NC} - v$containerapp_ver"
+    echo -e "  ${CYAN}Used for:${NC} Lesson 07 - Azure Container Apps deployment"
+else
+    echo -e "${YELLOW}⚠ containerapp extension not installed${NC}"
+    echo -e "  ${CYAN}Why needed:${NC} Required for 'az containerapp' commands in Lesson 07"
+    echo -e "  ${CYAN}Fix:${NC} Run 'az extension add --name containerapp --upgrade -y'"
+fi
+
 check_docker_running
 check_azure_login
 check_azd_login
@@ -401,6 +426,8 @@ else
     echo "  • Missing tools: Run ./scripts/bash/setup-local-tools.sh"
     echo "  • Not logged in: Run 'az login' and 'azd auth login'"
     echo "  • Docker not running: Start Docker Desktop"
+    echo "  • containerapp extension: Run 'az extension add --name containerapp -y'"
+    echo "  • Resource providers: Run 'az provider register --namespace Microsoft.App --wait'"
 fi
 
 echo ""

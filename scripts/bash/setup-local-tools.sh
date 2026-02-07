@@ -562,6 +562,52 @@ echo ""
 echo -e "${YELLOW}Installing/updating Bicep CLI...${NC}"
 az bicep install 2>/dev/null || az bicep upgrade 2>/dev/null || echo -e "${GREEN}✓ Bicep CLI ready${NC}"
 
+#===============================================================================
+# AZURE CLI EXTENSIONS
+#===============================================================================
+# Extensions add commands for newer Azure services that aren't in the core CLI.
+# These extensions are required for specific lessons.
+#===============================================================================
+echo ""
+echo -e "${BLUE}━━━ Azure CLI Extensions ━━━${NC}"
+echo -e "${CYAN}Installing extensions required for lessons...${NC}"
+echo ""
+
+# containerapp extension - Required for Lesson 07 (Container Apps)
+echo -e "${YELLOW}Installing containerapp extension (Lesson 07)...${NC}"
+az extension add --name containerapp --upgrade -y 2>/dev/null || echo -e "${GREEN}✓ containerapp extension ready${NC}"
+
+#===============================================================================
+# AZURE RESOURCE PROVIDER REGISTRATION
+#===============================================================================
+# New subscriptions may not have all resource providers registered.
+# We pre-register the providers needed for all lessons.
+#===============================================================================
+echo ""
+echo -e "${BLUE}━━━ Azure Resource Providers ━━━${NC}"
+echo -e "${CYAN}Registering resource providers for lessons (runs in background)...${NC}"
+echo ""
+
+# Check if logged in first
+if az account show >/dev/null 2>&1; then
+    # Register providers (no --wait to avoid blocking)
+    providers=("Microsoft.Compute" "Microsoft.Storage" "Microsoft.Network" "Microsoft.Web" "Microsoft.App" "Microsoft.ContainerRegistry")
+    
+    for provider in "${providers[@]}"; do
+        state=$(az provider show --namespace "$provider" --query registrationState -o tsv 2>/dev/null || echo "Unknown")
+        if [[ "$state" == "Registered" ]]; then
+            echo -e "${GREEN}✓ $provider - Already registered${NC}"
+        else
+            echo -e "${YELLOW}Registering $provider...${NC}"
+            az provider register --namespace "$provider" 2>/dev/null &
+        fi
+    done
+    echo -e "${CYAN}Note: Provider registration may take a few minutes to complete.${NC}"
+else
+    echo -e "${YELLOW}⚠ Not logged in. Skipping resource provider registration.${NC}"
+    echo -e "${CYAN}After running 'az login', run this again or manually register providers.${NC}"
+fi
+
 # Summary
 echo ""
 echo -e "${BLUE}=========================================="

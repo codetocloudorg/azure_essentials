@@ -1,24 +1,58 @@
 
-  CODE TO CLOUD - Azure Essentials
+    ██████╗ ██████╗ ██████╗ ███████╗    ████████╗ ██████╗ 
+   ██╔════╝██╔═══██╗██╔══██╗██╔════╝    ╚══██╔══╝██╔═══██╗
+   ██║     ██║   ██║██║  ██║█████╗         ██║   ██║   ██║
+   ██║     ██║   ██║██║  ██║██╔══╝         ██║   ██║   ██║
+   ╚██████╗╚██████╔╝██████╔╝███████╗       ██║   ╚██████╔╝
+    ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝       ╚═╝    ╚═════╝ 
+                                                          
+    ██████╗██╗      ██████╗ ██╗   ██╗██████╗             
+   ██╔════╝██║     ██╔═══██╗██║   ██║██╔══██╗            
+   ██║     ██║     ██║   ██║██║   ██║██║  ██║            
+   ██║     ██║     ██║   ██║██║   ██║██║  ██║            
+   ╚██████╗███████╗╚██████╔╝╚██████╔╝██████╔╝            
+    ╚═════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝             
 
-  =============================================
-  Azure Essentials - Development Container
-  =============================================
-  "There is no spoon. Only the code."
-  =============================================
+   ═══════════════════════════════════════════════════════
+     AZURE ESSENTIALS - Development Container
+   ═══════════════════════════════════════════════════════
 
-  All prerequisites are pre-installed!
+   Website:  www.codetocloud.io
+   Discord:  discord.gg/vwfwq2EpXJ
+   Podcast:  Code to Cloud on Spotify
 
-  First time? Authenticate with Azure:
-     az login
-     azd auth login
+   ═══════════════════════════════════════════════════════
+     INSTALLED TOOLS
+   ═══════════════════════════════════════════════════════
 
-  Deploy a lesson:
-     ./scripts/bash/deploy.sh
+   Azure CLI           az --version
+   Azure Developer CLI azd version
+   Python 3.11         python --version
+   Node.js LTS         node --version
+   .NET 8 SDK          dotnet --version
+   kubectl             kubectl version --client
+   Docker CLI          docker --version
+   Azure Functions     func --version
 
-  Course lessons are in: lessons/
+   ═══════════════════════════════════════════════════════
+     QUICK START
+   ═══════════════════════════════════════════════════════
 
-  www.codetocloud.io
+   1. Authenticate with Azure:
+      az login
+      azd auth login
 
-  =============================================
+   2. Deploy a lesson:
+      ./scripts/bash/deploy.sh
+
+   3. Validate your environment:
+      ./scripts/bash/validate-env.sh
+
+   Lessons are in: lessons/
+   Scripts are in: scripts/
+
+   ═══════════════════════════════════════════════════════
+   "There is no cloud. It's just someone else's computer."
+                  - Code to Cloud Inc.
+   ═══════════════════════════════════════════════════════
 

@@ -93,7 +93,7 @@ We provide a PowerShell setup script that automates everything:
 
 ```powershell
 # Clone the repository first
-git clone https://github.com/yourorg/azure_essentials.git
+git clone https://github.com/codetocloudorg/azure_essentials.git
 cd azure_essentials
 
 # Run the setup script
@@ -161,7 +161,7 @@ We provide a setup script that automates everything:
 
 ```bash
 # Clone the repository first
-git clone https://github.com/yourorg/azure_essentials.git
+git clone https://github.com/codetocloudorg/azure_essentials.git
 cd azure_essentials
 
 # Run the setup script
@@ -250,7 +250,7 @@ az bicep install
 Alternatively, use our setup script:
 
 ```bash
-git clone https://github.com/yourorg/azure_essentials.git
+git clone https://github.com/codetocloudorg/azure_essentials.git
 cd azure_essentials
 chmod +x scripts/bash/setup-local-tools.sh
 ./scripts/bash/setup-local-tools.sh
@@ -343,7 +343,7 @@ You should see your subscription name and ID.
 cd ~/Dev  # or any folder you prefer
 
 # Clone the repository
-git clone https://github.com/yourorg/azure_essentials.git
+git clone https://github.com/codetocloudorg/azure_essentials.git
 
 # Enter the directory
 cd azure_essentials
@@ -499,3 +499,11 @@ Before the training session, confirm you have:
 ---
 
 **You're all set! See you in class! 🎉**
+
+---
+
+## ➡️ Next Steps
+
+Ready to start learning? Head to the first lesson:
+
+👉 **[Lesson 01: Introduction to Azure](../01-introduction/README.md)**

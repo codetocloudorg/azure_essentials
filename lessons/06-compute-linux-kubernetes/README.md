@@ -6,6 +6,39 @@
 
 Azure supports a wide range of Linux distributions and Kubernetes workloads. This lesson introduces Linux VMs and provides hands-on experience with MicroK8s for container orchestration.
 
+## What Gets Deployed
+
+When you deploy this lesson using the deploy script, you get:
+
+| Resource | Description | Purpose |
+|----------|-------------|---------|
+| **Ubuntu 22.04 LTS VM** | Standard_B1s (1 vCPU, 1GB RAM) | Practice SSH, Linux administration |
+| **MicroK8s** | Pre-installed via cloud-init | Learn Kubernetes basics |
+| **Virtual Network** | 10.0.0.0/16 with default subnet | Isolated network for the VM |
+| **Public IP Address** | Static allocation with DNS label | SSH access from internet |
+| **Network Security Group** | Allow SSH (22), K8s Dashboard (10443) | Secure inbound access |
+
+> ⚠️ **Cost Note**: The VM uses B1s size (~$8/month if running 24/7). Stop/deallocate the VM when not in use.
+
+### Connecting to Your Linux VM
+
+After deployment, connect via SSH:
+
+```bash
+# Using the output from deployment
+ssh -i ~/.ssh/id_ed25519 azureuser@<your-vm-ip>
+
+# Or use the FQDN
+ssh azureuser@<your-vm-fqdn>
+```
+
+**Connection Details**:
+- **Username**: `azureuser`
+- **Authentication**: SSH key (provided during deployment)
+- **Port**: 22 (SSH)
+
+> ✅ **SSH Access Ready**: The deployment automatically creates an NSG rule allowing SSH (port 22) from any IP. You can connect immediately after deployment completes. In production, restrict this to specific IP addresses or use Azure Bastion.
+
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
@@ -153,6 +186,64 @@ kubectl scale deployment nginx --replicas=3
 # Watch the pods scale
 kubectl get pods -w
 ```
+
+### Exercise 6.3b: Expose Your App to the Internet
+
+**Objective**: Access your Kubernetes app from a web browser.
+
+NodePort services are only accessible on the VM's private network by default. Let's expose it to the internet:
+
+**Step 1: Get the NodePort** (on the VM via SSH)
+
+```bash
+# Get the assigned NodePort (usually 30000-32767)
+NODE_PORT=$(kubectl get svc nginx -o jsonpath='{.spec.ports[0].nodePort}')
+echo "NodePort: $NODE_PORT"
+
+# Test locally on the VM first
+curl http://localhost:$NODE_PORT
+```
+
+**Step 2: Open the port in NSG** (from your local machine, NOT in SSH)
+
+```bash
+# Variables
+RESOURCE_GROUP="rg-azure-essentials-dev"
+NODE_PORT="<port-from-step-1>"  # Replace with port from Step 1
+
+# Auto-discover the NSG name (finds the microk8s nsg)
+NSG_NAME=$(az network nsg list -g $RESOURCE_GROUP --query "[?contains(name, 'microk8s')].name" -o tsv)
+echo "Found NSG: $NSG_NAME"
+
+# If no NSG found, list all and pick manually:
+# az network nsg list -g $RESOURCE_GROUP -o table
+
+# Add NSG rule to allow inbound traffic
+az network nsg rule create \
+  --resource-group $RESOURCE_GROUP \
+  --nsg-name $NSG_NAME \
+  --name AllowKubernetesNodePort \
+  --priority 1100 \
+  --direction Inbound \
+  --access Allow \
+  --protocol Tcp \
+  --destination-port-ranges $NODE_PORT
+```
+
+**Step 3: Access from your browser**
+
+```bash
+# Auto-discover the VM name and get its public IP
+VM_NAME=$(az vm list -g $RESOURCE_GROUP --query "[?contains(name, 'microk8s')].name" -o tsv)
+VM_IP=$(az vm show -g $RESOURCE_GROUP -n $VM_NAME --show-details --query publicIps -o tsv)
+
+echo "VM: $VM_NAME"
+echo "Open in browser: http://$VM_IP:$NODE_PORT"
+```
+
+> 🎉 **Success!** You should see the nginx welcome page in your browser!
+
+> ⚠️ **Security Note**: In production, use an Ingress controller with TLS instead of exposing NodePorts directly.
 
 ### Exercise 6.4: Explore Kubernetes Resources
 

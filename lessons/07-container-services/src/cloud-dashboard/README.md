@@ -86,5 +86,5 @@ By building this container, you'll learn:
 ---
 
 <p align="center">
-  <strong>Code to Cloud</strong> | Containerize everything
+  <strong>Code to Cloud Inc.</strong> | Containerize everything
 </p>

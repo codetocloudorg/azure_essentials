@@ -4,7 +4,17 @@
 
 ---
 
-## � Before You Start
+## 🚀 Before You Start
+
+### Fastest Option: GitHub Codespaces
+
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-black?style=for-the-badge&logo=github)](https://codespaces.new/codetocloudorg/azure_essentials)
+
+All tools pre-installed, ready to go in your browser!
+
+> 💡 [Learn more about Dev Containers](https://github.com/codetocloudorg/platform-engineering/blob/main/docs/codespaces.md)
+
+### Local Setup
 
 1. **Run Preflight Checks** — Validate your environment is ready:
    - macOS/Linux: `./scripts/bash/validate-env.sh`
@@ -14,7 +24,7 @@
 
 ---
 
-## �🗓️ Day 1: Foundations
+## 🗓️ Day 1: Foundations
 
 | #   | Lesson                                                               | Duration  | Description                                         | Resources         |
 | --- | -------------------------------------------------------------------- | --------- | --------------------------------------------------- | ----------------- |
@@ -117,6 +127,17 @@ azd down --force --purge
 
 ---
 
+## 💬 Community
+
+Join the Code to Cloud community for help and discussions:
+
+[![Website](https://img.shields.io/badge/Website-codetocloud.io-00A4EF?logo=microsoft-edge&logoColor=white)](https://www.codetocloud.io)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/vwfwq2EpXJ)
+[![Podcast](https://img.shields.io/badge/Podcast-Spotify-1DB954?logo=spotify&logoColor=white)](https://open.spotify.com/show/1iOZfFVamUk7CJPOvtU00v)
+
+---
+
 <p align="center">
-  <strong>Code to Cloud</strong> | Azure Essentials Training
+  <strong>Code to Cloud Inc.</strong> | Azure Essentials Training<br/>
+  <sub>© 2024-2026 Code to Cloud Inc. | <a href="../LICENSE">MIT License</a></sub>
 </p>

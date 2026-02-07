@@ -1,33 +1,12 @@
 {
   "name": "Azure Essentials - Code to Cloud",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "features": {
-    "ghcr.io/devcontainers/features/azure-cli:1": {
-      "version": "latest",
-      "installBicep": true
-    },
-    "ghcr.io/azure/azure-dev/azd:latest": {},
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "version": "latest",
-      "helm": "latest",
-      "minikube": "none"
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    },
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/git:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "installOhMyZsh": true,
-      "configureZshAsDefaultShell": false
     }
   },
   "customizations": {
@@ -39,11 +18,15 @@
         "ms-azuretools.vscode-azurelogicapps",
         "ms-azuretools.vscode-cosmosdb",
         "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-azureappservice",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.vscode-dotnet-runtime",
         "HashiCorp.terraform",
         "redhat.vscode-yaml",
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "humao.rest-client",
         "github.copilot",
         "github.copilot-chat",
         "esbenp.prettier-vscode",
@@ -60,7 +43,7 @@
       }
     }
   },
-  "postCreateCommand": "bash -c 'sudo apt-get update && sudo apt-get install -y jq && cat .devcontainer/motd.txt && echo \"\" && echo \"📋 All tools installed:\" && echo \"   ✓ Azure CLI: $(az version --query '\\\"azure-cli\\\"' -o tsv 2>/dev/null)\" && echo \"   ✓ Azure Developer CLI: $(azd version 2>/dev/null | head -1)\" && echo \"   ✓ kubectl: $(kubectl version --client -o json 2>/dev/null | jq -r .clientVersion.gitVersion)\" && echo \"   ✓ Python: $(python3 --version)\" && echo \"   ✓ Node.js: $(node --version)\" && echo \"\" && echo \"🚀 Quick Start:\" && echo \"   ./scripts/bash/deploy.sh\" && echo \"\"'",
+  "postCreateCommand": "cat /etc/motd",
   "remoteUser": "vscode",
   "mounts": [
     "source=${localEnv:HOME}/.azure,target=/home/vscode/.azure,type=bind,consistency=cached"

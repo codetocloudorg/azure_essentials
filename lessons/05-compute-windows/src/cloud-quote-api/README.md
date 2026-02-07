@@ -89,5 +89,5 @@ By deploying this app, you'll learn:
 ---
 
 <p align="center">
-  <strong>Code to Cloud</strong> | Building the future, one deployment at a time
+  <strong>Code to Cloud Inc.</strong> | Building the future, one deployment at a time
 </p>

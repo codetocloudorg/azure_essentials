@@ -183,6 +183,65 @@ try {
 }
 
 #===============================================================================
+# AZURE CLI EXTENSIONS CHECK
+#===============================================================================
+
+Write-Host ""
+Write-ColorOutput "  Checking Azure CLI Extensions..." Cyan
+Write-Host ""
+
+# containerapp extension - Required for Lesson 07
+Write-Host "  " -NoNewline
+try {
+    $extInfo = az extension show --name containerapp 2>$null | ConvertFrom-Json
+    if ($extInfo) {
+        Write-ColorOutput "✓ containerapp extension: v$($extInfo.version)" Green
+        Write-Host "    Used for: Lesson 07 - Azure Container Apps"
+    } else {
+        Write-ColorOutput "○ containerapp extension: Not installed" Yellow
+        Write-Host "    Required for Lesson 07 (Container Apps)"
+        Write-Host "    Install: az extension add --name containerapp -y"
+    }
+} catch {
+    Write-ColorOutput "○ containerapp extension: Not installed" Yellow
+    Write-Host "    Required for Lesson 07 (Container Apps)"
+    Write-Host "    Install: az extension add --name containerapp -y"
+}
+
+#===============================================================================
+# AZURE RESOURCE PROVIDERS CHECK
+#===============================================================================
+
+Write-Host ""
+Write-ColorOutput "  Checking Azure Resource Providers..." Cyan
+Write-Host ""
+
+$requiredProviders = @(
+    "Microsoft.Compute",
+    "Microsoft.Storage",
+    "Microsoft.Network",
+    "Microsoft.Web",
+    "Microsoft.App",
+    "Microsoft.ContainerRegistry"
+)
+
+try {
+    foreach ($provider in $requiredProviders) {
+        Write-Host "  " -NoNewline
+        $state = az provider show --namespace $provider --query registrationState -o tsv 2>$null
+        if ($state -eq "Registered") {
+            Write-ColorOutput "✓ $provider - Ready" Green
+        } else {
+            Write-ColorOutput "○ $provider - $state" Yellow
+            Write-Host "    Register: az provider register --namespace $provider --wait"
+        }
+    }
+} catch {
+    Write-Host "  " -NoNewline
+    Write-ColorOutput "○ Could not check resource providers" Yellow
+}
+
+#===============================================================================
 # VS CODE EXTENSIONS CHECK
 #===============================================================================
 

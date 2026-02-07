@@ -172,7 +172,53 @@ az acr repository show-tags \
 cd ..
 ```
 
-### Exercise 7.3: Run Container Locally (Optional)
+### Exercise 7.3: Deploy to Azure Container Apps (Internet Accessible!)
+
+**Objective**: Deploy your container to Azure Container Apps with a public URL.
+
+Azure Container Apps is the easiest way to run containers with a public endpoint:
+
+```bash
+# First, ensure the containerapp extension is installed
+az extension add --name containerapp --upgrade -y
+
+# Variables
+RESOURCE_GROUP="rg-azure-essentials-dev"
+LOCATION="centralus"
+ENV_NAME="containerapp-env-$(openssl rand -hex 4)"
+APP_NAME="hello-app-$(openssl rand -hex 4)"
+
+# Create Container Apps environment
+az containerapp env create \
+  --name $ENV_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --location $LOCATION
+
+# Deploy container from ACR with public ingress
+az containerapp create \
+  --name $APP_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --environment $ENV_NAME \
+  --image $ACR_NAME.azurecr.io/sample-app:v1 \
+  --registry-server $ACR_NAME.azurecr.io \
+  --registry-username $(az acr credential show -n $ACR_NAME --query username -o tsv) \
+  --registry-password $(az acr credential show -n $ACR_NAME --query passwords[0].value -o tsv) \
+  --target-port 8080 \
+  --ingress external \
+  --min-replicas 1 \
+  --max-replicas 3
+
+# Get the public URL
+APP_URL=$(az containerapp show -n $APP_NAME -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
+echo "🎉 Your app is live at: https://$APP_URL"
+
+# Test it!
+curl https://$APP_URL
+```
+
+> ✅ **Success!** Your container is now running on Azure with HTTPS and auto-scaling!
+
+### Exercise 7.4: Run Container Locally (Optional)
 
 **Objective**: Test the container image locally if you have Docker installed.
 
@@ -191,7 +237,7 @@ curl http://localhost:8080
 docker stop $(docker ps -q --filter ancestor=$ACR_NAME.azurecr.io/sample-app:v1)
 ```
 
-### Exercise 7.4: Explore AKS Concepts
+### Exercise 7.5: Explore AKS Concepts
 
 **Objective**: Understand AKS architecture and create a cluster overview.
 
