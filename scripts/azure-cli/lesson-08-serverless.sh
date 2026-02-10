@@ -90,6 +90,9 @@ deploy() {
 
     #---------------------------------------------------------------------------
     # Step 2: Create Storage Account (Required for Functions)
+    # Note: Functions requires shared key access for internal operations.
+    # If your subscription has a policy disabling shared key access,
+    # you may need to request a policy exemption or use a different subscription.
     #---------------------------------------------------------------------------
     print_step "Creating storage account: ${STORAGE_ACCOUNT}"
 
@@ -99,9 +102,18 @@ deploy() {
         --location "$LOCATION" \
         --sku Standard_LRS \
         --kind StorageV2 \
+        --allow-shared-key-access true \
         --output none
-
-    echo "  ✓ Storage account created (required for Functions)"
+    
+    # Verify shared key access is enabled
+    local shared_key=$(az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" --query allowSharedKeyAccess -o tsv 2>/dev/null)
+    if [[ "$shared_key" == "false" ]]; then
+        echo -e "${YELLOW}  ⚠ Warning: Shared key access is disabled by Azure Policy${NC}"
+        echo -e "${YELLOW}    Azure Functions requires shared key access for internal storage.${NC}"
+        echo -e "${YELLOW}    If Function App creation fails, contact your Azure administrator.${NC}"
+    else
+        echo "  ✓ Storage account created (shared key access enabled)"
+    fi
     echo ""
 
     #---------------------------------------------------------------------------

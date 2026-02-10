@@ -105,7 +105,7 @@ deploy() {
         --resource-group "$RESOURCE_GROUP" \
         --locations regionName="$LOCATION" failoverPriority=0 isZoneRedundant=false \
         --default-consistency-level Session \
-        --capabilities EnableServerless \
+        --capacity-mode Serverless \
         --kind GlobalDocumentDB
 
     echo ""

@@ -282,15 +282,28 @@ deploy_lesson_3() {
 
     print_success "Storage account created: ${storage_name}"
 
-    # Create containers
+    # Assign RBAC roles for OAuth authentication
+    print_info "Assigning RBAC roles for storage access..."
+    local user_id=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || echo "")
+    local storage_scope="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$rg_name/providers/Microsoft.Storage/storageAccounts/$storage_name"
+    
+    if [[ -n "$user_id" ]]; then
+        az role assignment create --role "Storage Blob Data Contributor" --assignee "$user_id" --scope "$storage_scope" --output none 2>/dev/null || true
+        az role assignment create --role "Storage Queue Data Contributor" --assignee "$user_id" --scope "$storage_scope" --output none 2>/dev/null || true
+        az role assignment create --role "Storage Table Data Contributor" --assignee "$user_id" --scope "$storage_scope" --output none 2>/dev/null || true
+        print_success "RBAC roles assigned"
+        print_info "Waiting for role propagation (30 seconds)..."
+        sleep 30
+    fi
+
+    # Create containers using OAuth
     print_info "Creating blob containers..."
-    local account_key=$(az storage account keys list --account-name "$storage_name" --resource-group "$rg_name" --query '[0].value' -o tsv)
 
     for container in "documents" "images" "backups"; do
         az storage container create \
             --name "$container" \
             --account-name "$storage_name" \
-            --account-key "$account_key" \
+            --auth-mode login \
             --output none
         print_success "Container created: ${container}"
     done
@@ -300,7 +313,7 @@ deploy_lesson_3() {
     az storage queue create \
         --name "messages" \
         --account-name "$storage_name" \
-        --account-key "$account_key" \
+        --auth-mode login \
         --output none
     print_success "Queue created: messages"
 
@@ -309,7 +322,7 @@ deploy_lesson_3() {
     az storage table create \
         --name "logs" \
         --account-name "$storage_name" \
-        --account-key "$account_key" \
+        --auth-mode login \
         --output none
     print_success "Table created: logs"
 
@@ -828,13 +841,14 @@ deploy_lesson_8() {
     local storage_name="stfunc${suffix}"
     local func_name="func-${ENV_NAME}-${suffix}"
 
-    # Create storage account for function
+    # Create storage account for function (requires shared key access)
     print_info "Creating storage account for Functions..."
     az storage account create \
         --name "$storage_name" \
         --resource-group "$rg_name" \
         --location "$LOCATION" \
         --sku Standard_LRS \
+        --allow-shared-key-access true \
         --output none
     print_success "Storage account created: ${storage_name}"
 

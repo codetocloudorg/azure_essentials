@@ -50,7 +50,8 @@ scripts/
 │   ├── deploy.ps1             # 🚀 Interactive lesson deployment
 │   ├── validate-env.ps1       # ✅ Preflight environment check
 │   ├── setup-local-tools.ps1  # 🔧 Install all required tools
-│   └── test-deploy.ps1        # 🧪 Test deployment
+│   ├── test-deploy.ps1        # 🧪 Quick deployment test
+│   └── test-deployment.ps1    # 🧪 Full deployment test with cleanup
 │
 └── azure-cli/                 # Pure Azure CLI scripts (any OS)
     ├── deploy.sh              # 🚀 Interactive menu for CLI scripts

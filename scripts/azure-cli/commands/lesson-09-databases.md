@@ -45,7 +45,7 @@ az cosmosdb create \
     --name "$COSMOS_ACCOUNT" \
     --resource-group "$RESOURCE_GROUP" \
     --locations regionName="$LOCATION" \
-    --capabilities EnableServerless \
+    --capacity-mode Serverless \
     --default-consistency-level Session
 ```
 

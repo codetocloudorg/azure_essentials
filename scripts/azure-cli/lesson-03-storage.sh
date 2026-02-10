@@ -123,22 +123,52 @@ deploy() {
         --access-tier Hot \
         --min-tls-version TLS1_2 \
         --allow-blob-public-access false \
+        --allow-shared-key-access true \
         --https-only true
 
     echo ""
 
     #---------------------------------------------------------------------------
-    # Step 3: Get Storage Account Key
+    # Step 3: Assign RBAC Role for Azure AD Authentication
     #---------------------------------------------------------------------------
-    print_step "Retrieving storage account key..."
-
-    ACCOUNT_KEY=$(az storage account keys list \
-        --account-name "$STORAGE_ACCOUNT" \
-        --resource-group "$RESOURCE_GROUP" \
-        --query '[0].value' \
-        -o tsv)
-
-    echo "  ✓ Key retrieved"
+    print_step "Assigning Storage Blob Data Contributor role..."
+    
+    # Get the current user's object ID
+    USER_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || echo "")
+    
+    if [[ -n "$USER_ID" ]]; then
+        az role assignment create \
+            --role "Storage Blob Data Contributor" \
+            --assignee "$USER_ID" \
+            --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT" \
+            --output none 2>/dev/null || true
+        
+        az role assignment create \
+            --role "Storage Queue Data Contributor" \
+            --assignee "$USER_ID" \
+            --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT" \
+            --output none 2>/dev/null || true
+        
+        az role assignment create \
+            --role "Storage Table Data Contributor" \
+            --assignee "$USER_ID" \
+            --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT" \
+            --output none 2>/dev/null || true
+        
+        az role assignment create \
+            --role "Storage File Data SMB Share Contributor" \
+            --assignee "$USER_ID" \
+            --scope "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Storage/storageAccounts/$STORAGE_ACCOUNT" \
+            --output none 2>/dev/null || true
+        
+        echo "  ✓ RBAC roles assigned"
+        # Wait for RBAC propagation
+        echo "  ℹ Waiting for role propagation (30 seconds)..."
+        sleep 30
+    else
+        echo -e "${YELLOW}  ⚠ Could not get user ID. Storage operations may fail.${NC}"
+    fi
+    
     echo ""
 
     #---------------------------------------------------------------------------
@@ -150,7 +180,7 @@ deploy() {
         az storage container create \
             --name "$container" \
             --account-name "$STORAGE_ACCOUNT" \
-            --account-key "$ACCOUNT_KEY" \
+            --auth-mode login \
             --output none
         echo "  ✓ Container created: $container"
     done
@@ -165,7 +195,7 @@ deploy() {
     az storage queue create \
         --name "messages" \
         --account-name "$STORAGE_ACCOUNT" \
-        --account-key "$ACCOUNT_KEY" \
+        --auth-mode login \
         --output none
 
     echo "  ✓ Queue created: messages"
@@ -179,7 +209,7 @@ deploy() {
     az storage table create \
         --name "logs" \
         --account-name "$STORAGE_ACCOUNT" \
-        --account-key "$ACCOUNT_KEY" \
+        --auth-mode login \
         --output none
 
     echo "  ✓ Table created: logs"
@@ -190,10 +220,10 @@ deploy() {
     #---------------------------------------------------------------------------
     print_step "Creating file share..."
 
-    az storage share create \
+    az storage share-rm create \
         --name "files" \
-        --account-name "$STORAGE_ACCOUNT" \
-        --account-key "$ACCOUNT_KEY" \
+        --storage-account "$STORAGE_ACCOUNT" \
+        --resource-group "$RESOURCE_GROUP" \
         --quota 5 \
         --output none
 
@@ -209,10 +239,11 @@ deploy() {
 
     az storage blob upload \
         --account-name "$STORAGE_ACCOUNT" \
-        --account-key "$ACCOUNT_KEY" \
+        --auth-mode login \
         --container-name "documents" \
         --name "sample.txt" \
         --file /tmp/sample.txt \
+        --overwrite \
         --output none
 
     rm /tmp/sample.txt
@@ -226,7 +257,7 @@ deploy() {
 
     az storage blob list \
         --account-name "$STORAGE_ACCOUNT" \
-        --account-key "$ACCOUNT_KEY" \
+        --auth-mode login \
         --container-name "documents" \
         --query "[].{Name:name, Size:properties.contentLength}" \
         -o table
@@ -273,29 +304,26 @@ show_commands() {
     echo "# Create storage account"
     echo "az storage account create --name <name> --resource-group <rg> --sku Standard_LRS"
     echo ""
-    echo "# List storage account keys"
-    echo "az storage account keys list --account-name <name> --resource-group <rg>"
-    echo ""
-    echo "# Create blob container"
-    echo "az storage container create --name <name> --account-name <acct>"
+    echo "# Create blob container (using OAuth authentication)"
+    echo "az storage container create --name <name> --account-name <acct> --auth-mode login"
     echo ""
     echo "# Upload blob"
-    echo "az storage blob upload --container-name <c> --name <blob> --file <path>"
+    echo "az storage blob upload --container-name <c> --name <blob> --file <path> --account-name <acct> --auth-mode login"
     echo ""
     echo "# Download blob"
-    echo "az storage blob download --container-name <c> --name <blob> --file <path>"
+    echo "az storage blob download --container-name <c> --name <blob> --file <path> --account-name <acct> --auth-mode login"
     echo ""
     echo "# List blobs"
-    echo "az storage blob list --container-name <c> --account-name <acct> -o table"
+    echo "az storage blob list --container-name <c> --account-name <acct> --auth-mode login -o table"
     echo ""
     echo "# Create queue"
-    echo "az storage queue create --name <name> --account-name <acct>"
+    echo "az storage queue create --name <name> --account-name <acct> --auth-mode login"
     echo ""
     echo "# Create table"
-    echo "az storage table create --name <name> --account-name <acct>"
+    echo "az storage table create --name <name> --account-name <acct> --auth-mode login"
     echo ""
-    echo "# Create file share"
-    echo "az storage share create --name <name> --account-name <acct> --quota <gb>"
+    echo "# Create file share (using Resource Manager)"
+    echo "az storage share-rm create --name <name> --storage-account <acct> --resource-group <rg> --quota <gb>"
     echo ""
 }
 

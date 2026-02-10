@@ -47,21 +47,68 @@ log_warning() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
 log_step() { echo -e "\n${BLUE}━━━ $1 ━━━${NC}"; }
 
+# Track if cleanup was already done
+CLEANUP_DONE=false
+
 # Cleanup function
+# Usage: cleanup [--force]
+#   --force: Skip prompt and delete immediately (used for interrupts)
 cleanup() {
+    # Prevent double cleanup
+    if [[ "$CLEANUP_DONE" == "true" ]]; then
+        return 0
+    fi
+    
     log_step "Cleanup"
     
-    if [[ -n "$RESOURCE_GROUP" ]]; then
-        read -p "Delete resource group '$RESOURCE_GROUP' and all resources? (y/N): " confirm
-        if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            log_info "Deleting resource group (this takes a few minutes)..."
-            az group delete --name "$RESOURCE_GROUP" --yes --no-wait
-            log_success "Resource group deletion initiated"
+    if [[ -z "$RESOURCE_GROUP" ]]; then
+        return 0
+    fi
+    
+    # Check if resource group exists
+    if ! az group exists --name "$RESOURCE_GROUP" -o tsv 2>/dev/null | grep -q "true"; then
+        log_info "Resource group '$RESOURCE_GROUP' does not exist (already deleted or never created)"
+        CLEANUP_DONE=true
+        return 0
+    fi
+    
+    local force_cleanup=false
+    if [[ "$1" == "--force" ]]; then
+        force_cleanup=true
+    fi
+    
+    if [[ "$force_cleanup" == "true" ]]; then
+        log_info "Deleting resource group (this takes a few minutes)..."
+        az group delete --name "$RESOURCE_GROUP" --yes --no-wait
+        log_success "Resource group deletion initiated"
+    else
+        # Interactive prompt - only works when stdin is a terminal
+        if [[ -t 0 ]]; then
+            read -p "Delete resource group '$RESOURCE_GROUP' and all resources? (y/N): " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                log_info "Deleting resource group (this takes a few minutes)..."
+                az group delete --name "$RESOURCE_GROUP" --yes --no-wait
+                log_success "Resource group deletion initiated"
+            else
+                log_warning "Resources NOT deleted. Remember to clean up manually:"
+                echo "  az group delete --name $RESOURCE_GROUP --yes"
+            fi
         else
-            log_warning "Resources NOT deleted. Remember to clean up manually:"
+            log_warning "Non-interactive mode detected. Resources NOT deleted."
+            log_warning "Remember to clean up manually:"
             echo "  az group delete --name $RESOURCE_GROUP --yes"
         fi
     fi
+    
+    CLEANUP_DONE=true
+}
+
+# Trap handler for interrupts (Ctrl+C, errors)
+trap_handler() {
+    echo ""
+    log_warning "Script interrupted!"
+    cleanup --force
+    exit 1
 }
 
 # Check prerequisites
@@ -410,8 +457,8 @@ main() {
         exit 0
     fi
     
-    # Set up trap for cleanup
-    trap cleanup EXIT
+    # Set up trap for interrupts (Ctrl+C, errors)
+    trap trap_handler INT TERM
     
     check_prerequisites
     create_resource_group
@@ -440,6 +487,9 @@ main() {
     echo ""
     echo "Resource group: $RESOURCE_GROUP"
     echo ""
+    
+    # Call cleanup directly (not via trap) so interactive prompt works
+    cleanup
 }
 
 main "$@"
