@@ -19,7 +19,7 @@
 #
 # USAGE:
 #   ./scripts/bash/test-lessons-e2e.sh [lesson]
-#   
+#
 #   Examples:
 #     ./scripts/bash/test-lessons-e2e.sh        # Test all lessons
 #     ./scripts/bash/test-lessons-e2e.sh 06     # Test only lesson 06
@@ -58,25 +58,26 @@ cleanup() {
     if [[ "$CLEANUP_DONE" == "true" ]]; then
         return 0
     fi
-    
+
     log_step "Cleanup"
-    
+
     if [[ -z "$RESOURCE_GROUP" ]]; then
         return 0
     fi
-    
-    # Check if resource group exists
-    if ! az group exists --name "$RESOURCE_GROUP" -o tsv 2>/dev/null | grep -q "true"; then
-        log_info "Resource group '$RESOURCE_GROUP' does not exist (already deleted or never created)"
+
+    # Check if resource group exists (robust method)
+    local exists=$(az group exists --name "$RESOURCE_GROUP" -o tsv 2>/dev/null || echo "false")
+    if [[ "$exists" != "true" ]]; then
+        log_info "Resource group '$RESOURCE_GROUP' does not exist."
         CLEANUP_DONE=true
         return 0
     fi
-    
+
     local force_cleanup=false
     if [[ "$1" == "--force" ]]; then
         force_cleanup=true
     fi
-    
+
     if [[ "$force_cleanup" == "true" ]]; then
         log_info "Deleting resource group (this takes a few minutes)..."
         az group delete --name "$RESOURCE_GROUP" --yes --no-wait
@@ -99,8 +100,79 @@ cleanup() {
             echo "  az group delete --name $RESOURCE_GROUP --yes"
         fi
     fi
-    
+
     CLEANUP_DONE=true
+}
+
+# Backup cleanup function to find and delete any leftover lesson resource groups
+# This catches both test resource groups and azd-created resource groups
+cleanup_leftover_resource_groups() {
+    log_step "Checking for Leftover Resource Groups"
+
+    # Patterns to search for leftover lesson/test resource groups:
+    # - rg-lesson-test-*      (created by this script)
+    # - rg-*-lesson           (created by azd with AZURE_ENV_NAME)
+    # - rg-codetocloud-*      (common prefix from lessons)
+    local patterns=("rg-lesson-test-" "rg-*-lesson" "rg-codetocloud-")
+
+    local found_groups=()
+
+    for pattern in "${patterns[@]}"; do
+        # Use query to filter by name pattern
+        local groups=$(az group list --query "[?starts_with(name, '${pattern%\*}')].name" -o tsv 2>/dev/null || true)
+        if [[ -n "$groups" ]]; then
+            while IFS= read -r group; do
+                if [[ -n "$group" ]]; then
+                    found_groups+=("$group")
+                fi
+            done <<< "$groups"
+        fi
+    done
+
+    # Also check for any rg-*-lesson pattern using a different approach
+    local lesson_groups=$(az group list --query "[?contains(name, '-lesson')].name" -o tsv 2>/dev/null || true)
+    if [[ -n "$lesson_groups" ]]; then
+        while IFS= read -r group; do
+            if [[ -n "$group" ]]; then
+                # Avoid duplicates
+                if [[ ! " ${found_groups[*]} " =~ " ${group} " ]]; then
+                    found_groups+=("$group")
+                fi
+            fi
+        done <<< "$lesson_groups"
+    fi
+
+    if [[ ${#found_groups[@]} -eq 0 ]]; then
+        log_success "No leftover lesson resource groups found"
+        return 0
+    fi
+
+    log_warning "Found ${#found_groups[@]} leftover resource group(s):"
+    for group in "${found_groups[@]}"; do
+        echo "  - $group"
+    done
+    echo ""
+
+    if [[ -t 0 ]]; then
+        read -p "Delete ALL leftover resource groups? (y/N): " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            for group in "${found_groups[@]}"; do
+                log_info "Deleting resource group: $group"
+                az group delete --name "$group" --yes --no-wait 2>/dev/null || true
+            done
+            log_success "Deletion initiated for all leftover resource groups"
+        else
+            log_warning "Leftover resources NOT deleted. Delete manually:"
+            for group in "${found_groups[@]}"; do
+                echo "  az group delete --name $group --yes"
+            done
+        fi
+    else
+        log_warning "Non-interactive mode. Delete manually:"
+        for group in "${found_groups[@]}"; do
+            echo "  az group delete --name $group --yes"
+        done
+    fi
 }
 
 # Trap handler for interrupts (Ctrl+C, errors)
@@ -114,9 +186,9 @@ trap_handler() {
 # Check prerequisites
 check_prerequisites() {
     log_step "Checking Prerequisites"
-    
+
     local missing=0
-    
+
     # Check Azure CLI
     if ! command -v az &> /dev/null; then
         log_error "Azure CLI not installed"
@@ -124,7 +196,7 @@ check_prerequisites() {
     else
         log_success "Azure CLI: $(az version -o tsv --query '\"azure-cli\"' 2>/dev/null)"
     fi
-    
+
     # Check logged in
     if ! az account show &> /dev/null; then
         log_error "Not logged into Azure. Run: az login"
@@ -133,21 +205,21 @@ check_prerequisites() {
         local sub=$(az account show --query name -o tsv)
         log_success "Logged in to: $sub"
     fi
-    
+
     # Check SSH key
     if [[ ! -f ~/.ssh/id_ed25519.pub ]] && [[ ! -f ~/.ssh/id_rsa.pub ]]; then
         log_warning "No SSH key found. Will generate one if needed."
     else
         log_success "SSH key found"
     fi
-    
+
     # Check containerapp extension
     if ! az extension show --name containerapp &> /dev/null; then
         log_info "Installing containerapp extension..."
         az extension add --name containerapp --upgrade -y
     fi
     log_success "containerapp extension ready"
-    
+
     if [[ $missing -eq 1 ]]; then
         log_error "Prerequisites not met. Exiting."
         exit 1
@@ -157,12 +229,12 @@ check_prerequisites() {
 # Create resource group
 create_resource_group() {
     log_step "Creating Resource Group"
-    
+
     az group create \
         --name "$RESOURCE_GROUP" \
         --location "$LOCATION" \
         --output none
-    
+
     log_success "Resource group created: $RESOURCE_GROUP"
 }
 
@@ -171,14 +243,14 @@ create_resource_group() {
 #===============================================================================
 test_lesson_06() {
     log_step "Testing Lesson 06: Linux VM + MicroK8s"
-    
+
     local VM_NAME="vm-test-microk8s"
     local ADMIN_USER="azureuser"
     local NSG_NAME="nsg-$VM_NAME"
-    
+
     # Step 1: Create VM
     log_info "Creating Ubuntu VM with cloud-init (3-5 minutes)..."
-    
+
     # Create cloud-init script for MicroK8s
     cat > /tmp/cloud-init-microk8s.yaml << 'EOF'
 #cloud-config
@@ -207,28 +279,28 @@ EOF
         --nsg "$NSG_NAME" \
         --custom-data /tmp/cloud-init-microk8s.yaml \
         --output none
-    
+
     log_success "VM created"
-    
+
     # Get VM IP
     VM_IP=$(az vm show \
         --name "$VM_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --show-details \
         --query publicIps -o tsv)
-    
+
     log_info "VM Public IP: $VM_IP"
-    
+
     # Wait for cloud-init to complete
     log_info "Waiting for MicroK8s installation (2-3 minutes)..."
     sleep 120
-    
+
     # Step 2: Test SSH
     log_info "Testing SSH connection..."
-    
+
     # Add to known hosts
     ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts 2>/dev/null
-    
+
     # Test SSH and MicroK8s
     if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$ADMIN_USER@$VM_IP" "microk8s status" &> /dev/null; then
         log_success "SSH works, MicroK8s is running"
@@ -236,10 +308,10 @@ EOF
         log_warning "MicroK8s may still be installing. Waiting 60 more seconds..."
         sleep 60
     fi
-    
+
     # Step 3: Deploy nginx
     log_info "Deploying nginx to MicroK8s..."
-    
+
     ssh "$ADMIN_USER@$VM_IP" << 'ENDSSH'
         microk8s kubectl create deployment nginx --image=nginx
         microk8s kubectl expose deployment nginx --port=80 --type=NodePort
@@ -247,16 +319,16 @@ EOF
         microk8s kubectl get pods
         microk8s kubectl get svc nginx
 ENDSSH
-    
+
     log_success "Nginx deployed"
-    
+
     # Get NodePort
     NODE_PORT=$(ssh "$ADMIN_USER@$VM_IP" "microk8s kubectl get svc nginx -o jsonpath='{.spec.ports[0].nodePort}'")
     log_info "NodePort assigned: $NODE_PORT"
-    
+
     # Step 4: Open NSG port
     log_info "Opening NSG port $NODE_PORT..."
-    
+
     az network nsg rule create \
         --resource-group "$RESOURCE_GROUP" \
         --nsg-name "$NSG_NAME" \
@@ -267,20 +339,20 @@ ENDSSH
         --protocol Tcp \
         --destination-port-ranges "$NODE_PORT" \
         --output none
-    
+
     log_success "NSG rule created"
-    
+
     # Step 5: Test HTTP access
     log_info "Testing HTTP access to nginx..."
     sleep 5
-    
+
     if curl -s --connect-timeout 10 "http://$VM_IP:$NODE_PORT" | grep -q "nginx"; then
         log_success "✅ LESSON 06 PASSED: Nginx accessible at http://$VM_IP:$NODE_PORT"
     else
         log_error "❌ LESSON 06 FAILED: Could not reach nginx"
         log_info "Debug: Try manually: curl http://$VM_IP:$NODE_PORT"
     fi
-    
+
     echo ""
     echo "📋 Lesson 06 Summary:"
     echo "   VM IP:     $VM_IP"
@@ -293,14 +365,14 @@ ENDSSH
 #===============================================================================
 test_lesson_07() {
     log_step "Testing Lesson 07: ACR + Container Apps"
-    
+
     local ACR_NAME="acrtest$(openssl rand -hex 4)"
     local ENV_NAME="cae-test-$(openssl rand -hex 4)"
     local APP_NAME="hello-test-$(openssl rand -hex 4)"
-    
+
     # Step 1: Create ACR
     log_info "Creating Azure Container Registry..."
-    
+
     az acr create \
         --name "$ACR_NAME" \
         --resource-group "$RESOURCE_GROUP" \
@@ -308,15 +380,15 @@ test_lesson_07() {
         --sku Basic \
         --admin-enabled true \
         --output none
-    
+
     log_success "ACR created: $ACR_NAME"
-    
+
     # Step 2: Build sample app
     log_info "Building sample container image in ACR..."
-    
+
     # Create temp app directory
     mkdir -p /tmp/test-container-app
-    
+
     cat > /tmp/test-container-app/app.py << 'EOF'
 from flask import Flask
 import os
@@ -367,25 +439,25 @@ EOF
         --file /tmp/test-container-app/Dockerfile \
         /tmp/test-container-app \
         --output none
-    
+
     log_success "Container image built: $ACR_NAME.azurecr.io/hello-test:v1"
-    
+
     # Step 3: Create Container Apps environment
     log_info "Creating Container Apps environment (2-3 minutes)..."
-    
+
     az containerapp env create \
         --name "$ENV_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
         --output none
-    
+
     log_success "Container Apps environment created"
-    
+
     # Step 4: Deploy to Container Apps
     log_info "Deploying container to Container Apps..."
-    
+
     ACR_PASSWORD=$(az acr credential show -n "$ACR_NAME" --query "passwords[0].value" -o tsv)
-    
+
     az containerapp create \
         --name "$APP_NAME" \
         --resource-group "$RESOURCE_GROUP" \
@@ -399,15 +471,15 @@ EOF
         --min-replicas 1 \
         --max-replicas 3 \
         --output none
-    
+
     log_success "Container App deployed"
-    
+
     # Get URL - try container app show first, fall back to create output
     APP_URL=$(az containerapp show \
         --name "$APP_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --query "properties.configuration.ingress.fqdn" -o tsv 2>/dev/null)
-    
+
     # If that failed, the URL was in the create output - extract from logs
     if [[ -z "$APP_URL" ]]; then
         log_warning "Could not retrieve URL via az command, but app was created."
@@ -415,23 +487,23 @@ EOF
         log_success "✅ LESSON 07 PASSED: Container App deployed (verify URL manually)"
     else
         log_info "Container App URL: https://$APP_URL"
-    
+
         # Step 5: Test HTTP access
         log_info "Testing HTTPS access to Container App..."
         sleep 10  # Give it a moment to spin up
-        
+
         if curl -s --connect-timeout 30 "https://$APP_URL" | grep -q "Azure Container Apps"; then
             log_success "✅ LESSON 07 PASSED: App accessible at https://$APP_URL"
         else
             log_warning "App may still be starting. Try: curl https://$APP_URL"
         fi
     fi
-    
+
     echo ""
     echo "📋 Lesson 07 Summary:"
     echo "   ACR:       $ACR_NAME.azurecr.io"
     echo "   App URL:   https://$APP_URL"
-    
+
     # Cleanup temp files
     rm -rf /tmp/test-container-app
 }
@@ -446,23 +518,23 @@ main() {
     echo "║   Code to Cloud | www.codetocloud.io                            ║"
     echo "╚══════════════════════════════════════════════════════════════════╝"
     echo ""
-    
+
     log_warning "This script creates Azure resources that incur costs!"
     log_info "Test target: ${TEST_LESSON}"
     echo ""
-    
+
     read -p "Continue with test? (y/N): " confirm
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
         log_info "Test cancelled."
         exit 0
     fi
-    
+
     # Set up trap for interrupts (Ctrl+C, errors)
     trap trap_handler INT TERM
-    
+
     check_prerequisites
     create_resource_group
-    
+
     case "$TEST_LESSON" in
         06)
             test_lesson_06
@@ -480,16 +552,19 @@ main() {
             exit 1
             ;;
     esac
-    
+
     echo ""
     log_step "Test Complete"
     log_success "All tested lessons passed!"
     echo ""
     echo "Resource group: $RESOURCE_GROUP"
     echo ""
-    
+
     # Call cleanup directly (not via trap) so interactive prompt works
     cleanup
+
+    # Backup: check for any leftover resource groups from previous runs
+    cleanup_leftover_resource_groups
 }
 
 main "$@"
