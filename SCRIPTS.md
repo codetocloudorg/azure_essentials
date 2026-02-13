@@ -4,6 +4,25 @@
 
 ---
 
+## 💻 Where Do I Run These Commands?
+
+All scripts in this project are run from a **terminal** (also called a command line or shell). Here's how to open one:
+
+| Platform              | How to Open a Terminal                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **VS Code (any OS)**  | Press `` Ctrl+` `` (backtick) or go to **Terminal → New Terminal** from the menu bar. This is the easiest option! |
+| **macOS**             | Open **Terminal** (search for it in Spotlight with `Cmd+Space`)                                                   |
+| **Windows**           | Open **PowerShell** (search for it in the Start menu)                                                             |
+| **Linux**             | Open your distro's terminal emulator (usually `Ctrl+Alt+T`)                                                       |
+| **No install needed** | Use [Azure Cloud Shell](https://shell.azure.com) — runs in your browser with all tools pre-installed              |
+
+> **⚠️ Important:** Make sure your terminal is in the **project root folder** (`azure_essentials/`) before running any command.
+> After cloning, run `cd azure_essentials` to get there. If you're using VS Code's built-in terminal, it opens in the project root automatically.
+>
+> **What does `./` mean?** When you see `./scripts/bash/deploy.sh`, the `./` means "run this file from the current folder." On Windows, you'll use `.\` instead (e.g., `.\scripts\powershell\deploy.ps1`).
+
+---
+
 ## 🚀 Quick Start for Learners
 
 Follow these steps **before** starting any lesson:
@@ -105,10 +124,10 @@ Before teaching, validate that lessons work correctly with live Azure resources:
 ./scripts/bash/test-lessons-e2e.sh 07
 ```
 
-| What It Tests | Duration | Cost Estimate |
-|---------------|----------|---------------|
-| **Lesson 06**: VM → SSH → MicroK8s → Deploy nginx → NodePort → Browser access | ~10 min | ~$2 |
-| **Lesson 07**: ACR → Build image → Container Apps → Public HTTPS URL | ~8 min | ~$3 |
+| What It Tests                                                                 | Duration | Cost Estimate |
+| ----------------------------------------------------------------------------- | -------- | ------------- |
+| **Lesson 06**: VM → SSH → MicroK8s → Deploy nginx → NodePort → Browser access | ~10 min  | ~$2           |
+| **Lesson 07**: ACR → Build image → Container Apps → Public HTTPS URL          | ~8 min   | ~$3           |
 
 > ⚠️ **Cost Warning**: This creates real Azure resources. Cleanup is offered at the end of the test.
 

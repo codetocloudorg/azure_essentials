@@ -37,14 +37,19 @@ Click above to launch a fully-configured environment with all tools pre-installe
 
 ---
 
+> **🆕 New to Azure?** Start with the [Wiki for Learners](wiki/Home.md) — it walks you through everything step by step. Not sure what a term means? Check the [Glossary](wiki/Glossary.md).
+>
+> **Don't want to install anything?** Use [Azure Cloud Shell](https://shell.azure.com) — it runs in your browser with all tools pre-installed. Just sign in and paste commands from our [copy-paste reference](scripts/azure-cli/commands/).
+
 ## Quick Links
 
-| Link | Description |
-|------|-------------|
-| [Wiki for Learners](wiki/Home.md) | Beginner-friendly step-by-step guides |
-| [Course Agenda](lessons/00-prerequisites/agenda.md) | Full schedule with timings |
-| [Lesson Index](lessons/README.md) | All 12 lessons at a glance |
-| [Discord Community](https://discord.gg/vwfwq2EpXJ) | Get help and connect |
+| Link                                                | Description                              |
+| --------------------------------------------------- | ---------------------------------------- |
+| [Wiki for Learners](wiki/Home.md)                   | Beginner-friendly step-by-step guides    |
+| [Glossary](wiki/Glossary.md)                        | Plain-English definitions of Azure terms |
+| [Course Agenda](lessons/00-prerequisites/agenda.md) | Full schedule with timings               |
+| [Lesson Index](lessons/README.md)                   | All 12 lessons at a glance               |
+| [Discord Community](https://discord.gg/vwfwq2EpXJ)  | Get help and connect                     |
 
 ---
 
@@ -53,15 +58,17 @@ Click above to launch a fully-configured environment with all tools pre-installe
 
 ### Prerequisites
 
-| Tool | Installation |
-|------|--------------|
-| Azure Account | [Create free account](https://azure.microsoft.com/free/) |
-| Azure CLI | [Install](https://learn.microsoft.com/cli/azure/install-azure-cli) v2.50+ |
+| Tool                | Installation                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| Azure Account       | [Create free account](https://azure.microsoft.com/free/)                                         |
+| Azure CLI           | [Install](https://learn.microsoft.com/cli/azure/install-azure-cli) v2.50+                        |
 | Azure Developer CLI | [Install azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) v1.5+ |
-| VS Code | [Download](https://code.visualstudio.com/) with Bicep extension |
-| Git | [Install](https://git-scm.com/downloads) |
+| VS Code             | [Download](https://code.visualstudio.com/) with Bicep extension                                  |
+| Git                 | [Install](https://git-scm.com/downloads)                                                         |
 
 ### Setup Steps
+
+> **💡 All commands below should be run from the project root folder** (`azure_essentials/`). If you're not sure how to open a terminal, see the [Scripts Guide](SCRIPTS.md#-where-do-i-run-these-commands) for help.
 
 ```bash
 # 1. Clone the repo
@@ -127,26 +134,26 @@ See [SCRIPTS.md](SCRIPTS.md) for all options.
 
 ### Day 1: Foundations
 
-| # | Lesson | Time | Topic |
-|---|--------|------|-------|
-| 00 | [Prerequisites](lessons/00-prerequisites/README.md) | 15 min | Setup |
-| 01 | [Introduction](lessons/01-introduction/README.md) | 55 min | Azure concepts |
-| 02 | [Getting Started](lessons/02-getting-started/README.md) | 20 min | Subscriptions and resource groups |
-| 03 | [Storage](lessons/03-storage-services/README.md) | 55 min | Blobs, files, queues |
-| 04 | [Networking](lessons/04-networking/README.md) | 35 min | VNets, NSGs, load balancers |
-| 05 | [Windows Compute](lessons/05-compute-windows/README.md) | 30 min | VMs, App Service |
-| 06 | [Linux and K8s](lessons/06-compute-linux-kubernetes/README.md) | 25 min | Linux VMs, MicroK8s |
-| 07 | [Containers](lessons/07-container-services/README.md) | 25 min | ACR, AKS, Container Apps |
+| #   | Lesson                                                         | Time   | Topic                             |
+| --- | -------------------------------------------------------------- | ------ | --------------------------------- |
+| 00  | [Prerequisites](lessons/00-prerequisites/README.md)            | 15 min | Setup                             |
+| 01  | [Introduction](lessons/01-introduction/README.md)              | 55 min | Azure concepts                    |
+| 02  | [Getting Started](lessons/02-getting-started/README.md)        | 20 min | Subscriptions and resource groups |
+| 03  | [Storage](lessons/03-storage-services/README.md)               | 55 min | Blobs, files, queues              |
+| 04  | [Networking](lessons/04-networking/README.md)                  | 35 min | VNets, NSGs, load balancers       |
+| 05  | [Windows Compute](lessons/05-compute-windows/README.md)        | 30 min | VMs, App Service                  |
+| 06  | [Linux and K8s](lessons/06-compute-linux-kubernetes/README.md) | 25 min | Linux VMs, MicroK8s               |
+| 07  | [Containers](lessons/07-container-services/README.md)          | 25 min | ACR, AKS, Container Apps          |
 
 ### Day 2: Advanced Services
 
-| # | Lesson | Time | Topic |
-|---|--------|------|-------|
-| 08 | [Serverless](lessons/08-serverless/README.md) | 60 min | Functions, Logic Apps |
-| 09 | [Databases](lessons/09-database-services/README.md) | 60 min | SQL, Cosmos DB, Fabric |
-| 10 | [Billing](lessons/10-billing-cost/README.md) | 20 min | Cost management |
-| 11 | [AI Foundry](lessons/11-ai-foundry/README.md) | 45 min | AI models, chatbots |
-| 12 | [Architecture](lessons/12-architecture-design/README.md) | 45 min | Design patterns |
+| #   | Lesson                                                   | Time   | Topic                  |
+| --- | -------------------------------------------------------- | ------ | ---------------------- |
+| 08  | [Serverless](lessons/08-serverless/README.md)            | 60 min | Functions, Logic Apps  |
+| 09  | [Databases](lessons/09-database-services/README.md)      | 60 min | SQL, Cosmos DB, Fabric |
+| 10  | [Billing](lessons/10-billing-cost/README.md)             | 20 min | Cost management        |
+| 11  | [AI Foundry](lessons/11-ai-foundry/README.md)            | 45 min | AI models, chatbots    |
+| 12  | [Architecture](lessons/12-architecture-design/README.md) | 45 min | Design patterns        |
 
 </details>
 
@@ -155,30 +162,30 @@ See [SCRIPTS.md](SCRIPTS.md) for all options.
 
 ### Free Tier Compatible
 
-| Lessons | Resources | Cost |
-|---------|-----------|------|
-| 01-04 | Storage, VNet, NSGs | FREE |
-| 05 | App Service (F1) | FREE |
-| 06 | Local MicroK8s | FREE |
-| 08 | Functions (Consumption) | FREE |
+| Lessons | Resources               | Cost |
+| ------- | ----------------------- | ---- |
+| 01-04   | Storage, VNet, NSGs     | FREE |
+| 05      | App Service (F1)        | FREE |
+| 06      | Local MicroK8s          | FREE |
+| 08      | Functions (Consumption) | FREE |
 
 ### Low Cost (around $1-5/day)
 
-| Lesson | Resources | Est. Cost |
-|--------|-----------|-----------|
-| 07 | Container Registry | ~$0.17/day |
-| 09 | Cosmos DB (Serverless) | Pay-per-use |
-| 11 | AI Foundry | ~$1-5/day |
+| Lesson | Resources              | Est. Cost   |
+| ------ | ---------------------- | ----------- |
+| 07     | Container Registry     | ~$0.17/day  |
+| 09     | Cosmos DB (Serverless) | Pay-per-use |
+| 11     | AI Foundry             | ~$1-5/day   |
 
 ### Recommended Regions (North America)
 
-| Region | Location | Notes |
-|--------|----------|-------|
-| eastus | Virginia | Best availability |
-| eastus2 | Virginia | Good backup |
-| centralus | Iowa | Good for Cosmos DB |
-| westus2 | Washington | West Coast |
-| canadacentral | Toronto | Canadian learners |
+| Region        | Location   | Notes              |
+| ------------- | ---------- | ------------------ |
+| eastus        | Virginia   | Best availability  |
+| eastus2       | Virginia   | Good backup        |
+| centralus     | Iowa       | Good for Cosmos DB |
+| westus2       | Washington | West Coast         |
+| canadacentral | Toronto    | Canadian learners  |
 
 </details>
 
