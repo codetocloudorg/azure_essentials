@@ -28,6 +28,23 @@ style: |
 
 ---
 
+# Welcome Back!
+
+## Your Trainer: Kevin Evans
+
+🎙️ **Code to Cloud** — Helping you master cloud technologies
+
+| Connect With Me | |
+|-----------------|---|
+| 🔗 **All Links** | [linktr.ee/codetocloud](https://linktr.ee/codetocloud) |
+| 💼 **LinkedIn** | [linkedin.com/in/kevinevans01](https://www.linkedin.com/in/kevinevans01/) |
+| 🎧 **Podcast** | Code to Cloud Podcast |
+| 💬 **Discord** | Join our community! |
+
+> Day 2 recap + questions from yesterday?
+
+---
+
 # Day 2 Agenda
 
 | Module | Topic | Duration |
