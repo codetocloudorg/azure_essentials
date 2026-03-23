@@ -229,7 +229,7 @@ azure_essentials/
 
 ```bash
 azd auth logout && az logout
-azd auth login && az login
+azd auth login --use-device-code && az login --use-device-code
 ```
 
 ### Quota Exceeded

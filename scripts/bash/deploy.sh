@@ -244,13 +244,11 @@ check_prerequisites() {
         print_section "🔐 Azure Login Required"
         echo "You need to sign in to Azure to continue."
         echo ""
-        read -p "Press Enter to open the Azure login page in your browser..."
-        echo ""
-        echo -e "${CYAN}Opening browser for Azure login...${NC}"
+        echo -e "${CYAN}Using device code authentication (copy the code and open the URL in any browser)...${NC}"
         echo ""
 
-        # Login to Azure CLI
-        if ! az login; then
+        # Login to Azure CLI with device code
+        if ! az login --use-device-code; then
             echo -e "${RED}Azure CLI login failed. Please try again.${NC}"
             exit 1
         fi
@@ -259,9 +257,9 @@ check_prerequisites() {
         echo -e "${GREEN}✓ Azure CLI login successful!${NC}"
         echo ""
 
-        # Login to Azure Developer CLI
+        # Login to Azure Developer CLI with device code
         echo -e "${CYAN}Now authenticating Azure Developer CLI...${NC}"
-        if ! azd auth login; then
+        if ! azd auth login --use-device-code; then
             echo -e "${RED}Azure Developer CLI login failed. Please try again.${NC}"
             exit 1
         fi

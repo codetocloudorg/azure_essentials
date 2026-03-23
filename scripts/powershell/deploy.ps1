@@ -232,13 +232,11 @@ function Test-Prerequisites {
         Show-Section "🔐 Azure Login Required"
         Write-Host "  You need to sign in to Azure to continue."
         Write-Host ""
-        Read-Host "  Press Enter to open the Azure login page in your browser"
-        Write-Host ""
-        Write-ColorOutput "  Opening browser for Azure login..." Cyan
+        Write-ColorOutput "  Using device code authentication (copy the code and open the URL in any browser)..." Cyan
         Write-Host ""
 
         try {
-            az login
+            az login --use-device-code
             Write-Host ""
             Write-ColorOutput "  ✓ Azure CLI login successful!" Green
         } catch {
@@ -249,7 +247,7 @@ function Test-Prerequisites {
         Write-Host ""
         Write-ColorOutput "  Now authenticating Azure Developer CLI..." Cyan
         try {
-            azd auth login
+            azd auth login --use-device-code
             Write-ColorOutput "  ✓ Azure Developer CLI login successful!" Green
         } catch {
             Write-ColorOutput "  Azure Developer CLI login failed. Please try again." Red

@@ -39,8 +39,8 @@
    ═══════════════════════════════════════════════════════
 
    1. Authenticate with Azure:
-      az login
-      azd auth login
+      az login --use-device-code
+      azd auth login --use-device-code
 
    2. Deploy a lesson:
       ./scripts/bash/deploy.sh
