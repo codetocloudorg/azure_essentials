@@ -4,7 +4,7 @@
 
 ## Overview
 
-Azure provides managed container services for building, storing, and orchestrating containerised applications. This lesson covers Azure Container Registry (ACR) and introduces Azure Kubernetes Service (AKS).
+Azure provides managed container services for building, storing, and orchestrating containerised applications. This lesson covers Azure Container Registry (ACR) and Azure Container Apps.
 
 ## Prerequisites
 
@@ -13,6 +13,8 @@ Azure provides managed container services for building, storing, and orchestrati
 ./scripts/bash/deploy.sh    # Select option 7
 ```
 This creates your resource group and ACR automatically.
+
+> 💡 **Using Cloud Shell?** Clone the repo first: `git clone https://github.com/codetocloudorg/azure_essentials.git && cd azure_essentials`
 
 ---
 
@@ -42,10 +44,9 @@ That's it! You've built and stored a container image in Azure.
 By the end of this lesson, you will be able to:
 
 - Create and configure Azure Container Registry
-- Build and push container images to ACR
-- Understand Azure Kubernetes Service architecture
-- Deploy containers from ACR to orchestration platforms
-- Implement container security best practices
+- Build container images using ACR Tasks (no Docker needed!)
+- Deploy containers to Azure Container Apps with a public URL
+- Understand container security best practices
 
 ---
 
@@ -63,7 +64,7 @@ ACR is a managed Docker registry service for storing container images:
 
 ### Azure Kubernetes Service (AKS)
 
-AKS is a managed Kubernetes service:
+AKS is a managed Kubernetes service for production workloads:
 
 | Component     | Managed By                   |
 | ------------- | ---------------------------- |
@@ -72,12 +73,14 @@ AKS is a managed Kubernetes service:
 | Upgrades      | Assisted by Azure            |
 | Scaling       | Cluster autoscaler available |
 
+> 💡 For learning, we use **Container Apps** (simpler). For production at scale, consider **AKS**.
+
 ### Container Workflow
 
 ```
-Local Development → Build Image → Push to ACR → Deploy to AKS
-        ↓               ↓              ↓              ↓
-   Dockerfile      docker build    docker push    kubectl apply
+Dockerfile → ACR Build → Container Registry → Container Apps
+                ↓              ↓                    ↓
+         (in the cloud)   (stores images)    (runs containers)
 ```
 
 ---
@@ -126,9 +129,8 @@ The sample app folder contains:
 | ------------ | ---------------------------------- |
 | `app.py`     | Flask web app - "Hello from Azure" |
 | `Dockerfile` | Container build instructions       |
-```
 
-### Exercise 7.3: Deploy to Azure Container Apps (Optional)
+### Exercise 7.3: Deploy to Azure Container Apps
 
 **Objective**: Deploy your container to the internet with a public URL.
 
@@ -229,22 +231,17 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
 
 ```bash
 # Azure Container Registry
-az acr create --name <n> --sku Basic --admin-enabled true
-az acr login --name <n>
-az acr build --registry <n> --image <img:tag> .
-az acr repository list --name <n>
-az acr repository show-tags --name <n> --repository <repo>
+az acr list --query "[0].name" -o tsv              # Find your ACR
+az acr build --registry <n> --image <img:tag> .    # Build in cloud
+az acr repository list --name <n>                  # List images
 
-# Docker commands
-docker build -t <image:tag> .
-docker push <registry>/<image:tag>
-docker pull <registry>/<image:tag>
-docker run -d -p <host>:<container> <image>
+# Azure Container Apps
+az containerapp env create --name <env> --resource-group <rg>
+az containerapp create --name <app> --image <acr>.azurecr.io/<img> --ingress external
+az containerapp show --name <app> --query properties.configuration.ingress.fqdn
 
-# AKS (reference)
-az aks create --name <n> --node-count <n>
-az aks get-credentials --name <n> --resource-group <rg>
-kubectl get nodes
+# Docker (optional - for local testing)
+docker run -d -p 8080:8080 <image>
 ```
 
 ---
@@ -253,10 +250,9 @@ kubectl get nodes
 
 In this lesson, you learned:
 
-- ✅ Creating Azure Container Registry
-- ✅ Building container images with ACR Tasks
-- ✅ Container image management and tagging
-- ✅ Azure Kubernetes Service architecture
+- ✅ Building container images with ACR Tasks (no Docker needed!)
+- ✅ Storing images in Azure Container Registry
+- ✅ Deploying to Azure Container Apps with a public URL
 - ✅ Container security best practices
 
 ---
@@ -270,5 +266,5 @@ Continue to [Lesson 08: Serverless Services](../08-serverless/README.md) to expl
 ## Additional Resources
 
 - [Azure Container Registry Documentation](https://learn.microsoft.com/azure/container-registry/)
-- [Azure Kubernetes Service Documentation](https://learn.microsoft.com/azure/aks/)
+- [Azure Container Apps Documentation](https://learn.microsoft.com/azure/container-apps/)
 - [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
