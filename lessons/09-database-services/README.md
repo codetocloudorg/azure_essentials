@@ -2,6 +2,28 @@
 
 > **Duration**: 45 minutes | **Day**: 2
 
+## What You'll Learn
+
+In this lesson, you'll work with **Azure Cosmos DB**, a globally distributed NoSQL database. By the end, you'll be able to:
+
+- Create a Cosmos DB account and understand serverless vs provisioned pricing
+- Store and query JSON documents using Data Explorer
+- Use partition keys for efficient data distribution
+- Perform CRUD operations with the Python SDK
+
+## Why Cosmos DB?
+
+| Challenge | How Cosmos DB Solves It |
+|-----------|------------------------|
+| Need flexible schema | Store any JSON structure - no migrations needed |
+| Global users | Automatic multi-region replication |
+| Unpredictable traffic | Serverless mode scales to zero and auto-scales up |
+| Different data models | One service supports documents, graphs, key-value, tables |
+
+**Real-world example**: E-commerce product catalogs, user profiles, IoT telemetry, gaming leaderboards - anywhere you need flexible, scalable data storage.
+
+---
+
 ## Quick Start
 
 ```
