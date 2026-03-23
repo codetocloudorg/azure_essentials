@@ -144,9 +144,15 @@ SELECT * FROM c WHERE c.price > 100
 
 ---
 
-## Part 2: Test with Python App (Terminal)
+## Part 2: Test with Python App (Cloud Shell Recommended)
 
-### Option A: Bash/Zsh (macOS/Linux/Cloud Shell)
+> **Tip**: Use Azure Cloud Shell - it has Python and Azure CLI pre-installed, and you're already logged in!
+
+### Option A: Cloud Shell (Recommended)
+
+1. Click the **Cloud Shell** icon in the Azure Portal (top right: `>_`)
+2. Select **Bash** when prompted
+3. Run these commands:
 
 ```bash
 # 1. Auto-discover your Cosmos DB account
@@ -166,6 +172,8 @@ cd azure_essentials/lessons/09-database-services/src/cosmos-test-app
 pip install --user -r requirements.txt
 python app.py
 ```
+
+> **Local Bash/Zsh**: The same commands work on macOS/Linux if you have Azure CLI installed.
 
 ### Option B: PowerShell (Windows)
 
