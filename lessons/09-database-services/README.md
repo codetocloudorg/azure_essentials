@@ -13,11 +13,11 @@ In this lesson, you'll work with **Azure Cosmos DB**, a globally distributed NoS
 
 ## Why Cosmos DB?
 
-| Challenge | How Cosmos DB Solves It |
-|-----------|------------------------|
-| Need flexible schema | Store any JSON structure - no migrations needed |
-| Global users | Automatic multi-region replication |
-| Unpredictable traffic | Serverless mode scales to zero and auto-scales up |
+| Challenge             | How Cosmos DB Solves It                                   |
+| --------------------- | --------------------------------------------------------- |
+| Need flexible schema  | Store any JSON structure - no migrations needed           |
+| Global users          | Automatic multi-region replication                        |
+| Unpredictable traffic | Serverless mode scales to zero and auto-scales up         |
 | Different data models | One service supports documents, graphs, key-value, tables |
 
 **Real-world example**: E-commerce product catalogs, user profiles, IoT telemetry, gaming leaderboards - anywhere you need flexible, scalable data storage.
@@ -163,7 +163,7 @@ git clone https://github.com/codetocloudorg/azure_essentials.git 2>/dev/null || 
 cd azure_essentials/lessons/09-database-services/src/cosmos-test-app
 
 # 4. Install dependencies and run
-pip install -r requirements.txt
+pip install --user -r requirements.txt
 python app.py
 ```
 
@@ -184,7 +184,7 @@ git clone https://github.com/codetocloudorg/azure_essentials.git 2>$null
 cd azure_essentials/lessons/09-database-services/src/cosmos-test-app
 
 # 4. Install dependencies and run
-pip install -r requirements.txt
+pip install --user -r requirements.txt
 python app.py
 ```
 
@@ -310,6 +310,21 @@ items = container.query_items(
 ---
 
 ## Troubleshooting
+
+### "Permission denied" when installing packages
+
+Use `--user` flag or a virtual environment:
+
+```bash
+# Option 1: Install for current user only
+pip install --user -r requirements.txt
+
+# Option 2: Use a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+```
 
 ### "Environment variable not set"
 
