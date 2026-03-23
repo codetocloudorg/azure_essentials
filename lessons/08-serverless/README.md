@@ -74,7 +74,7 @@ Serverless computing lets you run code without managing infrastructure. This les
 ### Step 2: Create an HTTP Function (Portal)
 
 1. Go to your new Function App
-2. In the left menu, click **Functions** → **Create**
+2. In the centre left menu, click **Functions** → **Create**
 3. Select **HTTP trigger**
 4. Configure:
    - **New Function**: `HttpTrigger`
@@ -110,8 +110,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 ### Step 4: Test Your Function
 
 1. Click **Get function URL** at the top
-2. Copy the URL and open in a browser
-3. Add a name parameter: `?name=YourName`
+2. In the **Key** dropdown, select **default (function key)**
+   > Since we set Authorization to Anonymous, any key works - the URL won't require it
+3. Copy the URL and open in a browser
+4. Add a name parameter: `?name=YourName`
 
 **Example:**
 
@@ -235,6 +237,7 @@ Azure Functions Consumption plan pricing:
 This means the Function App doesn't have Python runtime configured.
 
 **Fix via Portal:**
+
 1. Go to your Function App
 2. Click **Configuration** → **General settings**
 3. Set **Runtime stack** to **Python**
@@ -242,6 +245,7 @@ This means the Function App doesn't have Python runtime configured.
 5. Click **Save**
 
 **Fix via CLI:**
+
 ```bash
 az functionapp config appsettings set \
   --name $FUNC_APP \
