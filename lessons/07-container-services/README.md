@@ -69,11 +69,15 @@ Local Development → Build Image → Push to ACR → Deploy to AKS
 
 **Objective**: Create an ACR instance for storing container images.
 
+---
+
+#### Option A: Bash / Cloud Shell
+
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
 LOCATION="centralus"
-ACR_NAME="crazessentials$(openssl rand -hex 4)"
+ACR_NAME="acressentials$(openssl rand -hex 4)"
 
 # Create the container registry
 az acr create \
@@ -93,90 +97,161 @@ az acr show \
 az acr credential show \
   --name $ACR_NAME \
   --output table
+
+# Save the ACR name for later exercises
+echo "ACR_NAME=$ACR_NAME"
 ```
+
+---
+
+#### Option B: PowerShell
+
+```powershell
+# Variables
+$RESOURCE_GROUP = "rg-azure-essentials-dev"
+$LOCATION = "centralus"
+$RANDOM_ID = -join ((48..57) + (97..102) | Get-Random -Count 8 | ForEach-Object {[char]$_})
+$ACR_NAME = "acressentials$RANDOM_ID"
+
+# Create the container registry
+az acr create `
+  --name $ACR_NAME `
+  --resource-group $RESOURCE_GROUP `
+  --location $LOCATION `
+  --sku Basic `
+  --admin-enabled true
+
+# Get the login server
+az acr show `
+  --name $ACR_NAME `
+  --query loginServer `
+  --output tsv
+
+# Get admin credentials
+az acr credential show `
+  --name $ACR_NAME `
+  --output table
+
+# Save the ACR name for later exercises
+Write-Host "ACR_NAME=$ACR_NAME - save this for later exercises!"
+```
+
+> 💡 **Important**: Copy your `ACR_NAME` value! You'll need it for the remaining exercises.
 
 ### Exercise 7.2: Build and Push a Container Image
 
-**Objective**: Create a simple application and push it to ACR.
+**Objective**: Build a container image and push it to ACR.
 
-First, create a sample application:
+This lesson includes a ready-to-use sample app in `src/hello-container/`. No need to create files manually!
+
+---
+
+#### Step 1: Navigate to the Sample App
+
+**Bash / Cloud Shell:**
 
 ```bash
-# Create a directory for the sample app
-mkdir -p sample-container && cd sample-container
-
-# Create a simple Python web application
-cat > app.py << 'EOF'
-from flask import Flask
-import os
-
-app = Flask(__name__)
-
-@app.route('/')
-def hello():
-    return f"Hello from Azure Container Registry! Host: {os.environ.get('HOSTNAME', 'unknown')}"
-
-@app.route('/health')
-def health():
-    return "OK", 200
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
-EOF
-
-# Create requirements file
-cat > requirements.txt << 'EOF'
-flask==3.1.0
-gunicorn==23.0.0
-EOF
-
-# Create Dockerfile
-cat > Dockerfile << 'EOF'
-FROM python:3.13-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY app.py .
-
-EXPOSE 8080
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
-EOF
+# From the repo root
+cd lessons/07-container-services/src/hello-container
 ```
 
-Build and push using ACR Tasks (no local Docker required):
+**PowerShell:**
+
+```powershell
+# From the repo root
+cd lessons\07-container-services\src\hello-container
+```
+
+The folder contains:
+| File | Purpose |
+|------|---------|
+| `app.py` | Flask web app showing "Hello from Azure!" |
+| `Dockerfile` | Container build instructions |
+| `README.md` | Additional documentation |
+
+---
+
+#### Step 2: Build with ACR Tasks (No Docker Required!)
+
+ACR Tasks builds the container in Azure, so you don't need Docker installed locally.
+
+**Bash / Cloud Shell:**
 
 ```bash
-# Build directly in Azure using ACR Tasks
+# Build the image in ACR
 az acr build \
   --registry $ACR_NAME \
-  --image sample-app:v1 \
-  --file Dockerfile \
+  --image hello-container:v1 \
   .
+```
 
+**PowerShell:**
+
+```powershell
+# Build the image in ACR
+az acr build `
+  --registry $ACR_NAME `
+  --image hello-container:v1 `
+  .
+```
+
+> 💡 **Tip**: The `.` at the end tells ACR Tasks to use the current directory as the build context.
+
+---
+
+#### Step 3: Verify the Image
+
+**Bash / Cloud Shell:**
+
+```bash
 # List images in the registry
-az acr repository list \
-  --name $ACR_NAME \
-  --output table
+az acr repository list --name $ACR_NAME --output table
 
 # Show image tags
 az acr repository show-tags \
   --name $ACR_NAME \
-  --repository sample-app \
+  --repository hello-container \
   --output table
+```
 
-# Go back to parent directory
-cd ..
+**PowerShell:**
+
+```powershell
+# List images in the registry
+az acr repository list --name $ACR_NAME --output table
+
+# Show image tags
+az acr repository show-tags `
+  --name $ACR_NAME `
+  --repository hello-container `
+  --output table
+```
+
+---
+
+#### Step 4: Return to Repo Root
+
+**Bash:**
+
+```bash
+cd ../../../..
+```
+
+**PowerShell:**
+
+```powershell
+cd ..\..\..\..
 ```
 
 ### Exercise 7.3: Deploy to Azure Container Apps (Internet Accessible!)
 
 **Objective**: Deploy your container to Azure Container Apps with a public URL.
 
-Azure Container Apps is the easiest way to run containers with a public endpoint:
+Azure Container Apps is the easiest way to run containers with a public endpoint.
+
+---
+
+#### Option A: Bash / Cloud Shell
 
 ```bash
 # First, ensure the containerapp extension is installed
@@ -185,10 +260,11 @@ az extension add --name containerapp --upgrade -y
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
 LOCATION="centralus"
-ENV_NAME="containerapp-env-$(openssl rand -hex 4)"
-APP_NAME="hello-app-$(openssl rand -hex 4)"
+RANDOM_ID=$(openssl rand -hex 4)
+ENV_NAME="cae-essentials-$RANDOM_ID"
+APP_NAME="hello-app-$RANDOM_ID"
 
-# Create Container Apps environment
+# Create Container Apps environment (takes 1-2 minutes)
 az containerapp env create \
   --name $ENV_NAME \
   --resource-group $RESOURCE_GROUP \
@@ -199,7 +275,7 @@ az containerapp create \
   --name $APP_NAME \
   --resource-group $RESOURCE_GROUP \
   --environment $ENV_NAME \
-  --image $ACR_NAME.azurecr.io/sample-app:v1 \
+  --image $ACR_NAME.azurecr.io/hello-container:v1 \
   --registry-server $ACR_NAME.azurecr.io \
   --registry-username $(az acr credential show -n $ACR_NAME --query username -o tsv) \
   --registry-password $(az acr credential show -n $ACR_NAME --query passwords[0].value -o tsv) \
@@ -210,11 +286,58 @@ az containerapp create \
 
 # Get the public URL
 APP_URL=$(az containerapp show -n $APP_NAME -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
-echo "🎉 Your app is live at: https://$APP_URL"
-
-# Test it!
-curl https://$APP_URL
+echo "Your app is live at: https://$APP_URL"
 ```
+
+---
+
+#### Option B: PowerShell
+
+```powershell
+# First, ensure the containerapp extension is installed
+az extension add --name containerapp --upgrade -y
+
+# Variables
+$RESOURCE_GROUP = "rg-azure-essentials-dev"
+$LOCATION = "centralus"
+$RANDOM_ID = -join ((48..57) + (97..102) | Get-Random -Count 8 | ForEach-Object {[char]$_})
+$ENV_NAME = "cae-essentials-$RANDOM_ID"
+$APP_NAME = "hello-app-$RANDOM_ID"
+
+# Create Container Apps environment (takes 1-2 minutes)
+az containerapp env create `
+  --name $ENV_NAME `
+  --resource-group $RESOURCE_GROUP `
+  --location $LOCATION
+
+# Get ACR credentials
+$ACR_USERNAME = az acr credential show -n $ACR_NAME --query username -o tsv
+$ACR_PASSWORD = az acr credential show -n $ACR_NAME --query "passwords[0].value" -o tsv
+
+# Deploy container from ACR with public ingress
+az containerapp create `
+  --name $APP_NAME `
+  --resource-group $RESOURCE_GROUP `
+  --environment $ENV_NAME `
+  --image "$ACR_NAME.azurecr.io/hello-container:v1" `
+  --registry-server "$ACR_NAME.azurecr.io" `
+  --registry-username $ACR_USERNAME `
+  --registry-password $ACR_PASSWORD `
+  --target-port 8080 `
+  --ingress external `
+  --min-replicas 1 `
+  --max-replicas 3
+
+# Get the public URL
+$APP_URL = az containerapp show -n $APP_NAME -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv
+Write-Host "Your app is live at: https://$APP_URL"
+```
+
+---
+
+#### Step 3: View Your App
+
+Open the URL in your browser. You should see **"Hello from Azure!"** with the container hostname.
 
 > ✅ **Success!** Your container is now running on Azure with HTTPS and auto-scaling!
 
@@ -222,19 +345,38 @@ curl https://$APP_URL
 
 **Objective**: Test the container image locally if you have Docker installed.
 
+**Bash:**
+
 ```bash
 # Login to ACR
 az acr login --name $ACR_NAME
 
 # Pull and run the image
-docker pull $ACR_NAME.azurecr.io/sample-app:v1
-docker run -d -p 8080:8080 $ACR_NAME.azurecr.io/sample-app:v1
+docker pull $ACR_NAME.azurecr.io/hello-container:v1
+docker run -d -p 8080:8080 $ACR_NAME.azurecr.io/hello-container:v1
 
 # Test the application
 curl http://localhost:8080
 
 # Stop the container
-docker stop $(docker ps -q --filter ancestor=$ACR_NAME.azurecr.io/sample-app:v1)
+docker stop $(docker ps -q --filter ancestor=$ACR_NAME.azurecr.io/hello-container:v1)
+```
+
+**PowerShell:**
+
+```powershell
+# Login to ACR
+az acr login --name $ACR_NAME
+
+# Pull and run the image
+docker pull "$ACR_NAME.azurecr.io/hello-container:v1"
+docker run -d -p 8080:8080 "$ACR_NAME.azurecr.io/hello-container:v1"
+
+# Test the application (open in browser)
+Start-Process "http://localhost:8080"
+
+# Stop the container
+docker stop (docker ps -q --filter "ancestor=$ACR_NAME.azurecr.io/hello-container:v1")
 ```
 
 ### Exercise 7.5: Explore AKS Concepts
