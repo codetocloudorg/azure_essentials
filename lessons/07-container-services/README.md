@@ -36,22 +36,22 @@ By the end of this lesson, you will be able to:
 
 ACR is a managed Docker registry service for storing container images:
 
-| SKU | Features | Use Case |
-|-----|----------|----------|
-| **Basic** | Entry-level, limited storage | Development, testing |
-| **Standard** | More storage, webhooks | Small production |
-| **Premium** | Geo-replication, private link | Enterprise |
+| SKU          | Features                      | Use Case             |
+| ------------ | ----------------------------- | -------------------- |
+| **Basic**    | Entry-level, limited storage  | Development, testing |
+| **Standard** | More storage, webhooks        | Small production     |
+| **Premium**  | Geo-replication, private link | Enterprise           |
 
 ### Azure Kubernetes Service (AKS)
 
 AKS is a managed Kubernetes service:
 
-| Component | Managed By |
-|-----------|-----------|
-| Control plane | Microsoft (free) |
-| Worker nodes | You (pay for VMs) |
-| Upgrades | Assisted by Azure |
-| Scaling | Cluster autoscaler available |
+| Component     | Managed By                   |
+| ------------- | ---------------------------- |
+| Control plane | Microsoft (free)             |
+| Worker nodes  | You (pay for VMs)            |
+| Upgrades      | Assisted by Azure            |
+| Scaling       | Cluster autoscaler available |
 
 ### Container Workflow
 
@@ -303,14 +303,14 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8080", "app:app"]
 
 ## Container Security Checklist
 
-| Practice | Description |
-|----------|-------------|
-| ✅ Use official base images | Start from trusted sources |
-| ✅ Scan for vulnerabilities | Use ACR's built-in scanning |
-| ✅ Run as non-root | Reduce container privileges |
-| ✅ Use specific tags | Avoid `latest` in production |
-| ✅ Keep images small | Remove unnecessary packages |
-| ✅ Sign images | Use content trust |
+| Practice                    | Description                  |
+| --------------------------- | ---------------------------- |
+| ✅ Use official base images | Start from trusted sources   |
+| ✅ Scan for vulnerabilities | Use ACR's built-in scanning  |
+| ✅ Run as non-root          | Reduce container privileges  |
+| ✅ Use specific tags        | Avoid `latest` in production |
+| ✅ Keep images small        | Remove unnecessary packages  |
+| ✅ Sign images              | Use content trust            |
 
 ---
 

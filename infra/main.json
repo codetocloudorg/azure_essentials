@@ -33,17 +33,7 @@
     "lessonNumber": {
       "type": "string",
       "defaultValue": "",
-      "allowedValues": [
-        "",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "09",
-        "11"
-      ],
+      "allowedValues": ["", "03", "04", "05", "06", "07", "08", "09", "11"],
       "metadata": {
         "description": "Optional: Specific lesson number to deploy. Leave empty for full deployment."
       }
@@ -51,10 +41,7 @@
     "appServicePlanSku": {
       "type": "string",
       "defaultValue": "B1",
-      "allowedValues": [
-        "F1",
-        "B1"
-      ],
+      "allowedValues": ["F1", "B1"],
       "metadata": {
         "description": "App Service Plan SKU. Use B1 if your subscription has no F1 quota."
       }
@@ -253,11 +240,7 @@
             "kind": {
               "type": "string",
               "defaultValue": "StorageV2",
-              "allowedValues": [
-                "StorageV2",
-                "BlobStorage",
-                "Storage"
-              ],
+              "allowedValues": ["StorageV2", "BlobStorage", "Storage"],
               "metadata": {
                 "description": "Storage account kind"
               }
@@ -583,9 +566,7 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": [
-                    "[parameters('vnetAddressPrefix')]"
-                  ]
+                  "addressPrefixes": ["[parameters('vnetAddressPrefix')]"]
                 },
                 "subnets": [
                   {
@@ -757,13 +738,7 @@
             "appServicePlanSku": {
               "type": "string",
               "defaultValue": "F1",
-              "allowedValues": [
-                "F1",
-                "B1",
-                "B2",
-                "S1",
-                "P1v2"
-              ],
+              "allowedValues": ["F1", "B1", "B2", "S1", "P1v2"],
               "metadata": {
                 "description": "App Service Plan SKU"
               }
@@ -778,9 +753,7 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": [
-                    "10.1.0.0/16"
-                  ]
+                  "addressPrefixes": ["10.1.0.0/16"]
                 },
                 "subnets": [
                   {
@@ -1102,11 +1075,7 @@
             "acrSku": {
               "type": "string",
               "defaultValue": "Basic",
-              "allowedValues": [
-                "Basic",
-                "Standard",
-                "Premium"
-              ],
+              "allowedValues": ["Basic", "Standard", "Premium"],
               "metadata": {
                 "description": "ACR SKU"
               }
@@ -1534,9 +1503,7 @@
                 "resource": {
                   "id": "items",
                   "partitionKey": {
-                    "paths": [
-                      "/category"
-                    ],
+                    "paths": ["/category"],
                     "kind": "Hash"
                   },
                   "indexingPolicy": {
@@ -1910,9 +1877,7 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": [
-                    "10.100.0.0/16"
-                  ]
+                  "addressPrefixes": ["10.100.0.0/16"]
                 },
                 "subnets": [
                   {

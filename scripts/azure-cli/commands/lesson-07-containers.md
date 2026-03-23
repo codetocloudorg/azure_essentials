@@ -260,24 +260,24 @@ rm -f /tmp/Dockerfile /tmp/index.html
 
 ## 🔗 Quick Reference
 
-| Command | Description |
-|---------|-------------|
-| `az acr create` | Create container registry |
-| `az acr login` | Login to registry |
-| `az acr build` | Build image in ACR (no Docker needed) |
-| `az acr repository list` | List all repositories |
-| `az acr repository show-tags` | List image tags |
-| `az acr credential show` | Get admin credentials |
-| `az acr show-usage` | View storage usage |
+| Command                       | Description                           |
+| ----------------------------- | ------------------------------------- |
+| `az acr create`               | Create container registry             |
+| `az acr login`                | Login to registry                     |
+| `az acr build`                | Build image in ACR (no Docker needed) |
+| `az acr repository list`      | List all repositories                 |
+| `az acr repository show-tags` | List image tags                       |
+| `az acr credential show`      | Get admin credentials                 |
+| `az acr show-usage`           | View storage usage                    |
 
 ---
 
 ## 🏗️ ACR SKU Comparison
 
-| Feature | Basic | Standard | Premium |
-|---------|-------|----------|---------|
-| Storage | 10 GB | 100 GB | 500 GB |
-| Webhooks | 2 | 10 | 500 |
-| Geo-replication | ❌ | ❌ | ✅ |
-| Content Trust | ❌ | ❌ | ✅ |
-| Private Link | ❌ | ❌ | ✅ |
+| Feature         | Basic | Standard | Premium |
+| --------------- | ----- | -------- | ------- |
+| Storage         | 10 GB | 100 GB   | 500 GB  |
+| Webhooks        | 2     | 10       | 500     |
+| Geo-replication | ❌    | ❌       | ✅      |
+| Content Trust   | ❌    | ❌       | ✅      |
+| Private Link    | ❌    | ❌       | ✅      |

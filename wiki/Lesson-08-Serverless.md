@@ -5,6 +5,7 @@
 ## 🎯 What You'll Build
 
 By the end of this lesson, you'll have:
+
 - Created an Azure Function App
 - Deployed a serverless function
 - Triggered it via HTTP request
@@ -18,22 +19,24 @@ By the end of this lesson, you'll have:
 
 ### Traditional vs Serverless
 
-| Aspect | Traditional VM | Serverless |
-|--------|---------------|------------|
-| **You manage** | OS, runtime, scaling | Just your code |
-| **Billing** | Pay for uptime | Pay per execution |
-| **Scaling** | Manual or autoscale rules | Automatic (instant) |
-| **Idle cost** | Still paying | $0 when not running |
+| Aspect         | Traditional VM            | Serverless          |
+| -------------- | ------------------------- | ------------------- |
+| **You manage** | OS, runtime, scaling      | Just your code      |
+| **Billing**    | Pay for uptime            | Pay per execution   |
+| **Scaling**    | Manual or autoscale rules | Automatic (instant) |
+| **Idle cost**  | Still paying              | $0 when not running |
 
 ### When to Use Serverless
 
 ✅ **Good for:**
+
 - Event-driven processing (file uploads, webhooks)
 - APIs with variable traffic
 - Scheduled tasks (cron jobs)
 - Prototypes and MVPs
 
 ❌ **Not ideal for:**
+
 - Long-running processes (>10 min)
 - Applications needing persistent connections
 - Consistent high-volume workloads
@@ -77,6 +80,7 @@ az functionapp create \
 ```
 
 **What this creates:**
+
 - Function App container
 - Consumption plan (pay-per-execution)
 - Python 3.13 runtime
@@ -104,6 +108,7 @@ echo "Your Function App URL: https://$FUNC_APP_NAME.azurewebsites.net"
 ### Option B: Using Azure Functions Core Tools
 
 Install the tools first:
+
 ```bash
 # Mac
 brew install azure-functions-core-tools@4
@@ -113,6 +118,7 @@ npm install -g azure-functions-core-tools@4
 ```
 
 Create a local project:
+
 ```bash
 # Create project folder
 mkdir my-function && cd my-function
@@ -125,6 +131,7 @@ func new --name hello --template "HTTP trigger"
 ```
 
 This creates:
+
 ```
 my-function/
 ├── host.json
@@ -167,6 +174,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 ```
 
 **What it does:**
+
 1. Receives HTTP request
 2. Looks for `name` parameter
 3. Returns personalized greeting
@@ -181,18 +189,21 @@ func start
 ```
 
 Output:
+
 ```
 Functions:
     hello: [GET,POST] http://localhost:7071/api/hello
 ```
 
 Test it:
+
 ```bash
 # In another terminal
 curl "http://localhost:7071/api/hello?name=World"
 ```
 
 Response:
+
 ```
 Hello, World!
 ```
@@ -207,6 +218,7 @@ func azure functionapp publish $FUNC_APP_NAME
 ```
 
 Once deployed, test it:
+
 ```bash
 curl "https://$FUNC_APP_NAME.azurewebsites.net/api/hello?name=Azure"
 ```
@@ -217,14 +229,14 @@ curl "https://$FUNC_APP_NAME.azurewebsites.net/api/hello?name=Azure"
 
 Functions can be triggered by many events:
 
-| Trigger | Use Case | Example |
-|---------|----------|---------|
-| **HTTP** | REST APIs, webhooks | `GET /api/users` |
-| **Timer** | Scheduled jobs | Run every 5 minutes |
-| **Blob** | File processing | Process uploaded images |
-| **Queue** | Background jobs | Send emails async |
-| **Cosmos DB** | Data changes | Update search index |
-| **Event Hub** | Streaming data | IoT telemetry |
+| Trigger       | Use Case            | Example                 |
+| ------------- | ------------------- | ----------------------- |
+| **HTTP**      | REST APIs, webhooks | `GET /api/users`        |
+| **Timer**     | Scheduled jobs      | Run every 5 minutes     |
+| **Blob**      | File processing     | Process uploaded images |
+| **Queue**     | Background jobs     | Send emails async       |
+| **Cosmos DB** | Data changes        | Update search index     |
+| **Event Hub** | Streaming data      | IoT telemetry           |
 
 ### Timer Trigger Example
 
@@ -239,6 +251,7 @@ def main(timer: func.TimerRequest) -> None:
 ```
 
 `function.json`:
+
 ```json
 {
   "scriptFile": "__init__.py",
@@ -272,6 +285,7 @@ func azure functionapp logstream $FUNC_APP_NAME
 ### Application Insights
 
 For production, enable Application Insights for:
+
 - Detailed telemetry
 - Performance monitoring
 - Error tracking
@@ -282,12 +296,13 @@ For production, enable Application Insights for:
 
 ### Consumption Plan (Pay-per-use)
 
-| Metric | Free Grant | Cost After |
-|--------|------------|------------|
-| Executions | 1M/month free | $0.20 per million |
-| Duration | 400K GB-s free | $0.000016/GB-s |
+| Metric     | Free Grant     | Cost After        |
+| ---------- | -------------- | ----------------- |
+| Executions | 1M/month free  | $0.20 per million |
+| Duration   | 400K GB-s free | $0.000016/GB-s    |
 
 **Example:** A function that runs 100ms with 256MB RAM:
+
 - 1 million executions = ~$0 (within free tier)
 - 10 million executions ≈ $1.80/month
 
@@ -303,12 +318,12 @@ az group delete --name $RG_NAME --yes
 
 ## ⚠️ Common Mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Function times out | Check timeout settings (default: 5 min) |
-| Cold start too slow | Use Premium plan for warm instances |
+| Mistake              | Fix                                      |
+| -------------------- | ---------------------------------------- |
+| Function times out   | Check timeout settings (default: 5 min)  |
+| Cold start too slow  | Use Premium plan for warm instances      |
 | Can't reach function | Check auth level (Anonymous for testing) |
-| Module not found | Add to requirements.txt and redeploy |
+| Module not found     | Add to requirements.txt and redeploy     |
 
 ---
 
@@ -330,4 +345,4 @@ Let's add a database to store data!
 
 ---
 
-*Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!*
+_Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!_

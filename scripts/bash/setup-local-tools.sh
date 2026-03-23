@@ -592,7 +592,7 @@ echo ""
 if az account show >/dev/null 2>&1; then
     # Register providers (no --wait to avoid blocking)
     providers=("Microsoft.Compute" "Microsoft.Storage" "Microsoft.Network" "Microsoft.Web" "Microsoft.App" "Microsoft.ContainerRegistry")
-    
+
     for provider in "${providers[@]}"; do
         state=$(az provider show --namespace "$provider" --query registrationState -o tsv 2>/dev/null || echo "Unknown")
         if [[ "$state" == "Registered" ]]; then

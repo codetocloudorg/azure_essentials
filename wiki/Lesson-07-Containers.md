@@ -5,6 +5,7 @@
 ## 🎯 What You'll Build
 
 By the end of this lesson, you'll have:
+
 - Built a container image in Azure (no Docker install needed!)
 - Deployed a web app to Azure Container Apps
 - Accessed your app via a public HTTPS URL
@@ -17,22 +18,23 @@ By the end of this lesson, you'll have:
 
 Ever heard "but it works on my computer"? Containers fix that!
 
-| Without Containers | With Containers |
-|-------------------|-----------------|
-| "Install Python 3.9, then install Flask, then configure..." | "Run this container" |
-| Works on your laptop, breaks on server | Works exactly the same everywhere |
-| Takes hours to set up | Takes seconds to start |
+| Without Containers                                          | With Containers                   |
+| ----------------------------------------------------------- | --------------------------------- |
+| "Install Python 3.9, then install Flask, then configure..." | "Run this container"              |
+| Works on your laptop, breaks on server                      | Works exactly the same everywhere |
+| Takes hours to set up                                       | Takes seconds to start            |
 
 ### Containers vs Virtual Machines
 
-| Container | Virtual Machine |
-|-----------|-----------------|
-| Shares the host's OS kernel | Has its own complete OS |
-| Starts in seconds | Starts in minutes |
-| Megabytes in size | Gigabytes in size |
+| Container                     | Virtual Machine             |
+| ----------------------------- | --------------------------- |
+| Shares the host's OS kernel   | Has its own complete OS     |
+| Starts in seconds             | Starts in minutes           |
+| Megabytes in size             | Gigabytes in size           |
 | Best for: single applications | Best for: full environments |
 
 Think of it this way:
+
 - **VM** = A whole apartment (has kitchen, bathroom, etc.)
 - **Container** = A hotel room (shares building facilities)
 
@@ -40,12 +42,12 @@ Think of it this way:
 
 ## 📦 Container Vocabulary
 
-| Term | Simple Definition |
-|------|-------------------|
-| **Container** | A packaged application with all its dependencies |
-| **Image** | A template/snapshot used to create containers |
-| **Registry** | A library where images are stored (like GitHub for code) |
-| **Dockerfile** | Instructions for building an image (like a recipe) |
+| Term           | Simple Definition                                        |
+| -------------- | -------------------------------------------------------- |
+| **Container**  | A packaged application with all its dependencies         |
+| **Image**      | A template/snapshot used to create containers            |
+| **Registry**   | A library where images are stored (like GitHub for code) |
+| **Dockerfile** | Instructions for building an image (like a recipe)       |
 
 ---
 
@@ -53,11 +55,11 @@ Think of it this way:
 
 Azure offers several ways to run containers:
 
-| Service | Best For | Complexity |
-|---------|----------|------------|
-| **Azure Container Apps** | Web apps, APIs, microservices | ⭐ Easy |
-| **Azure Container Instances** | Quick, simple containers | ⭐ Easy |
-| **Azure Kubernetes Service (AKS)** | Complex, large-scale apps | ⭐⭐⭐ Advanced |
+| Service                            | Best For                      | Complexity      |
+| ---------------------------------- | ----------------------------- | --------------- |
+| **Azure Container Apps**           | Web apps, APIs, microservices | ⭐ Easy         |
+| **Azure Container Instances**      | Quick, simple containers      | ⭐ Easy         |
+| **Azure Kubernetes Service (AKS)** | Complex, large-scale apps     | ⭐⭐⭐ Advanced |
 
 **This lesson uses Container Apps** - perfect for beginners!
 
@@ -120,7 +122,7 @@ def hello():
     return '''
     <html>
     <head><title>Hello Container!</title></head>
-    <body style="font-family: Arial; text-align: center; padding: 50px; 
+    <body style="font-family: Arial; text-align: center; padding: 50px;
                  background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
         <h1>🐳 Hello from Azure Container Apps!</h1>
         <p>You did it! This is running in a container.</p>
@@ -209,6 +211,7 @@ az containerapp show \
 **Open that URL in your browser!** 🎉
 
 Your app is now live on the internet with:
+
 - ✅ HTTPS (secure)
 - ✅ Auto-scaling (handles traffic spikes)
 - ✅ Load balancing (distributes requests)
@@ -264,6 +267,7 @@ az group delete --name rg-container-lesson --yes --no-wait
 **Problem:** CLI extension not installed.
 
 **Fix:**
+
 ```bash
 az extension add --name containerapp --upgrade -y
 ```
@@ -275,6 +279,7 @@ az extension add --name containerapp --upgrade -y
 **Problem:** Not logged into ACR or ACR doesn't exist.
 
 **Fix:**
+
 ```bash
 # Check ACR exists
 az acr list -o table
@@ -287,9 +292,10 @@ az acr login --name $ACR_NAME
 
 ### App shows "Service Unavailable"
 
-**Problem:** Container failed to start. 
+**Problem:** Container failed to start.
 
 **Fix:** Check the logs:
+
 ```bash
 az containerapp logs show \
   --name $APP_NAME \
@@ -297,6 +303,7 @@ az containerapp logs show \
 ```
 
 Common causes:
+
 - Port mismatch (app runs on wrong port)
 - Missing dependencies
 - Crash at startup
@@ -308,6 +315,7 @@ Common causes:
 **Problem:** Microsoft.App provider not registered.
 
 **Fix:**
+
 ```bash
 az provider register --namespace Microsoft.App --wait
 az provider register --namespace Microsoft.ContainerRegistry --wait
@@ -327,13 +335,13 @@ az provider register --namespace Microsoft.ContainerRegistry --wait
 
 ## 📖 Key Terms
 
-| Term | Meaning |
-|------|---------|
-| **Container** | Packaged application with its dependencies |
-| **Image** | Template for creating containers |
-| **ACR** | Azure Container Registry - stores your images |
-| **Container Apps** | Azure's serverless container platform |
-| **Ingress** | How external traffic reaches your app |
+| Term               | Meaning                                       |
+| ------------------ | --------------------------------------------- |
+| **Container**      | Packaged application with its dependencies    |
+| **Image**          | Template for creating containers              |
+| **ACR**            | Azure Container Registry - stores your images |
+| **Container Apps** | Azure's serverless container platform         |
+| **Ingress**        | How external traffic reaches your app         |
 
 ---
 
@@ -345,4 +353,4 @@ Ready for serverless? Functions are even simpler:
 
 ---
 
-*Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!*
+_Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!_

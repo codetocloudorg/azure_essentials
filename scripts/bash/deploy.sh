@@ -1436,7 +1436,7 @@ check_vm_quota() {
     # Calculate required vCPUs based on lesson
     local required_vcpus=0
     local vm_details=""
-    
+
     if [ "$SELECTED_LESSON" = "05" ] || [ -z "$SELECTED_LESSON" ]; then
         required_vcpus=$((required_vcpus + 2))
         vm_details="${vm_details}\n    • Lesson 05 Windows VM (B2s): 2 vCPUs"

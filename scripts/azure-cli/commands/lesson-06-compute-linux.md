@@ -297,12 +297,12 @@ rm -f /tmp/cloud-init.yaml
 
 ## 🔗 Quick Reference
 
-| Command | Description |
-|---------|-------------|
-| `az vm create` | Create a virtual machine |
-| `az vm show --show-details` | Show VM with public IP |
-| `az vm start` | Start a VM |
-| `az vm deallocate` | Stop and deallocate a VM |
-| `az vm run-command invoke` | Run command remotely |
-| `microk8s status` | Check MicroK8s status |
-| `microk8s kubectl` | Run kubectl commands |
+| Command                     | Description              |
+| --------------------------- | ------------------------ |
+| `az vm create`              | Create a virtual machine |
+| `az vm show --show-details` | Show VM with public IP   |
+| `az vm start`               | Start a VM               |
+| `az vm deallocate`          | Stop and deallocate a VM |
+| `az vm run-command invoke`  | Run command remotely     |
+| `microk8s status`           | Check MicroK8s status    |
+| `microk8s kubectl`          | Run kubectl commands     |

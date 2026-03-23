@@ -74,10 +74,10 @@ RUN curl -fsSL https://aka.ms/install-azd.sh | bash
 RUN add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        python3.13 \
-        python3.13-venv \
-        python3.13-dev \
-        python3-pip \
+    python3.13 \
+    python3.13-venv \
+    python3.13-dev \
+    python3-pip \
     && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
     && update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1 \
     && rm -rf /var/lib/apt/lists/*
@@ -144,14 +144,14 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 RUN if getent group $USER_GID > /dev/null 2>&1; then \
-        groupmod -n $USERNAME $(getent group $USER_GID | cut -d: -f1); \
+    groupmod -n $USERNAME $(getent group $USER_GID | cut -d: -f1); \
     else \
-        groupadd --gid $USER_GID $USERNAME; \
+    groupadd --gid $USER_GID $USERNAME; \
     fi \
     && if id -u $USER_UID > /dev/null 2>&1; then \
-        usermod -l $USERNAME -d /home/$USERNAME -m $(id -nu $USER_UID); \
+    usermod -l $USERNAME -d /home/$USERNAME -m $(id -nu $USER_UID); \
     else \
-        useradd --uid $USER_UID --gid $USER_GID -m $USERNAME; \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME; \
     fi \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME

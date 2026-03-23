@@ -273,12 +273,12 @@ echo "Cleanup initiated - resources deleting in background"
 
 ## 🔗 Quick Reference
 
-| Command | Description |
-|---------|-------------|
-| `az vm create` | Create a virtual machine |
-| `az vm show` | Show VM details |
-| `az vm start` | Start a VM |
-| `az vm deallocate` | Stop and deallocate a VM |
-| `az appservice plan create` | Create App Service Plan |
-| `az webapp create` | Create a Web App |
-| `az webapp config appsettings set` | Configure app settings |
+| Command                            | Description              |
+| ---------------------------------- | ------------------------ |
+| `az vm create`                     | Create a virtual machine |
+| `az vm show`                       | Show VM details          |
+| `az vm start`                      | Start a VM               |
+| `az vm deallocate`                 | Stop and deallocate a VM |
+| `az appservice plan create`        | Create App Service Plan  |
+| `az webapp create`                 | Create a Web App         |
+| `az webapp config appsettings set` | Configure app settings   |

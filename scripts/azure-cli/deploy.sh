@@ -286,7 +286,7 @@ deploy_lesson_3() {
     print_info "Assigning RBAC roles for storage access..."
     local user_id=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || echo "")
     local storage_scope="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$rg_name/providers/Microsoft.Storage/storageAccounts/$storage_name"
-    
+
     if [[ -n "$user_id" ]]; then
         az role assignment create --role "Storage Blob Data Contributor" --assignee "$user_id" --scope "$storage_scope" --output none 2>/dev/null || true
         az role assignment create --role "Storage Queue Data Contributor" --assignee "$user_id" --scope "$storage_scope" --output none 2>/dev/null || true

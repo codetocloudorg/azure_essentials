@@ -5,6 +5,7 @@
 ## 🎯 What You'll Build
 
 By the end of this lesson, you'll have:
+
 - Created an Azure AI Services (Foundry) resource
 - Made your first AI API call
 - Built a simple chatbot using Azure OpenAI
@@ -16,13 +17,13 @@ By the end of this lesson, you'll have:
 
 Azure AI Foundry provides a unified platform for AI:
 
-| Category | Services | Use Cases |
-|----------|----------|-----------|
-| **Language** | OpenAI GPT-4o, Translator | Chatbots, translation, reasoning |
-| **Vision** | Computer Vision, GPT-4o Vision | Image analysis, OCR, detection |
-| **Speech** | Whisper, Text-to-Speech | Voice assistants, transcription |
-| **Decision** | Content Safety | Content moderation, safety |
-| **Search** | Azure AI Search | Enterprise search, RAG |
+| Category     | Services                       | Use Cases                        |
+| ------------ | ------------------------------ | -------------------------------- |
+| **Language** | OpenAI GPT-4o, Translator      | Chatbots, translation, reasoning |
+| **Vision**   | Computer Vision, GPT-4o Vision | Image analysis, OCR, detection   |
+| **Speech**   | Whisper, Text-to-Speech        | Voice assistants, transcription  |
+| **Decision** | Content Safety                 | Content moderation, safety       |
+| **Search**   | Azure AI Search                | Enterprise search, RAG           |
 
 ---
 
@@ -32,14 +33,14 @@ The unified platform for building AI applications—access to GPT-4o, Phi-4, DAL
 
 ### What You Can Build
 
-| Model | Capability | Example |
-|-------|------------|---------|
-| **GPT-4o** | Multimodal reasoning | Chatbots, document analysis |
-| **GPT-4o-mini** | Fast, efficient | Quick responses, summaries |
-| **Phi-4** | Small language model | Edge scenarios, low latency |
-| **DALL-E 3** | Image generation | Create images from text |
-| **Whisper** | Speech-to-text | Transcription |
-| **text-embedding-3** | Vector embeddings | Semantic search, RAG |
+| Model                | Capability           | Example                     |
+| -------------------- | -------------------- | --------------------------- |
+| **GPT-4o**           | Multimodal reasoning | Chatbots, document analysis |
+| **GPT-4o-mini**      | Fast, efficient      | Quick responses, summaries  |
+| **Phi-4**            | Small language model | Edge scenarios, low latency |
+| **DALL-E 3**         | Image generation     | Create images from text     |
+| **Whisper**          | Speech-to-text       | Transcription               |
+| **text-embedding-3** | Vector embeddings    | Semantic search, RAG        |
 
 ---
 
@@ -149,8 +150,9 @@ print(response.choices[0].message.content)
 ```
 
 **Output:**
+
 ```
-Azure is Microsoft's cloud computing platform that provides a wide range of 
+Azure is Microsoft's cloud computing platform that provides a wide range of
 services for building, deploying, and managing applications and services.
 ```
 
@@ -197,29 +199,30 @@ print("-" * 40)
 
 while True:
     user_input = input("\nYou: ").strip()
-    
+
     if user_input.lower() == 'quit':
         break
-    
+
     # Add user message to history
     messages.append({"role": "user", "content": user_input})
-    
+
     # Get response
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,
         max_tokens=500
     )
-    
+
     assistant_message = response.choices[0].message.content
-    
+
     # Add assistant response to history
     messages.append({"role": "assistant", "content": assistant_message})
-    
+
     print(f"\nBot: {assistant_message}")
 ```
 
 Run it:
+
 ```bash
 export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
 export AZURE_OPENAI_KEY="your-key-here"
@@ -277,14 +280,14 @@ print(f"Description: {analysis.description.captions[0].text}")
 
 Azure AI services charge per API call:
 
-| Service | Pricing (approx) |
-|---------|------------------|
-| **GPT-4o** | $0.005/1K input tokens |
-| **GPT-4o-mini** | $0.00015/1K input tokens |
-| **Phi-4** | $0.00007/1K input tokens |
-| **DALL-E 3** | $0.04/image |
-| **Whisper** | $0.006/minute |
-| **text-embedding-3-large** | $0.00013/1K tokens |
+| Service                    | Pricing (approx)         |
+| -------------------------- | ------------------------ |
+| **GPT-4o**                 | $0.005/1K input tokens   |
+| **GPT-4o-mini**            | $0.00015/1K input tokens |
+| **Phi-4**                  | $0.00007/1K input tokens |
+| **DALL-E 3**               | $0.04/image              |
+| **Whisper**                | $0.006/minute            |
+| **text-embedding-3-large** | $0.00013/1K tokens       |
 
 ### What's a Token?
 
@@ -298,16 +301,17 @@ Azure AI services charge per API call:
 
 Azure AI includes safety features:
 
-| Feature | Purpose |
-|---------|---------|
-| **Content filters** | Block harmful content |
-| **Abuse monitoring** | Detect misuse |
-| **Rate limiting** | Prevent overload |
-| **Audit logging** | Track usage |
+| Feature              | Purpose               |
+| -------------------- | --------------------- |
+| **Content filters**  | Block harmful content |
+| **Abuse monitoring** | Detect misuse         |
+| **Rate limiting**    | Prevent overload      |
+| **Audit logging**    | Track usage           |
 
 ### Enable Content Filtering
 
 In the portal:
+
 1. Go to your Azure AI Services resource
 2. Click **"Content filters"**
 3. Configure severity thresholds for:
@@ -351,13 +355,13 @@ az cognitiveservices account purge --name $AI_NAME --location $LOCATION
 
 ## ⚠️ Common Issues
 
-| Issue | Fix |
-|-------|-----|
+| Issue                   | Fix                                                                |
+| ----------------------- | ------------------------------------------------------------------ |
 | Provider not registered | Run `az provider register --namespace Microsoft.CognitiveServices` |
-| Model not available | Try different region (northcentralus recommended) |
-| Rate limited | Wait or request quota increase |
-| Content filtered | Adjust content filter settings |
-| Soft-deleted resource | Purge with `az cognitiveservices account purge` |
+| Model not available     | Try different region (northcentralus recommended)                  |
+| Rate limited            | Wait or request quota increase                                     |
+| Content filtered        | Adjust content filter settings                                     |
+| Soft-deleted resource   | Purge with `az cognitiveservices account purge`                    |
 
 ---
 
@@ -379,4 +383,4 @@ Let's put it all together with architecture design!
 
 ---
 
-*Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!*
+_Questions? Join our [Discord](https://discord.gg/vwfwq2EpXJ) community!_

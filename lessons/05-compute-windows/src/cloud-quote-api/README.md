@@ -41,13 +41,13 @@ az webapp up \
 
 ## 📡 API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Welcome message |
-| `/api/quotes` | GET | List all quotes |
-| `/api/quotes/random` | GET | Get a random quote |
-| `/api/quotes/{id}` | GET | Get a specific quote |
-| `/health` | GET | Health check |
+| Endpoint             | Method | Description          |
+| -------------------- | ------ | -------------------- |
+| `/`                  | GET    | Welcome message      |
+| `/api/quotes`        | GET    | List all quotes      |
+| `/api/quotes/random` | GET    | Get a random quote   |
+| `/api/quotes/{id}`   | GET    | Get a specific quote |
+| `/health`            | GET    | Health check         |
 
 ---
 
@@ -55,11 +55,11 @@ az webapp up \
 
 ```json
 {
-    "id": 3,
-    "text": "The cloud is not about the cloud. It's about what the cloud enables.",
-    "author": "Satya Nadella",
-    "category": "vision",
-    "timestamp": "2026-01-18T10:30:00Z"
+  "id": 3,
+  "text": "The cloud is not about the cloud. It's about what the cloud enables.",
+  "author": "Satya Nadella",
+  "category": "vision",
+  "timestamp": "2026-01-18T10:30:00Z"
 }
 ```
 

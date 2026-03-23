@@ -23,17 +23,20 @@ A simple chatbot built with Azure AI Foundry that demonstrates:
 ## Setup
 
 1. Create a virtual environment:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # macOS/Linux
    ```
 
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. Set environment variables:
+
    ```bash
    export AZURE_AI_ENDPOINT="https://your-endpoint.openai.azure.com/"
    export AZURE_AI_KEY="your-api-key"

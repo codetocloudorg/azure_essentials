@@ -22,14 +22,14 @@ az webapp up --name "cloudquote-$(openssl rand -hex 4)" --sku F1
 
 When you deploy this lesson using the deploy script, you get:
 
-| Resource | Description | Purpose |
-|----------|-------------|---------|
-| **Windows Server 2022 VM** | Standard_B2s (2 vCPU, 4GB RAM) | Practice RDP connections, Windows administration |
-| **Virtual Network** | 10.1.0.0/16 with default subnet | Isolated network for the VM |
-| **Public IP Address** | Static allocation with DNS label | RDP access from internet |
-| **Network Security Group** | Allow RDP (port 3389) | Secure inbound access |
-| **App Service Plan** | F1 (Free tier) | Host web applications |
-| **Web App** | .NET runtime | Deploy sample applications |
+| Resource                   | Description                      | Purpose                                          |
+| -------------------------- | -------------------------------- | ------------------------------------------------ |
+| **Windows Server 2022 VM** | Standard_B2s (2 vCPU, 4GB RAM)   | Practice RDP connections, Windows administration |
+| **Virtual Network**        | 10.1.0.0/16 with default subnet  | Isolated network for the VM                      |
+| **Public IP Address**      | Static allocation with DNS label | RDP access from internet                         |
+| **Network Security Group** | Allow RDP (port 3389)            | Secure inbound access                            |
+| **App Service Plan**       | F1 (Free tier)                   | Host web applications                            |
+| **Web App**                | .NET runtime                     | Deploy sample applications                       |
 
 > ⚠️ **Cost Note**: The VM uses B2s size (~$30/month if running 24/7). An auto-shutdown is configured for 7 PM UTC to save costs. Stop/deallocate the VM when not in use.
 
@@ -51,6 +51,7 @@ WINDOWS_VM_FQDN=<your-vm-fqdn>
 ```
 
 **Connection Details**:
+
 - **Username**: `azureuser`
 - **Password**: The password you entered during deployment
 - **Port**: 3389 (RDP)
@@ -75,31 +76,31 @@ By the end of this lesson, you will be able to:
 
 Azure VMs come in different series for different workloads:
 
-| Series | Purpose | Example Sizes |
-|--------|---------|---------------|
-| **B** | Burstable, cost-effective | B1s, B2s, B4ms |
-| **D** | General purpose | D2s_v5, D4s_v5 |
-| **E** | Memory optimised | E2s_v5, E4s_v5 |
-| **F** | Compute optimised | F2s_v2, F4s_v2 |
-| **N** | GPU enabled | NC6, NV6 |
+| Series | Purpose                   | Example Sizes  |
+| ------ | ------------------------- | -------------- |
+| **B**  | Burstable, cost-effective | B1s, B2s, B4ms |
+| **D**  | General purpose           | D2s_v5, D4s_v5 |
+| **E**  | Memory optimised          | E2s_v5, E4s_v5 |
+| **F**  | Compute optimised         | F2s_v2, F4s_v2 |
+| **N**  | GPU enabled               | NC6, NV6       |
 
 ### Availability Options
 
-| Option | Protection Level | SLA |
-|--------|-----------------|-----|
-| **Single VM (Premium SSD)** | Hardware failure | 99.9% |
-| **Availability Set** | Rack-level failure | 99.95% |
-| **Availability Zone** | Datacentre failure | 99.99% |
+| Option                      | Protection Level   | SLA    |
+| --------------------------- | ------------------ | ------ |
+| **Single VM (Premium SSD)** | Hardware failure   | 99.9%  |
+| **Availability Set**        | Rack-level failure | 99.95% |
+| **Availability Zone**       | Datacentre failure | 99.99% |
 
 ### IaaS vs PaaS Comparison
 
-| Aspect | Virtual Machines (IaaS) | App Service (PaaS) |
-|--------|------------------------|---------------------|
-| **Control** | Full OS control | Application only |
-| **Maintenance** | You patch and update | Microsoft manages |
-| **Scaling** | Manual or VMSS | Built-in auto-scale |
-| **Cost** | Pay for VM uptime | Pay for plan tier |
-| **Best for** | Lift-and-shift, custom software | Modern web apps |
+| Aspect          | Virtual Machines (IaaS)         | App Service (PaaS)  |
+| --------------- | ------------------------------- | ------------------- |
+| **Control**     | Full OS control                 | Application only    |
+| **Maintenance** | You patch and update            | Microsoft manages   |
+| **Scaling**     | Manual or VMSS                  | Built-in auto-scale |
+| **Cost**        | Pay for VM uptime               | Pay for plan tier   |
+| **Best for**    | Lift-and-shift, custom software | Modern web apps     |
 
 ---
 

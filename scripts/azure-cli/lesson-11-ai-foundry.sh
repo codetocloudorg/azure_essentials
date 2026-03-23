@@ -106,7 +106,7 @@ deploy() {
     print_step "Checking Microsoft.CognitiveServices provider..."
 
     local provider_state=$(az provider show --namespace Microsoft.CognitiveServices --query "registrationState" -o tsv 2>/dev/null || echo "NotRegistered")
-    
+
     if [[ "$provider_state" != "Registered" ]]; then
         print_info "Registering Microsoft.CognitiveServices provider..."
         az provider register --namespace Microsoft.CognitiveServices

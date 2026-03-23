@@ -22,33 +22,33 @@ By the end of this lesson, you will be able to:
 
 ### Azure AI Foundry Components
 
-| Component | Description |
-|-----------|-------------|
-| **AI Services** | Multi-service resource providing access to AI capabilities |
-| **Foundry Portal** | Web interface for managing AI projects (ai.azure.com) |
-| **Model Catalog** | Library of pre-trained models to deploy |
-| **Deployments** | Hosted model endpoints for inference |
-| **Hosted Agents** | Container-based agents running custom code |
+| Component          | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
+| **AI Services**    | Multi-service resource providing access to AI capabilities |
+| **Foundry Portal** | Web interface for managing AI projects (ai.azure.com)      |
+| **Model Catalog**  | Library of pre-trained models to deploy                    |
+| **Deployments**    | Hosted model endpoints for inference                       |
+| **Hosted Agents**  | Container-based agents running custom code                 |
 
 ### Model Categories
 
-| Category | Models | Use Cases |
-|----------|--------|-----------|
-| **OpenAI** | GPT-4o, GPT-4o-mini, o1 | Chat, text generation, reasoning |
-| **Microsoft** | Phi-4, Phi-3 | Efficient small language models |
-| **Embedding** | text-embedding-3-large | Semantic search, RAG |
-| **Image** | DALL-E 3 | Image generation |
-| **Speech** | Whisper | Speech-to-text |
+| Category      | Models                  | Use Cases                        |
+| ------------- | ----------------------- | -------------------------------- |
+| **OpenAI**    | GPT-4o, GPT-4o-mini, o1 | Chat, text generation, reasoning |
+| **Microsoft** | Phi-4, Phi-3            | Efficient small language models  |
+| **Embedding** | text-embedding-3-large  | Semantic search, RAG             |
+| **Image**     | DALL-E 3                | Image generation                 |
+| **Speech**    | Whisper                 | Speech-to-text                   |
 
 ### Key Parameters
 
-| Parameter | Description | Range |
-|-----------|-------------|-------|
-| **Temperature** | Randomness in responses | 0.0 (focused) to 2.0 (creative) |
-| **Max Tokens** | Maximum response length | 1 to model max |
-| **Top P** | Nucleus sampling threshold | 0.0 to 1.0 |
-| **Frequency Penalty** | Reduces repetition | 0.0 to 2.0 |
-| **Presence Penalty** | Encourages new topics | 0.0 to 2.0 |
+| Parameter             | Description                | Range                           |
+| --------------------- | -------------------------- | ------------------------------- |
+| **Temperature**       | Randomness in responses    | 0.0 (focused) to 2.0 (creative) |
+| **Max Tokens**        | Maximum response length    | 1 to model max                  |
+| **Top P**             | Nucleus sampling threshold | 0.0 to 1.0                      |
+| **Frequency Penalty** | Reduces repetition         | 0.0 to 2.0                      |
+| **Presence Penalty**  | Encourages new topics      | 0.0 to 2.0                      |
 
 ---
 
@@ -176,7 +176,7 @@ API_KEY = os.environ.get("AZURE_AI_KEY")
 DEPLOYMENT = os.environ.get("AZURE_AI_DEPLOYMENT", "gpt-4o-mini-deployment")
 
 # System prompt defines the chatbot's personality and behavior
-SYSTEM_PROMPT = """You are a helpful Azure learning assistant. 
+SYSTEM_PROMPT = """You are a helpful Azure learning assistant.
 Your role is to:
 - Answer questions about Microsoft Azure services
 - Explain cloud computing concepts in simple terms
@@ -200,7 +200,7 @@ def chat(client, messages: list, user_input: str) -> str:
         "role": "user",
         "content": user_input
     })
-    
+
     # Get response from the model
     response = client.chat.completions.create(
         model=DEPLOYMENT,
@@ -209,14 +209,14 @@ def chat(client, messages: list, user_input: str) -> str:
         max_tokens=500,
         top_p=0.95
     )
-    
+
     # Extract and store assistant response
     assistant_message = response.choices[0].message.content
     messages.append({
         "role": "assistant",
         "content": assistant_message
     })
-    
+
     return assistant_message
 
 def main():
@@ -225,35 +225,35 @@ def main():
     print("Azure Learning Assistant")
     print("Type 'quit' to exit, 'clear' to reset conversation")
     print("=" * 60)
-    
+
     client = create_client()
-    
+
     # Initialize conversation with system prompt
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
-    
+
     while True:
         try:
             # Get user input
             user_input = input("\nYou: ").strip()
-            
+
             if not user_input:
                 continue
-            
+
             if user_input.lower() == 'quit':
                 print("Goodbye!")
                 break
-            
+
             if user_input.lower() == 'clear':
                 messages = [{"role": "system", "content": SYSTEM_PROMPT}]
                 print("Conversation cleared.")
                 continue
-            
+
             # Get and display response
             response = chat(client, messages, user_input)
             print(f"\nAssistant: {response}")
-            
+
         except KeyboardInterrupt:
             print("\nGoodbye!")
             break
@@ -325,13 +325,13 @@ response = client.chat.completions.create(
 
 ## Prompt Engineering Tips
 
-| Technique | Description | Example |
-|-----------|-------------|---------|
-| **Be specific** | Clear instructions | "Explain in 3 bullet points" |
-| **Provide context** | Background information | "For a beginner developer..." |
-| **Use examples** | Few-shot learning | "Format like this example: ..." |
-| **Set constraints** | Limit scope | "In 100 words or less" |
-| **Define persona** | Role-based prompts | "You are an Azure architect..." |
+| Technique           | Description            | Example                         |
+| ------------------- | ---------------------- | ------------------------------- |
+| **Be specific**     | Clear instructions     | "Explain in 3 bullet points"    |
+| **Provide context** | Background information | "For a beginner developer..."   |
+| **Use examples**    | Few-shot learning      | "Format like this example: ..." |
+| **Set constraints** | Limit scope            | "In 100 words or less"          |
+| **Define persona**  | Role-based prompts     | "You are an Azure architect..." |
 
 ---
 

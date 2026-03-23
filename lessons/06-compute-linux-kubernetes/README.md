@@ -10,13 +10,13 @@ Azure supports a wide range of Linux distributions and Kubernetes workloads. Thi
 
 When you deploy this lesson using the deploy script, you get:
 
-| Resource | Description | Purpose |
-|----------|-------------|---------|
-| **Ubuntu 22.04 LTS VM** | Standard_B2s (2 vCPU, 4GB RAM) | Practice SSH, Linux administration |
-| **MicroK8s** | Pre-installed via cloud-init | Learn Kubernetes basics |
-| **Virtual Network** | 10.0.0.0/16 with default subnet | Isolated network for the VM |
-| **Public IP Address** | Static allocation with DNS label | SSH access from internet |
-| **Network Security Group** | Allow SSH (22), K8s Dashboard (10443) | Secure inbound access |
+| Resource                   | Description                           | Purpose                            |
+| -------------------------- | ------------------------------------- | ---------------------------------- |
+| **Ubuntu 22.04 LTS VM**    | Standard_B2s (2 vCPU, 4GB RAM)        | Practice SSH, Linux administration |
+| **MicroK8s**               | Pre-installed via cloud-init          | Learn Kubernetes basics            |
+| **Virtual Network**        | 10.0.0.0/16 with default subnet       | Isolated network for the VM        |
+| **Public IP Address**      | Static allocation with DNS label      | SSH access from internet           |
+| **Network Security Group** | Allow SSH (22), K8s Dashboard (10443) | Secure inbound access              |
 
 > ⚠️ **Cost Note**: The VM uses B2s size (~$30/month if running 24/7). Stop/deallocate the VM when not in use.
 
@@ -34,6 +34,7 @@ ssh -i ~/.ssh/id_ed25519_azure azureuser@<your-vm-ip>
 ```
 
 **Connection Details**:
+
 - **Username**: `azureuser`
 - **SSH Key**: `~/.ssh/id_ed25519_azure`
 - **Passphrase**: `azure`
@@ -59,25 +60,25 @@ By the end of this lesson, you will be able to:
 
 Azure supports many Linux distributions:
 
-| Distribution | Use Case |
-|--------------|----------|
-| **Ubuntu** | General purpose, development |
-| **Red Hat Enterprise Linux** | Enterprise workloads |
-| **Debian** | Stability, servers |
-| **CentOS** | RHEL compatibility |
-| **SUSE** | SAP workloads |
+| Distribution                 | Use Case                     |
+| ---------------------------- | ---------------------------- |
+| **Ubuntu**                   | General purpose, development |
+| **Red Hat Enterprise Linux** | Enterprise workloads         |
+| **Debian**                   | Stability, servers           |
+| **CentOS**                   | RHEL compatibility           |
+| **SUSE**                     | SAP workloads                |
 
 ### Kubernetes Fundamentals
 
 Key Kubernetes concepts:
 
-| Concept | Description |
-|---------|-------------|
-| **Pod** | Smallest deployable unit (one or more containers) |
-| **Deployment** | Manages pod replicas and updates |
-| **Service** | Exposes pods to network traffic |
-| **Namespace** | Logical isolation within a cluster |
-| **ConfigMap/Secret** | Configuration and sensitive data |
+| Concept              | Description                                       |
+| -------------------- | ------------------------------------------------- |
+| **Pod**              | Smallest deployable unit (one or more containers) |
+| **Deployment**       | Manages pod replicas and updates                  |
+| **Service**          | Exposes pods to network traffic                   |
+| **Namespace**        | Logical isolation within a cluster                |
+| **ConfigMap/Secret** | Configuration and sensitive data                  |
 
 ### Why MicroK8s?
 
@@ -193,34 +194,81 @@ kubectl get pods -w
 
 **Objective**: Access your Kubernetes app from a web browser.
 
-NodePort services are only accessible on the VM's private network by default. Let's expose it to the internet:
+NodePort services are only accessible on the VM's private network by default. To access nginx from your browser, you need to:
+1. Find out which port Kubernetes assigned (the NodePort)
+2. Open that port in Azure's Network Security Group (NSG)
+3. Browse to `http://<VM-IP>:<NodePort>`
 
-**Step 1: Get the NodePort** (on the VM via SSH)
+---
+
+#### Step 1: Get the NodePort (on the VM via SSH)
+
+Run this command while connected to your VM:
 
 ```bash
 # Get the assigned NodePort (usually 30000-32767)
-NODE_PORT=$(kubectl get svc nginx -o jsonpath='{.spec.ports[0].nodePort}')
-echo "NodePort: $NODE_PORT"
-
-# Test locally on the VM first
-curl http://localhost:$NODE_PORT
+kubectl get svc nginx
 ```
 
-**Step 2: Open the port in NSG** (from your local machine, NOT in SSH)
+Look for the port number after `80:` in the output. For example:
+```
+NAME    TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+nginx   NodePort   10.152.183.42   <none>        80:31302/TCP   2m
+```
+In this example, the **NodePort is 31302**. Write this down!
+
+Test it works locally first:
+```bash
+curl http://localhost:31302   # Replace 31302 with your NodePort
+```
+
+You should see HTML output starting with `<!DOCTYPE html>`.
+
+---
+
+#### Step 2: Open the Port in the NSG
+
+**Exit your SSH session** (type `exit`) and run the following from your **local machine**.
+
+Choose **Option A (Portal)** or **Option B (CLI)**:
+
+##### Option A: Using the Azure Portal (Recommended for Beginners)
+
+1. Go to [portal.azure.com](https://portal.azure.com)
+2. Search for **"Network security groups"** in the top search bar
+3. Click on your NSG (look for `nsg-microk8s-001` or similar)
+4. In the left menu, click **Inbound security rules**
+5. Click **+ Add** at the top
+6. Fill in the form:
+
+   | Field | Value |
+   |-------|-------|
+   | Source | Any |
+   | Source port ranges | `*` |
+   | Destination | Any |
+   | Service | Custom |
+   | Destination port ranges | `31302` (your NodePort) |
+   | Protocol | TCP |
+   | Action | Allow |
+   | Priority | `1100` |
+   | Name | `AllowKubernetesNodePort` |
+
+7. Click **Add**
+
+> 💡 **Tip**: You can also find the NSG by going to your Resource Group → clicking the NSG resource directly.
+
+##### Option B: Using Azure CLI (Bash)
 
 ```bash
-# Variables
+# Set your variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-NODE_PORT="<port-from-step-1>"  # Replace with port from Step 1
+NODE_PORT="31302"  # Replace with YOUR NodePort from Step 1
 
-# Auto-discover the NSG name (finds the microk8s nsg)
+# Find your NSG name
 NSG_NAME=$(az network nsg list -g $RESOURCE_GROUP --query "[?contains(name, 'microk8s')].name" -o tsv)
 echo "Found NSG: $NSG_NAME"
 
-# If no NSG found, list all and pick manually:
-# az network nsg list -g $RESOURCE_GROUP -o table
-
-# Add NSG rule to allow inbound traffic
+# Add the inbound rule
 az network nsg rule create \
   --resource-group $RESOURCE_GROUP \
   --nsg-name $NSG_NAME \
@@ -230,20 +278,63 @@ az network nsg rule create \
   --access Allow \
   --protocol Tcp \
   --destination-port-ranges $NODE_PORT
+
+echo "NSG rule created for port $NODE_PORT"
 ```
 
-**Step 3: Access from your browser**
+##### Option C: Using Azure CLI (PowerShell)
 
+```powershell
+# Set your variables
+$RESOURCE_GROUP = "rg-azure-essentials-dev"
+$NODE_PORT = "31302"  # Replace with YOUR NodePort from Step 1
+
+# Find your NSG name
+$NSG_NAME = az network nsg list -g $RESOURCE_GROUP --query "[?contains(name, 'microk8s')].name" -o tsv
+Write-Host "Found NSG: $NSG_NAME"
+
+# Add the inbound rule
+az network nsg rule create `
+  --resource-group $RESOURCE_GROUP `
+  --nsg-name $NSG_NAME `
+  --name AllowKubernetesNodePort `
+  --priority 1100 `
+  --direction Inbound `
+  --access Allow `
+  --protocol Tcp `
+  --destination-port-ranges $NODE_PORT
+
+Write-Host "NSG rule created for port $NODE_PORT"
+```
+
+---
+
+#### Step 3: Access from Your Browser
+
+Get your VM's public IP address:
+
+**Bash:**
 ```bash
-# Auto-discover the VM name and get its public IP
-VM_NAME=$(az vm list -g $RESOURCE_GROUP --query "[?contains(name, 'microk8s')].name" -o tsv)
-VM_IP=$(az vm show -g $RESOURCE_GROUP -n $VM_NAME --show-details --query publicIps -o tsv)
-
-echo "VM: $VM_NAME"
-echo "Open in browser: http://$VM_IP:$NODE_PORT"
+VM_IP=$(az vm show -g rg-azure-essentials-dev -n vm-microk8s-001 --show-details --query publicIps -o tsv)
+echo "Open in browser: http://$VM_IP:31302"
 ```
 
-> 🎉 **Success!** You should see the nginx welcome page in your browser!
+**PowerShell:**
+```powershell
+$VM_IP = az vm show -g rg-azure-essentials-dev -n vm-microk8s-001 --show-details --query publicIps -o tsv
+Write-Host "Open in browser: http://${VM_IP}:31302"
+```
+
+**Or via Portal:** Go to your VM in the Azure Portal → **Overview** → copy the **Public IP address**.
+
+Now open your browser and go to:
+```
+http://<YOUR-VM-IP>:<YOUR-NODE-PORT>
+```
+
+**Example:** `http://52.165.62.130:31302`
+
+> 🎉 **Success!** You should see the **Welcome to nginx!** page in your browser!
 
 > ⚠️ **Security Note**: In production, use an Ingress controller with TLS instead of exposing NodePorts directly.
 
@@ -298,17 +389,17 @@ spec:
         app: nginx
     spec:
       containers:
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "128Mi"
-            cpu: "200m"
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
 ```
 
 Apply the manifest:

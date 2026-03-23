@@ -104,7 +104,7 @@ deploy() {
         --kind StorageV2 \
         --allow-shared-key-access true \
         --output none
-    
+
     # Verify shared key access is enabled
     local shared_key=$(az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" --query allowSharedKeyAccess -o tsv 2>/dev/null)
     if [[ "$shared_key" == "false" ]]; then

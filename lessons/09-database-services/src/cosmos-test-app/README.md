@@ -17,17 +17,20 @@ This application demonstrates CRUD operations with Azure Cosmos DB using the Pyt
 ## Setup
 
 1. Create a virtual environment:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # macOS/Linux
    ```
 
 2. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
 
 3. Set environment variables:
+
    ```bash
    export COSMOS_ENDPOINT="https://your-account.documents.azure.com:443/"
    export COSMOS_KEY="your-primary-key"

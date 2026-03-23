@@ -58,13 +58,13 @@ Click above to launch a fully-configured environment with all tools pre-installe
 
 ### Prerequisites
 
-| Tool                | Installation                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| Azure Account       | [Create free account](https://azure.microsoft.com/free/)                                         |
-| Azure CLI           | [Install](https://learn.microsoft.com/cli/azure/install-azure-cli) v2.60+                        |
+| Tool                | Installation                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| Azure Account       | [Create free account](https://azure.microsoft.com/free/)                                          |
+| Azure CLI           | [Install](https://learn.microsoft.com/cli/azure/install-azure-cli) v2.60+                         |
 | Azure Developer CLI | [Install azd](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) v1.10+ |
-| VS Code             | [Download](https://code.visualstudio.com/) with Bicep extension                                  |
-| Git                 | [Install](https://git-scm.com/downloads)                                                         |
+| VS Code             | [Download](https://code.visualstudio.com/) with Bicep extension                                   |
+| Git                 | [Install](https://git-scm.com/downloads)                                                          |
 
 ### Setup Steps
 

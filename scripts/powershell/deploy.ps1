@@ -99,7 +99,8 @@ function Write-ColorOutput {
     )
     if ($NoNewline) {
         Write-Host $Message -ForegroundColor $Color -NoNewline
-    } else {
+    }
+    else {
         Write-Host $Message -ForegroundColor $Color
     }
 }
@@ -154,10 +155,12 @@ function Test-Prerequisites {
     if ($IsWindows -or ($PSVersionTable.PSVersion.Major -le 5)) {
         $osType = "Windows"
         $setupCmd = ".\scripts\powershell\setup-local-tools.ps1"
-    } elseif ($IsMacOS) {
+    }
+    elseif ($IsMacOS) {
         $osType = "macOS"
         $setupCmd = "./scripts/bash/setup-local-tools.sh"
-    } elseif ($IsLinux) {
+    }
+    elseif ($IsLinux) {
         $osType = "Linux"
         $setupCmd = "./scripts/bash/setup-local-tools.sh"
     }
@@ -173,10 +176,12 @@ function Test-Prerequisites {
         try {
             $azVersion = (az version --query '"azure-cli"' -o tsv 2>$null)
             Write-ColorOutput "    ✓ Azure CLI: $azVersion" Green
-        } catch {
+        }
+        catch {
             Write-ColorOutput "    ✓ Azure CLI: installed" Green
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "    ✗ Azure CLI: Not installed" Red
         Write-ColorOutput "      Install: https://aka.ms/installazurecli" Cyan
         $missing = $true
@@ -187,10 +192,12 @@ function Test-Prerequisites {
         try {
             $azdVersion = (azd version 2>$null | Select-Object -First 1)
             Write-ColorOutput "    ✓ Azure Developer CLI: $azdVersion" Green
-        } catch {
+        }
+        catch {
             Write-ColorOutput "    ✓ Azure Developer CLI: installed" Green
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "    ✗ Azure Developer CLI: Not installed" Red
         Write-ColorOutput "      Install: winget install Microsoft.Azd" Cyan
         $missing = $true
@@ -201,11 +208,13 @@ function Test-Prerequisites {
         $account = az account show --query name -o tsv 2>$null
         if ($account) {
             Write-ColorOutput "    ✓ Azure Login: Signed in to '$account'" Green
-        } else {
+        }
+        else {
             Write-ColorOutput "    ○ Azure Login: Not authenticated" Yellow
             $needsLogin = $true
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "    ○ Azure Login: Not authenticated" Yellow
         $needsLogin = $true
     }
@@ -239,7 +248,8 @@ function Test-Prerequisites {
             az login --use-device-code
             Write-Host ""
             Write-ColorOutput "  ✓ Azure CLI login successful!" Green
-        } catch {
+        }
+        catch {
             Write-ColorOutput "  Azure CLI login failed. Please try again." Red
             exit 1
         }
@@ -249,7 +259,8 @@ function Test-Prerequisites {
         try {
             azd auth login --use-device-code
             Write-ColorOutput "  ✓ Azure Developer CLI login successful!" Green
-        } catch {
+        }
+        catch {
             Write-ColorOutput "  Azure Developer CLI login failed. Please try again." Red
             exit 1
         }
@@ -273,7 +284,8 @@ function Select-Subscription {
     # Get list of subscriptions
     try {
         $subs = az account list --query "[].{name:name, id:id, state:state, isDefault:isDefault}" -o json 2>$null | ConvertFrom-Json
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  Error fetching subscriptions." Red
         exit 1
     }
@@ -293,7 +305,8 @@ function Select-Subscription {
         $script:SelectedSubscriptionId = $subs[0].id
         $script:SelectedSubscriptionName = $subs[0].name
         Write-ColorOutput "    ✓ Found 1 subscription: $($subs[0].name)" Green
-    } else {
+    }
+    else {
         # Multiple subscriptions, let user choose
         Write-Host "    Found $($subs.Count) subscriptions:"
         Write-Host ""
@@ -317,7 +330,8 @@ function Select-Subscription {
             Write-Host $sub.name.PadRight(45) -NoNewline
             if ($sub.state -eq "Enabled") {
                 Write-ColorOutput $sub.state Green -NoNewline
-            } else {
+            }
+            else {
                 Write-ColorOutput $sub.state Yellow -NoNewline
             }
             Write-ColorOutput $defaultMarker Green
@@ -338,7 +352,8 @@ function Select-Subscription {
                 $script:SelectedSubscriptionId = $subs[$idx].id
                 $script:SelectedSubscriptionName = $subs[$idx].name
                 break
-            } else {
+            }
+            else {
                 Write-ColorOutput "  Invalid choice. Please enter a number between 1 and $($subs.Count)." Red
             }
         }
@@ -375,11 +390,13 @@ function Test-PreflightChecks {
         $subState = az account show --query state -o tsv 2>$null
         if ($subState -eq "Enabled") {
             Write-ColorOutput "     ✓ Subscription is active and enabled" Green
-        } else {
+        }
+        else {
             Write-ColorOutput "     ✗ Subscription state: $subState" Red
             $checksPassed = $false
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "     ○ Could not check subscription state" Yellow
         $warnings++
     }
@@ -396,14 +413,17 @@ function Test-PreflightChecks {
             $state = az provider show --namespace $provider --query registrationState -o tsv 2>$null
             if ($state -eq "Registered") {
                 Write-ColorOutput "     ✓ $provider" Green
-            } elseif ($state -eq "Registering") {
+            }
+            elseif ($state -eq "Registering") {
                 Write-ColorOutput "     ○ $provider (registering)" Yellow
                 $warnings++
-            } else {
+            }
+            else {
                 Write-ColorOutput "     ○ $provider - $state" Yellow
                 $warnings++
             }
-        } catch {
+        }
+        catch {
             Write-ColorOutput "     ○ $provider - Could not check" Yellow
             $warnings++
         }
@@ -426,17 +446,21 @@ function Test-PreflightChecks {
             if ($limit -eq 0) {
                 Write-ColorOutput "     ⚠ B-series vCPU quota: $current/$limit used (no quota)" Yellow
                 $warnings++
-            } elseif ($available -lt 2) {
+            }
+            elseif ($available -lt 2) {
                 Write-ColorOutput "     ⚠ B-series vCPU quota: $current/$limit used ($available available)" Yellow
                 $warnings++
-            } else {
+            }
+            else {
                 Write-ColorOutput "     ✓ B-series vCPU quota: $current/$limit used ($available available)" Green
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "     ○ Could not check quota" Yellow
             $warnings++
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "     ○ Could not check quota" Yellow
         $warnings++
     }
@@ -454,19 +478,23 @@ function Test-PreflightChecks {
                 $rolesString = $roles -join ", "
                 if ($rolesString -match "Owner|Contributor") {
                     Write-ColorOutput "     ✓ You have Owner/Contributor access" Green
-                } else {
+                }
+                else {
                     Write-ColorOutput "     ⚠ Found roles: $rolesString" Yellow
                     $warnings++
                 }
-            } else {
+            }
+            else {
                 Write-ColorOutput "     ○ Could not determine role assignments" Yellow
                 $warnings++
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "     ○ Could not check permissions" Yellow
             $warnings++
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "     ○ Could not check permissions" Yellow
         $warnings++
     }
@@ -480,11 +508,13 @@ function Test-PreflightChecks {
         $regionAvailable = az account list-locations --query "[?name=='$($script:SelectedRegion)'].name" -o tsv 2>$null
         if ($regionAvailable) {
             Write-ColorOutput "     ✓ Region '$($script:SelectedRegion)' is available" Green
-        } else {
+        }
+        else {
             Write-ColorOutput "     ✗ Region '$($script:SelectedRegion)' is not available" Red
             $checksPassed = $false
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "     ○ Could not check region availability" Yellow
         $warnings++
     }
@@ -500,14 +530,16 @@ function Test-PreflightChecks {
             Write-ColorOutput "  Deployment cancelled." Yellow
             exit 1
         }
-    } elseif ($warnings -gt 0) {
+    }
+    elseif ($warnings -gt 0) {
         Write-ColorOutput "    ⚠ Preflight checks passed with $warnings warning(s)" Yellow
         $continueDeploy = Read-Host "    Continue with deployment? (y/n) [y]"
         if ($continueDeploy -eq "n" -or $continueDeploy -eq "N") {
             Write-ColorOutput "  Deployment cancelled." Yellow
             exit 0
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "    ✓ All preflight checks passed!" Green
     }
 
@@ -578,7 +610,7 @@ function Get-EnvironmentName {
     Write-Host ""
 
     $username = if ($env:USERNAME) { $env:USERNAME } elseif ($env:USER) { $env:USER } else { "user" }
-    $cleanUsername = ($username.ToLower() -replace '[^a-z0-9]','')
+    $cleanUsername = ($username.ToLower() -replace '[^a-z0-9]', '')
     if ($cleanUsername.Length -gt 8) { $cleanUsername = $cleanUsername.Substring(0, 8) }
     $defaultName = "azlearn-$cleanUsername"
 
@@ -586,8 +618,9 @@ function Get-EnvironmentName {
 
     if ([string]::IsNullOrWhiteSpace($envName)) {
         $script:EnvName = $defaultName
-    } else {
-        $script:EnvName = ($envName.ToLower() -replace '[^a-z0-9-]','')
+    }
+    else {
+        $script:EnvName = ($envName.ToLower() -replace '[^a-z0-9-]', '')
     }
 
     Write-Host ""
@@ -713,7 +746,8 @@ function Select-Lesson {
     if ([string]::IsNullOrEmpty($script:SelectedLesson)) {
         Write-Host "  Selected: " -NoNewline
         Write-Host "All Lessons" -ForegroundColor White
-    } else {
+    }
+    else {
         Write-Host "  Selected: " -NoNewline
         Write-Host "Lesson $($script:SelectedLesson)" -ForegroundColor White
     }
@@ -788,7 +822,8 @@ function Setup-WindowsPassword {
         Write-ColorOutput "  ╚══════════════════════════════════════════════════════════════╝" Yellow
         Write-Host ""
         Write-ColorOutput "  You'll need these credentials to RDP into your Windows VM." Cyan
-    } else {
+    }
+    else {
         while ($true) {
             $securePassword = Read-Host "  Enter password for Windows VM" -AsSecureString
             $password = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
@@ -852,13 +887,16 @@ function Setup-SshKey {
     if (Test-Path $azureKeyPath) {
         $script:SshPublicKey = (Get-Content $azureKeyPath -Raw).Trim()
         Write-ColorOutput "  ✓ Using existing key: $azureKeyPath" Green
-    } elseif (Test-Path $ed25519KeyPath) {
+    }
+    elseif (Test-Path $ed25519KeyPath) {
         $script:SshPublicKey = (Get-Content $ed25519KeyPath -Raw).Trim()
         Write-ColorOutput "  ✓ Using existing key: $ed25519KeyPath" Green
-    } elseif (Test-Path $rsaKeyPath) {
+    }
+    elseif (Test-Path $rsaKeyPath) {
         $script:SshPublicKey = (Get-Content $rsaKeyPath -Raw).Trim()
         Write-ColorOutput "  ✓ Using existing key: $rsaKeyPath" Green
-    } else {
+    }
+    else {
         # Auto-generate new key
         Write-ColorOutput "  Generating SSH key..." Cyan
 
@@ -955,7 +993,8 @@ function Deploy-ManagementGroups {
         Write-Host ""
         Write-Host "  View in Azure Portal:"
         Write-Host "    https://portal.azure.com/#view/Microsoft_Azure_ManagementGroups/ManagementGroupBrowseBlade"
-    } catch {
+    }
+    catch {
         Write-Host ""
         Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Red
         Write-ColorOutput "    ❌ Deployment Failed" Red
@@ -1014,7 +1053,7 @@ function Test-VMQuota {
     # Calculate required vCPUs based on lesson
     $requiredVCPUs = 0
     $vmDetails = @()
-    
+
     if ($script:SelectedLesson -eq "05" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
         $requiredVCPUs += 2
         $vmDetails += "Lesson 05 Windows VM (B2s): 2 vCPUs"
@@ -1063,7 +1102,8 @@ function Test-VMQuota {
                 if ($continueAnyway -ne "y" -and $continueAnyway -ne "Y") {
                     return $false
                 }
-            } elseif ($available -lt $requiredVCPUs) {
+            }
+            elseif ($available -lt $requiredVCPUs) {
                 Write-ColorOutput "  ⚠️  INSUFFICIENT QUOTA: Need $requiredVCPUs vCPUs but only $available available." Yellow
                 Write-Host ""
                 Write-ColorOutput "  OPTIONS:" Yellow
@@ -1075,13 +1115,16 @@ function Test-VMQuota {
                 if ($continueAnyway -ne "y" -and $continueAnyway -ne "Y") {
                     return $false
                 }
-            } else {
+            }
+            else {
                 Write-ColorOutput "  ✅ QUOTA OK: $available vCPUs available (need $requiredVCPUs)" Green
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "  ⚠️  Could not verify quota. Proceeding with deployment..." Yellow
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ⚠️  Could not verify quota. Proceeding with deployment..." Yellow
     }
 
@@ -1104,7 +1147,8 @@ function Confirm-AndDeploy {
     if ([string]::IsNullOrEmpty($script:SelectedLesson)) {
         Write-Host "    Lesson:       " -NoNewline
         Write-Host "All Lessons (02-09, 11)" -ForegroundColor White
-    } else {
+    }
+    else {
         Write-Host "    Lesson:       " -NoNewline
         Write-Host "Lesson $($script:SelectedLesson)" -ForegroundColor White
     }
@@ -1138,7 +1182,8 @@ function Confirm-AndDeploy {
     if ($envList -match "^$($script:EnvName) ") {
         Write-Host "  Environment '$($script:EnvName)' already exists, selecting it..."
         azd env select $script:EnvName
-    } else {
+    }
+    else {
         Write-Host "  Creating new environment '$($script:EnvName)'..."
         azd env new $script:EnvName --no-prompt 2>$null
         if (-not $?) {
@@ -1204,7 +1249,8 @@ function Show-PostDeploymentInfo {
                 Write-Host "     User: azureuser"
                 Write-Host ""
             }
-        } catch {}
+        }
+        catch {}
     }
 
     # Lesson 06: Linux VM
@@ -1217,7 +1263,8 @@ function Show-PostDeploymentInfo {
                 Write-Host "     ssh -i ~/.ssh/id_ed25519_azure azureuser@$linuxIp"
                 Write-Host ""
             }
-        } catch {}
+        }
+        catch {}
     }
 
     # Lesson 07: Containers
@@ -1231,7 +1278,8 @@ function Show-PostDeploymentInfo {
                 Write-Host "     kubectl get nodes"
                 Write-Host ""
             }
-        } catch {}
+        }
+        catch {}
     }
 
     # Lesson 08: Serverless
@@ -1244,7 +1292,8 @@ function Show-PostDeploymentInfo {
                 Write-Host "     https://$funcUrl"
                 Write-Host ""
             }
-        } catch {}
+        }
+        catch {}
     }
 
     Write-ColorOutput "  🔧 Useful Commands:" Yellow
@@ -1261,7 +1310,8 @@ function Build-HelloContainer {
 
     try {
         $acrName = az acr list --query "[?contains(name, '$($script:EnvName)')].name" -o tsv 2>$null | Select-Object -First 1
-    } catch {
+    }
+    catch {
         return
     }
 
@@ -1306,13 +1356,15 @@ function Invoke-Cleanup {
         if ($rgJson) {
             $resourceGroups = $rgJson | ConvertFrom-Json
         }
-    } catch {}
+    }
+    catch {}
 
     # Find management groups
     $mgRoot = $null
     try {
         $mgRoot = az account management-group list --query "[?name=='mg-$($script:EnvName)-root'].name" -o tsv 2>$null
-    } catch {}
+    }
+    catch {}
 
     if (($resourceGroups.Count -eq 0) -and (-not $mgRoot)) {
         Write-ColorOutput "  No resources found for environment '$($script:EnvName)'" Yellow
@@ -1386,7 +1438,8 @@ function Invoke-Cleanup {
                 if ($remainingJson) {
                     $remaining = $remainingJson | ConvertFrom-Json
                 }
-            } catch {}
+            }
+            catch {}
 
             if ($remaining.Count -eq 0) {
                 Write-ColorOutput "    ✅ All resource groups deleted!" Green
@@ -1453,7 +1506,8 @@ function Invoke-Cleanup {
                 }
             }
         }
-    } catch {}
+    }
+    catch {}
 
     # Cognitive Services (AI Foundry)
     try {
@@ -1467,7 +1521,8 @@ function Invoke-Cleanup {
                 }
             }
         }
-    } catch {}
+    }
+    catch {}
 
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
@@ -1525,7 +1580,8 @@ function Show-Completion {
     Write-Host "  Resource Groups Created:" -ForegroundColor White
     try {
         az group list --query "[?contains(name, '$($script:EnvName)')].{Name:name, Location:location}" -o table
-    } catch {
+    }
+    catch {
         Write-Host "    Run 'az group list' to see your resource groups"
     }
     Write-Host ""
@@ -1592,7 +1648,8 @@ if ($Cleanup) {
         $script:SelectedSubscriptionId = az account show --query id -o tsv 2>$null
         Write-Host ""
         Write-ColorOutput "  Using current subscription: $($script:SelectedSubscriptionName)" Green
-    } else {
+    }
+    else {
         Select-Subscription
     }
 
@@ -1600,7 +1657,8 @@ if ($Cleanup) {
         $script:EnvName = $Environment
         Write-Host ""
         Write-ColorOutput "  Using environment: $($script:EnvName)" Green
-    } else {
+    }
+    else {
         Get-EnvironmentName
     }
 

@@ -38,11 +38,7 @@
     "acrSku": {
       "type": "string",
       "defaultValue": "Basic",
-      "allowedValues": [
-        "Basic",
-        "Standard",
-        "Premium"
-      ],
+      "allowedValues": ["Basic", "Standard", "Premium"],
       "metadata": {
         "description": "ACR SKU"
       }

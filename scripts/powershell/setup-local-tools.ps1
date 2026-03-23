@@ -21,7 +21,8 @@ function Write-ColorOutput {
     )
     if ($NoNewline) {
         Write-Host $Message -ForegroundColor $Color -NoNewline
-    } else {
+    }
+    else {
         Write-Host $Message -ForegroundColor $Color
     }
 }
@@ -53,9 +54,11 @@ $hasChoco = Test-Command "choco"
 
 if ($hasWinget) {
     Write-ColorOutput "  ✓ Package Manager: winget detected" Green
-} elseif ($hasChoco) {
+}
+elseif ($hasChoco) {
     Write-ColorOutput "  ✓ Package Manager: Chocolatey detected" Green
-} else {
+}
+else {
     Write-ColorOutput "  ⚠ No package manager found" Yellow
     Write-Host "  winget is recommended (included with Windows 11 and Windows 10 updates)"
     Write-Host "  Alternatively, install Chocolatey: https://chocolatey.org/install"
@@ -76,17 +79,21 @@ if (Test-Command "az") {
         $azVersion = (az version --query '"azure-cli"' -o tsv 2>$null)
         Write-ColorOutput " ✓ Installed ($azVersion)" Green
         $tools["az"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["az"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Microsoft.AzureCLI --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install azure-cli -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://aka.ms/installazurecli" Cyan
     }
     $tools["az"] = Test-Command "az"
@@ -99,17 +106,21 @@ if (Test-Command "azd") {
         $azdVersion = (azd version 2>$null | Select-Object -First 1)
         Write-ColorOutput " ✓ Installed ($azdVersion)" Green
         $tools["azd"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["azd"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Microsoft.Azd --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install azd -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://aka.ms/azure-dev/install" Cyan
     }
     $tools["azd"] = Test-Command "azd"
@@ -122,17 +133,21 @@ if (Test-Command "kubectl") {
         $kubectlVersion = (kubectl version --client -o json 2>$null | ConvertFrom-Json).clientVersion.gitVersion
         Write-ColorOutput " ✓ Installed ($kubectlVersion)" Green
         $tools["kubectl"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["kubectl"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Kubernetes.kubectl --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install kubernetes-cli -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/" Cyan
     }
     $tools["kubectl"] = Test-Command "kubectl"
@@ -145,17 +160,21 @@ if (Test-Command "git") {
         $gitVersion = (git --version)
         Write-ColorOutput " ✓ $gitVersion" Green
         $tools["git"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["git"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Git.Git --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install git -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://git-scm.com/download/win" Cyan
     }
     $tools["git"] = Test-Command "git"
@@ -168,22 +187,27 @@ if ((Test-Command "python") -or (Test-Command "python3")) {
         # Try python3 first (macOS/Linux), then python (Windows)
         if (Test-Command "python3") {
             $pythonVersion = (python3 --version 2>&1)
-        } else {
+        }
+        else {
             $pythonVersion = (python --version 2>&1)
         }
         Write-ColorOutput " ✓ $pythonVersion" Green
         $tools["python"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["python"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Python.Python.3.13 --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install python -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://www.python.org/downloads/" Cyan
     }
     $tools["python"] = (Test-Command "python") -or (Test-Command "python3")
@@ -196,17 +220,21 @@ if (Test-Command "jq") {
         $jqVersion = (jq --version 2>&1)
         Write-ColorOutput " ✓ $jqVersion" Green
         $tools["jq"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["jq"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install jqlang.jq --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install jq -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://stedolan.github.io/jq/download/" Cyan
     }
     $tools["jq"] = Test-Command "jq"
@@ -222,13 +250,16 @@ if ($vscodeInstalled) {
     if (-not (Test-Command "code")) {
         Write-ColorOutput "    Tip: Add 'code' to PATH via: VS Code > Command Palette > 'Shell Command: Install'" Yellow
     }
-} else {
+}
+else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
         winget install Microsoft.VisualStudioCode --silent --accept-package-agreements --accept-source-agreements
-    } elseif ($hasChoco) {
+    }
+    elseif ($hasChoco) {
         choco install vscode -y
-    } else {
+    }
+    else {
         Write-ColorOutput "    Please install manually: https://code.visualstudio.com/" Cyan
     }
     $tools["code"] = Test-Command "code"
@@ -241,11 +272,13 @@ if (Test-Command "docker") {
         $dockerVersion = (docker version --format '{{.Client.Version}}' 2>$null)
         Write-ColorOutput " ✓ Installed ($dockerVersion)" Green
         $tools["docker"] = $true
-    } catch {
+    }
+    catch {
         Write-ColorOutput " ✓ Installed" Green
         $tools["docker"] = $true
     }
-} else {
+}
+else {
     Write-ColorOutput " Not installed" Yellow
     Write-ColorOutput "    Please install Docker Desktop: https://www.docker.com/products/docker-desktop/" Cyan
     $tools["docker"] = $false
@@ -258,11 +291,13 @@ if (Test-Command "az") {
     try {
         az bicep install 2>$null
         Write-ColorOutput "  ✓ Bicep CLI ready" Green
-    } catch {
+    }
+    catch {
         try {
             az bicep upgrade 2>$null
             Write-ColorOutput "  ✓ Bicep CLI updated" Green
-        } catch {
+        }
+        catch {
             Write-ColorOutput "  ✓ Bicep CLI ready" Green
         }
     }
@@ -280,7 +315,8 @@ if (Test-Command "az") {
     try {
         az extension add --name containerapp --upgrade -y 2>$null
         Write-ColorOutput "  ✓ containerapp extension ready" Green
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ○ containerapp extension (install manually)" Yellow
         Write-Host "    Run: az extension add --name containerapp -y"
     }
@@ -312,18 +348,21 @@ if (Test-Command "az") {
                 $state = az provider show --namespace $provider --query registrationState -o tsv 2>$null
                 if ($state -eq "Registered") {
                     Write-ColorOutput "  ✓ $provider - Already registered" Green
-                } else {
+                }
+                else {
                     Write-ColorOutput "  ○ Registering $provider..." Yellow
                     Start-Job -ScriptBlock { param($p) az provider register --namespace $p } -ArgumentList $provider | Out-Null
                 }
             }
             Write-Host ""
             Write-ColorOutput "  Note: Provider registration may take a few minutes." Cyan
-        } else {
+        }
+        else {
             Write-ColorOutput "  ○ Not logged in - skipping provider registration" Yellow
             Write-Host "    After 'az login', run this script again"
         }
-    } catch {
+    }
+    catch {
         Write-ColorOutput "  ○ Not logged in - skipping provider registration" Yellow
     }
 }
@@ -344,14 +383,16 @@ foreach ($tool in $toolList) {
     if (-not $isInstalled) {
         if ($tool -eq "python") {
             $isInstalled = (Test-Command "python3")
-        } elseif ($tool -eq "code") {
+        }
+        elseif ($tool -eq "code") {
             $isInstalled = (Test-Path "/Applications/Visual Studio Code.app")
         }
     }
 
     if ($isInstalled) {
         Write-ColorOutput "  ✓ $tool" Green
-    } else {
+    }
+    else {
         Write-ColorOutput "  ✗ $tool (not installed)" Red
         $allInstalled = $false
     }
@@ -367,7 +408,8 @@ if ($allInstalled) {
     Write-Host "    2. Run: az login"
     Write-Host "    3. Run: azd auth login"
     Write-Host "    4. Run: .\scripts\powershell\validate-env.ps1"
-} else {
+}
+else {
     Write-ColorOutput "  Some tools could not be installed automatically." Yellow
     Write-Host "  Please install them manually and run this script again."
     Write-Host ""
