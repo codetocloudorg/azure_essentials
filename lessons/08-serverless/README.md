@@ -148,10 +148,10 @@ cd azure_essentials/lessons/08-serverless/src/sample-function
 ### Step 2: Deploy to Your Function App
 
 ```bash
-# Find your Function App name
+# Auto-discover your Function App and Resource Group
 FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
-RG="rg-azure-essentials-dev"
-echo "Deploying to: $FUNC_APP"
+RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
+echo "Deploying to: $FUNC_APP in $RG"
 
 # Ensure Python runtime is configured (fixes "WorkerConfig not found" error)
 az functionapp config appsettings set \
@@ -166,7 +166,9 @@ az functionapp deployment source config-zip \
   --resource-group $RG \
   --src function.zip
 
-# Test the function
+# Restart and test
+az functionapp restart --name $FUNC_APP --resource-group $RG
+sleep 30
 echo "Test URL: https://$FUNC_APP.azurewebsites.net/api/HttpTrigger?name=Azure"
 ```
 
@@ -247,9 +249,11 @@ This means the Function App doesn't have Python runtime configured.
 **Fix via CLI:**
 
 ```bash
+# Auto-discover resource group
+RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
 az functionapp config appsettings set \
   --name $FUNC_APP \
-  --resource-group rg-azure-essentials-dev \
+  --resource-group $RG \
   --settings FUNCTIONS_WORKER_RUNTIME=python
 ```
 
@@ -276,9 +280,12 @@ If you see "Running your function requires CORS" message:
 
 **Fix via CLI:**
 ```bash
+# Auto-discover Function App and resource group
+FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
 az functionapp cors add \
-  --name <func-app-name> \
-  --resource-group rg-azure-essentials-dev \
+  --name $FUNC_APP \
+  --resource-group $RG \
   --allowed-origins https://portal.azure.com
 ```
 
@@ -302,7 +309,12 @@ In this lesson, you:
 To avoid charges, delete the Function App when done:
 
 1. **Portal**: Go to your Function App → **Delete**
-2. **CLI**: `az functionapp delete --name <func-name> --resource-group rg-azure-essentials-dev`
+2. **CLI**:
+   ```bash
+   FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+   RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
+   az functionapp delete --name $FUNC_APP --resource-group $RG
+   ```
 
 ---
 
