@@ -6,17 +6,36 @@
 
 Azure provides managed container services for building, storing, and orchestrating containerised applications. This lesson covers Azure Container Registry (ACR) and introduces Azure Kubernetes Service (AKS).
 
-## 🚀 Sample Application
+## Prerequisites
 
-This lesson includes a containerized dashboard you can build and deploy:
+**Deploy Lesson 7 first** using the deploy script:
+```bash
+./scripts/bash/deploy.sh    # Select option 7
+```
+This creates your resource group and ACR automatically.
 
-**[Cloud Dashboard](src/cloud-dashboard/README.md)** - An interactive Azure services status dashboard
+---
+
+## Quick Start (After Deployment)
 
 ```bash
-# Build with ACR Tasks (no local Docker needed!)
-cd lessons/07-container-services/src/cloud-dashboard
-az acr build --registry $ACR_NAME --image cloud-dashboard:v1 .
+# 1. Find your ACR (auto-discover)
+ACR_NAME=$(az acr list --query "[0].name" -o tsv)
+echo "Your ACR: $ACR_NAME"
+
+# 2. Navigate to sample app
+cd lessons/07-container-services/src/hello-container
+
+# 3. Build the container (no Docker needed!)
+az acr build --registry $ACR_NAME --image hello-container:v1 .
+
+# 4. Verify it worked
+az acr repository list --name $ACR_NAME -o table
 ```
+
+That's it! You've built and stored a container image in Azure.
+
+---
 
 ## Learning Objectives
 
@@ -65,285 +84,87 @@ Local Development → Build Image → Push to ACR → Deploy to AKS
 
 ## Hands-on Exercises
 
-### Exercise 7.1: Create Azure Container Registry
+### Exercise 7.1: Discover Your ACR
 
-**Objective**: Create an ACR instance for storing container images.
-
----
-
-#### Option A: Bash / Cloud Shell
+**Objective**: Find the ACR created by the deploy script.
 
 ```bash
-# Variables
-RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="centralus"
-ACR_NAME="acressentials$(openssl rand -hex 4)"
+# Find your ACR name
+ACR_NAME=$(az acr list --query "[0].name" -o tsv)
+echo "ACR Name: $ACR_NAME"
 
-# Create the container registry
-az acr create \
-  --name $ACR_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --sku Basic \
-  --admin-enabled true
+# Find your resource group
+RG=$(az acr list --query "[0].resourceGroup" -o tsv)
+echo "Resource Group: $RG"
 
 # Get the login server
-az acr show \
-  --name $ACR_NAME \
-  --query loginServer \
-  --output tsv
+az acr show --name $ACR_NAME --query loginServer -o tsv
 
 # Get admin credentials
-az acr credential show \
-  --name $ACR_NAME \
-  --output table
-
-# Save the ACR name for later exercises
-echo "ACR_NAME=$ACR_NAME"
+az acr credential show --name $ACR_NAME -o table
 ```
 
----
+### Exercise 7.2: Build a Container Image
 
-#### Option B: PowerShell
-
-```powershell
-# Variables
-$RESOURCE_GROUP = "rg-azure-essentials-dev"
-$LOCATION = "centralus"
-$RANDOM_ID = -join ((48..57) + (97..102) | Get-Random -Count 8 | ForEach-Object {[char]$_})
-$ACR_NAME = "acressentials$RANDOM_ID"
-
-# Create the container registry
-az acr create `
-  --name $ACR_NAME `
-  --resource-group $RESOURCE_GROUP `
-  --location $LOCATION `
-  --sku Basic `
-  --admin-enabled true
-
-# Get the login server
-az acr show `
-  --name $ACR_NAME `
-  --query loginServer `
-  --output tsv
-
-# Get admin credentials
-az acr credential show `
-  --name $ACR_NAME `
-  --output table
-
-# Save the ACR name for later exercises
-Write-Host "ACR_NAME=$ACR_NAME - save this for later exercises!"
-```
-
-> 💡 **Important**: Copy your `ACR_NAME` value! You'll need it for the remaining exercises.
-
-### Exercise 7.2: Build and Push a Container Image
-
-**Objective**: Build a container image and push it to ACR.
-
-This lesson includes a ready-to-use sample app in `src/hello-container/`. No need to create files manually!
-
----
-
-#### Step 1: Navigate to the Sample App
-
-**Bash / Cloud Shell:**
+**Objective**: Build a container image using ACR Tasks (no Docker required!).
 
 ```bash
-# From the repo root
+# Navigate to the sample app
 cd lessons/07-container-services/src/hello-container
-```
 
-**PowerShell:**
-
-```powershell
-# From the repo root
-cd lessons\07-container-services\src\hello-container
-```
-
-The folder contains:
-| File | Purpose |
-|------|---------|
-| `app.py` | Flask web app showing "Hello from Azure!" |
-| `Dockerfile` | Container build instructions |
-| `README.md` | Additional documentation |
-
----
-
-#### Step 2: Build with ACR Tasks (No Docker Required!)
-
-ACR Tasks builds the container in Azure, so you don't need Docker installed locally.
-
-**Bash / Cloud Shell:**
-
-```bash
 # Build the image in ACR
-az acr build \
-  --registry $ACR_NAME \
-  --image hello-container:v1 \
-  .
+az acr build --registry $ACR_NAME --image hello-container:v1 .
+
+# Verify it was created
+az acr repository list --name $ACR_NAME -o table
+az acr repository show-tags --name $ACR_NAME --repository hello-container -o table
 ```
 
-**PowerShell:**
+The sample app folder contains:
 
-```powershell
-# Build the image in ACR
-az acr build `
-  --registry $ACR_NAME `
-  --image hello-container:v1 `
-  .
+| File         | Purpose                            |
+| ------------ | ---------------------------------- |
+| `app.py`     | Flask web app - "Hello from Azure" |
+| `Dockerfile` | Container build instructions       |
 ```
 
-> 💡 **Tip**: The `.` at the end tells ACR Tasks to use the current directory as the build context.
+### Exercise 7.3: Deploy to Azure Container Apps (Optional)
 
----
-
-#### Step 3: Verify the Image
-
-**Bash / Cloud Shell:**
+**Objective**: Deploy your container to the internet with a public URL.
 
 ```bash
-# List images in the registry
-az acr repository list --name $ACR_NAME --output table
+# Get your resource group
+RG=$(az acr list --query "[0].resourceGroup" -o tsv)
 
-# Show image tags
-az acr repository show-tags \
-  --name $ACR_NAME \
-  --repository hello-container \
-  --output table
-```
-
-**PowerShell:**
-
-```powershell
-# List images in the registry
-az acr repository list --name $ACR_NAME --output table
-
-# Show image tags
-az acr repository show-tags `
-  --name $ACR_NAME `
-  --repository hello-container `
-  --output table
-```
-
----
-
-#### Step 4: Return to Repo Root
-
-**Bash:**
-
-```bash
-cd ../../../..
-```
-
-**PowerShell:**
-
-```powershell
-cd ..\..\..\..
-```
-
-### Exercise 7.3: Deploy to Azure Container Apps (Internet Accessible!)
-
-**Objective**: Deploy your container to Azure Container Apps with a public URL.
-
-Azure Container Apps is the easiest way to run containers with a public endpoint.
-
----
-
-#### Option A: Bash / Cloud Shell
-
-```bash
-# First, ensure the containerapp extension is installed
+# Install containerapp extension
 az extension add --name containerapp --upgrade -y
 
-# Variables
-RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="centralus"
-RANDOM_ID=$(openssl rand -hex 4)
-ENV_NAME="cae-essentials-$RANDOM_ID"
-APP_NAME="hello-app-$RANDOM_ID"
+# Create environment and deploy (takes 2-3 minutes)
+ENV_NAME="cae-$(openssl rand -hex 4)"
+APP_NAME="hello-$(openssl rand -hex 4)"
 
-# Create Container Apps environment (takes 1-2 minutes)
-az containerapp env create \
-  --name $ENV_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION
+az containerapp env create --name $ENV_NAME --resource-group $RG --location centralus
 
-# Deploy container from ACR with public ingress
 az containerapp create \
   --name $APP_NAME \
-  --resource-group $RESOURCE_GROUP \
+  --resource-group $RG \
   --environment $ENV_NAME \
   --image $ACR_NAME.azurecr.io/hello-container:v1 \
   --registry-server $ACR_NAME.azurecr.io \
   --registry-username $(az acr credential show -n $ACR_NAME --query username -o tsv) \
   --registry-password $(az acr credential show -n $ACR_NAME --query passwords[0].value -o tsv) \
   --target-port 8080 \
-  --ingress external \
-  --min-replicas 1 \
-  --max-replicas 3
+  --ingress external
 
 # Get the public URL
-APP_URL=$(az containerapp show -n $APP_NAME -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv)
-echo "Your app is live at: https://$APP_URL"
+az containerapp show -n $APP_NAME -g $RG --query properties.configuration.ingress.fqdn -o tsv
 ```
 
----
+Open the URL in your browser - you should see **"Hello from Azure!"**
 
-#### Option B: PowerShell
+### Exercise 7.4: Run Locally with Docker (Optional)
 
-```powershell
-# First, ensure the containerapp extension is installed
-az extension add --name containerapp --upgrade -y
-
-# Variables
-$RESOURCE_GROUP = "rg-azure-essentials-dev"
-$LOCATION = "centralus"
-$RANDOM_ID = -join ((48..57) + (97..102) | Get-Random -Count 8 | ForEach-Object {[char]$_})
-$ENV_NAME = "cae-essentials-$RANDOM_ID"
-$APP_NAME = "hello-app-$RANDOM_ID"
-
-# Create Container Apps environment (takes 1-2 minutes)
-az containerapp env create `
-  --name $ENV_NAME `
-  --resource-group $RESOURCE_GROUP `
-  --location $LOCATION
-
-# Get ACR credentials
-$ACR_USERNAME = az acr credential show -n $ACR_NAME --query username -o tsv
-$ACR_PASSWORD = az acr credential show -n $ACR_NAME --query "passwords[0].value" -o tsv
-
-# Deploy container from ACR with public ingress
-az containerapp create `
-  --name $APP_NAME `
-  --resource-group $RESOURCE_GROUP `
-  --environment $ENV_NAME `
-  --image "$ACR_NAME.azurecr.io/hello-container:v1" `
-  --registry-server "$ACR_NAME.azurecr.io" `
-  --registry-username $ACR_USERNAME `
-  --registry-password $ACR_PASSWORD `
-  --target-port 8080 `
-  --ingress external `
-  --min-replicas 1 `
-  --max-replicas 3
-
-# Get the public URL
-$APP_URL = az containerapp show -n $APP_NAME -g $RESOURCE_GROUP --query properties.configuration.ingress.fqdn -o tsv
-Write-Host "Your app is live at: https://$APP_URL"
-```
-
----
-
-#### Step 3: View Your App
-
-Open the URL in your browser. You should see **"Hello from Azure!"** with the container hostname.
-
-> ✅ **Success!** Your container is now running on Azure with HTTPS and auto-scaling!
-
-### Exercise 7.4: Run Container Locally (Optional)
-
-**Objective**: Test the container image locally if you have Docker installed.
+**Objective**: Test locally if you have Docker installed.
 
 **Bash:**
 
@@ -351,63 +172,11 @@ Open the URL in your browser. You should see **"Hello from Azure!"** with the co
 # Login to ACR
 az acr login --name $ACR_NAME
 
-# Pull and run the image
+# Pull and run
 docker pull $ACR_NAME.azurecr.io/hello-container:v1
 docker run -d -p 8080:8080 $ACR_NAME.azurecr.io/hello-container:v1
 
-# Test the application
-curl http://localhost:8080
-
-# Stop the container
-docker stop $(docker ps -q --filter ancestor=$ACR_NAME.azurecr.io/hello-container:v1)
-```
-
-**PowerShell:**
-
-```powershell
-# Login to ACR
-az acr login --name $ACR_NAME
-
-# Pull and run the image
-docker pull "$ACR_NAME.azurecr.io/hello-container:v1"
-docker run -d -p 8080:8080 "$ACR_NAME.azurecr.io/hello-container:v1"
-
-# Test the application (open in browser)
-Start-Process "http://localhost:8080"
-
-# Stop the container
-docker stop (docker ps -q --filter "ancestor=$ACR_NAME.azurecr.io/hello-container:v1")
-```
-
-### Exercise 7.5: Explore AKS Concepts
-
-**Objective**: Understand AKS architecture and create a cluster overview.
-
-```bash
-# View available Kubernetes versions
-az aks get-versions \
-  --location $LOCATION \
-  --output table
-
-# View available VM sizes for AKS nodes
-az vm list-sizes \
-  --location $LOCATION \
-  --query "[?numberOfCores <= \`4\`].{Name:name, Cores:numberOfCores, Memory:memoryInMb}" \
-  --output table
-```
-
-> **Note**: Creating a full AKS cluster takes 10-15 minutes and incurs costs. In a production exercise, you would create the cluster with:
-
-```bash
-# Example: Create AKS cluster (for reference)
-# az aks create \
-#   --name aks-azure-essentials \
-#   --resource-group $RESOURCE_GROUP \
-#   --location $LOCATION \
-#   --node-count 2 \
-#   --node-vm-size Standard_B2s \
-#   --generate-ssh-keys \
-#   --attach-acr $ACR_NAME
+# Open http://localhost:8080 in your browser
 ```
 
 ---
