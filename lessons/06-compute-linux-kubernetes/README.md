@@ -195,6 +195,7 @@ kubectl get pods -w
 **Objective**: Access your Kubernetes app from a web browser.
 
 NodePort services are only accessible on the VM's private network by default. To access nginx from your browser, you need to:
+
 1. Find out which port Kubernetes assigned (the NodePort)
 2. Open that port in Azure's Network Security Group (NSG)
 3. Browse to `http://<VM-IP>:<NodePort>`
@@ -211,13 +212,16 @@ kubectl get svc nginx
 ```
 
 Look for the port number after `80:` in the output. For example:
+
 ```
 NAME    TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
 nginx   NodePort   10.152.183.42   <none>        80:31302/TCP   2m
 ```
+
 In this example, the **NodePort is 31302**. Write this down!
 
 Test it works locally first:
+
 ```bash
 curl http://localhost:31302   # Replace 31302 with your NodePort
 ```
@@ -241,17 +245,17 @@ Choose **Option A (Portal)** or **Option B (CLI)**:
 5. Click **+ Add** at the top
 6. Fill in the form:
 
-   | Field | Value |
-   |-------|-------|
-   | Source | Any |
-   | Source port ranges | `*` |
-   | Destination | Any |
-   | Service | Custom |
-   | Destination port ranges | `31302` (your NodePort) |
-   | Protocol | TCP |
-   | Action | Allow |
-   | Priority | `1100` |
-   | Name | `AllowKubernetesNodePort` |
+   | Field                   | Value                     |
+   | ----------------------- | ------------------------- |
+   | Source                  | Any                       |
+   | Source port ranges      | `*`                       |
+   | Destination             | Any                       |
+   | Service                 | Custom                    |
+   | Destination port ranges | `31302` (your NodePort)   |
+   | Protocol                | TCP                       |
+   | Action                  | Allow                     |
+   | Priority                | `1100`                    |
+   | Name                    | `AllowKubernetesNodePort` |
 
 7. Click **Add**
 
@@ -314,12 +318,14 @@ Write-Host "NSG rule created for port $NODE_PORT"
 Get your VM's public IP address:
 
 **Bash:**
+
 ```bash
 VM_IP=$(az vm show -g rg-azure-essentials-dev -n vm-microk8s-001 --show-details --query publicIps -o tsv)
 echo "Open in browser: http://$VM_IP:31302"
 ```
 
 **PowerShell:**
+
 ```powershell
 $VM_IP = az vm show -g rg-azure-essentials-dev -n vm-microk8s-001 --show-details --query publicIps -o tsv
 Write-Host "Open in browser: http://${VM_IP}:31302"
@@ -328,6 +334,7 @@ Write-Host "Open in browser: http://${VM_IP}:31302"
 **Or via Portal:** Go to your VM in the Azure Portal → **Overview** → copy the **Public IP address**.
 
 Now open your browser and go to:
+
 ```
 http://<YOUR-VM-IP>:<YOUR-NODE-PORT>
 ```
