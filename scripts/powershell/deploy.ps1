@@ -873,7 +873,8 @@ function Setup-SshKey {
             Remove-Item "$keyPath.pub" -Force -ErrorAction SilentlyContinue
         }
 
-        ssh-keygen -t ed25519 -f $keyPath -N '""' -C "azure-essentials-vm" -q
+        # -N "" sets empty passphrase (no prompt)
+        & ssh-keygen -t ed25519 -f $keyPath -N "" -C "azure-essentials-vm" -q
 
         $script:SshPublicKey = (Get-Content "$keyPath.pub" -Raw).Trim()
         Write-ColorOutput "  ✓ Generated: $keyPath" Green
