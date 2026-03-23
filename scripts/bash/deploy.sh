@@ -1345,71 +1345,31 @@ setup_ssh_key() {
 
     print_section "🔑 SSH Key Setup"
 
-    echo -e "${CYAN}WHAT YOU'RE CONFIGURING:${NC}"
-    echo "  Lesson 6 deploys an Ubuntu Linux VM with MicroK8s."
-    echo "  You'll use SSH (Secure Shell) to connect to this VM."
-    echo ""
-    echo -e "${CYAN}WHY SSH KEYS?${NC}"
-    echo "  SSH keys are more secure than passwords:"
-    echo "  • Can't be guessed or brute-forced"
-    echo "  • Private key never leaves your machine"
-    echo "  • Can be protected with a passphrase"
-    echo ""
-
-    # Check for existing SSH key
-    if [ -f "$HOME/.ssh/id_rsa.pub" ]; then
-        echo -e "${GREEN}✓ Found existing SSH key: ~/.ssh/id_rsa.pub${NC}"
-        echo ""
-        read -p "Use this key? (y/n) [y]: " use_existing
-        if [ "$use_existing" != "n" ] && [ "$use_existing" != "N" ]; then
-            SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_rsa.pub")
-            echo -e "${GREEN}Using existing SSH key.${NC}"
-            return
-        fi
+    # Check for existing keys (auto-use without prompting)
+    if [ -f "$HOME/.ssh/id_ed25519_azure.pub" ]; then
+        SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519_azure.pub")
+        echo -e "${GREEN}✓ Using existing key: ~/.ssh/id_ed25519_azure.pub${NC}"
     elif [ -f "$HOME/.ssh/id_ed25519.pub" ]; then
-        echo -e "${GREEN}✓ Found existing SSH key: ~/.ssh/id_ed25519.pub${NC}"
-        echo ""
-        read -p "Use this key? (y/n) [y]: " use_existing
-        if [ "$use_existing" != "n" ] && [ "$use_existing" != "N" ]; then
-            SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519.pub")
-            echo -e "${GREEN}Using existing SSH key.${NC}"
-            return
-        fi
-    fi
-
-    # No existing key or user declined - generate new one
-    echo "No SSH key found or you chose not to use existing key."
-    echo ""
-    read -p "Generate a new SSH key pair? (y/n) [y]: " generate_key
-
-    if [ "$generate_key" = "n" ] || [ "$generate_key" = "N" ]; then
-        echo ""
-        echo -e "${YELLOW}You'll need to provide an SSH public key for VM access.${NC}"
-        echo "Enter your SSH public key (starts with ssh-rsa or ssh-ed25519):"
-        read -p "> " SSH_PUBLIC_KEY
-
-        if [ -z "$SSH_PUBLIC_KEY" ]; then
-            echo -e "${RED}No SSH key provided. Cannot deploy Lesson 06.${NC}"
-            exit 1
-        fi
+        SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519.pub")
+        echo -e "${GREEN}✓ Using existing key: ~/.ssh/id_ed25519.pub${NC}"
+    elif [ -f "$HOME/.ssh/id_rsa.pub" ]; then
+        SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_rsa.pub")
+        echo -e "${GREEN}✓ Using existing key: ~/.ssh/id_rsa.pub${NC}"
     else
-        echo ""
-        echo -e "${CYAN}Generating new SSH key pair...${NC}"
+        # Auto-generate new key
+        echo -e "${CYAN}Generating SSH key...${NC}"
 
-        # Check if key exists and remove to avoid interactive prompt
         if [ -f "$HOME/.ssh/id_ed25519_azure" ]; then
             rm -f "$HOME/.ssh/id_ed25519_azure" "$HOME/.ssh/id_ed25519_azure.pub"
         fi
 
-        ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_azure" -N "" -C "azure-essentials-vm"
+        ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_azure" -N "" -C "azure-essentials-vm" -q
         SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519_azure.pub")
-        echo ""
-        echo -e "${GREEN}✓ SSH key generated: ~/.ssh/id_ed25519_azure${NC}"
-        echo -e "${GREEN}✓ Private key: ~/.ssh/id_ed25519_azure${NC}"
-        echo ""
-        echo -e "${YELLOW}💡 To SSH to your VM after deployment:${NC}"
-        echo -e "   ${CYAN}ssh -i ~/.ssh/id_ed25519_azure azureuser@<vm-public-ip>${NC}"
+        echo -e "${GREEN}✓ Generated: ~/.ssh/id_ed25519_azure${NC}"
     fi
+
+    echo ""
+    echo -e "${CYAN}💡 SSH command: ssh -i ~/.ssh/id_ed25519_azure azureuser@<vm-ip>${NC}"
     echo ""
 }
 

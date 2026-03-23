@@ -841,60 +841,27 @@ function Setup-SshKey {
 
     Show-Section "🔑 SSH Key Setup"
 
-    Write-ColorOutput "  WHAT YOU'RE CONFIGURING:" Cyan
-    Write-Host "    Lesson 6 deploys an Ubuntu Linux VM with MicroK8s."
-    Write-Host "    You'll use SSH (Secure Shell) to connect to this VM."
-    Write-Host ""
-    Write-ColorOutput "  WHY SSH KEYS?" Cyan
-    Write-Host "    SSH keys are more secure than passwords:"
-    Write-Host "    • Can't be guessed or brute-forced"
-    Write-Host "    • Private key never leaves your machine"
-    Write-Host ""
-
     $homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { "~" }
+    $sshDir = Join-Path $homeDir ".ssh"
 
-    $rsaKeyPath = Join-Path $homeDir ".ssh" "id_rsa.pub"
-    $ed25519KeyPath = Join-Path $homeDir ".ssh" "id_ed25519.pub"
+    # Check for existing keys (auto-use without prompting)
+    $rsaKeyPath = Join-Path $sshDir "id_rsa.pub"
+    $ed25519KeyPath = Join-Path $sshDir "id_ed25519.pub"
+    $azureKeyPath = Join-Path $sshDir "id_ed25519_azure.pub"
 
-    if (Test-Path $rsaKeyPath) {
-        Write-ColorOutput "  ✓ Found existing SSH key: $rsaKeyPath" Green
-        Write-Host ""
-        $useExisting = Read-Host "  Use this key? (y/n) [y]"
-        if ($useExisting -ne "n" -and $useExisting -ne "N") {
-            $script:SshPublicKey = (Get-Content $rsaKeyPath -Raw).Trim()
-            Write-ColorOutput "  Using existing SSH key." Green
-            return
-        }
+    if (Test-Path $azureKeyPath) {
+        $script:SshPublicKey = (Get-Content $azureKeyPath -Raw).Trim()
+        Write-ColorOutput "  ✓ Using existing key: $azureKeyPath" Green
     } elseif (Test-Path $ed25519KeyPath) {
-        Write-ColorOutput "  ✓ Found existing SSH key: $ed25519KeyPath" Green
-        Write-Host ""
-        $useExisting = Read-Host "  Use this key? (y/n) [y]"
-        if ($useExisting -ne "n" -and $useExisting -ne "N") {
-            $script:SshPublicKey = (Get-Content $ed25519KeyPath -Raw).Trim()
-            Write-ColorOutput "  Using existing SSH key." Green
-            return
-        }
-    }
-
-    Write-Host "  No SSH key found or you chose not to use existing key."
-    Write-Host ""
-    $generateKey = Read-Host "  Generate a new SSH key pair? (y/n) [y]"
-
-    if ($generateKey -eq "n" -or $generateKey -eq "N") {
-        Write-Host ""
-        Write-ColorOutput "  You'll need to provide an SSH public key for VM access." Yellow
-        Write-Host "  Enter your SSH public key (starts with ssh-rsa or ssh-ed25519):"
-        $script:SshPublicKey = Read-Host "  "
-
-        if ([string]::IsNullOrWhiteSpace($script:SshPublicKey)) {
-            Write-ColorOutput "  No SSH key provided. Cannot deploy Lesson 06." Red
-            exit 1
-        }
+        $script:SshPublicKey = (Get-Content $ed25519KeyPath -Raw).Trim()
+        Write-ColorOutput "  ✓ Using existing key: $ed25519KeyPath" Green
+    } elseif (Test-Path $rsaKeyPath) {
+        $script:SshPublicKey = (Get-Content $rsaKeyPath -Raw).Trim()
+        Write-ColorOutput "  ✓ Using existing key: $rsaKeyPath" Green
     } else {
-        Write-Host ""
-        Write-ColorOutput "  Generating new SSH key pair..." Cyan
+        # Auto-generate new key
+        Write-ColorOutput "  Generating SSH key..." Cyan
 
-        $sshDir = Join-Path $homeDir ".ssh"
         if (-not (Test-Path $sshDir)) {
             New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
         }
@@ -906,15 +873,14 @@ function Setup-SshKey {
             Remove-Item "$keyPath.pub" -Force -ErrorAction SilentlyContinue
         }
 
-        ssh-keygen -t ed25519 -f $keyPath -N '""' -C "azure-essentials-vm"
+        ssh-keygen -t ed25519 -f $keyPath -N '""' -C "azure-essentials-vm" -q
 
         $script:SshPublicKey = (Get-Content "$keyPath.pub" -Raw).Trim()
-        Write-Host ""
-        Write-ColorOutput "  ✓ SSH key generated: $keyPath" Green
-        Write-Host ""
-        Write-ColorOutput "  💡 To SSH to your VM after deployment:" Yellow
-        Write-ColorOutput "     ssh -i $keyPath azureuser@<vm-public-ip>" Cyan
+        Write-ColorOutput "  ✓ Generated: $keyPath" Green
     }
+
+    Write-Host ""
+    Write-ColorOutput "  💡 SSH command: ssh -i ~/.ssh/id_ed25519_azure azureuser@<vm-ip>" Cyan
     Write-Host ""
 }
 
