@@ -8,22 +8,24 @@ Serverless computing lets you run code without managing infrastructure. This les
 
 ## Learning Objectives
 
-- Create an Azure Function App from the Portal
-- Build and test an HTTP-triggered function
-- Deploy code from the Cloud Shell
-- Understand serverless pricing and scaling
+- Deploy a Python Azure Function from Cloud Shell
+- Understand how serverless functions work
+- Edit function code in the Azure Portal
+- Test your function via browser
 
 ---
 
-## Quick Start (Portal + Cloud Shell)
+## Quick Start
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Create     │ ──▶ │   Add HTTP   │ ──▶ │    Test      │
-│ Function App │     │   Function   │     │    URL       │
+│   Deploy     │ ──▶ │    Edit      │ ──▶ │    Test      │
+│  via azd up  │     │  in Portal   │     │   in Browser │
 └──────────────┘     └──────────────┘     └──────────────┘
-     Portal              Portal             Browser
+   Local CLI           Optional            URL + ?name=
 ```
+
+**Prerequisites**: Run `azd up` with `LESSON_NUMBER=08` to create the Function App infrastructure.
 
 ---
 
@@ -31,61 +33,92 @@ Serverless computing lets you run code without managing infrastructure. This les
 
 ### What is Serverless?
 
-| Benefit                  | Description                                |
-| ------------------------ | ------------------------------------------ |
-| **No servers to manage** | Azure handles all infrastructure           |
-| **Auto-scaling**         | Scales from zero to thousands of instances |
-| **Pay per execution**    | Only pay when your code runs               |
-| **Event-driven**         | Triggered by HTTP, timers, queues, etc.    |
+| Benefit | Description |
+|---------|-------------|
+| **No servers to manage** | Azure handles all infrastructure |
+| **Auto-scaling** | Scales from zero to thousands of instances |
+| **Pay per execution** | Only pay when your code runs |
+| **Event-driven** | Triggered by HTTP, timers, queues, etc. |
 
 ### Common Trigger Types
 
-| Trigger   | Use Case            | Example                        |
-| --------- | ------------------- | ------------------------------ |
-| **HTTP**  | REST APIs, webhooks | `GET /api/greeting?name=Azure` |
-| **Timer** | Scheduled jobs      | Run cleanup every hour         |
-| **Blob**  | File processing     | Resize uploaded images         |
-| **Queue** | Background tasks    | Process orders                 |
+| Trigger | Use Case | Example |
+|---------|----------|---------|
+| **HTTP** | REST APIs, webhooks | `GET /api/HttpTrigger?name=Azure` |
+| **Timer** | Scheduled jobs | Run cleanup every hour |
+| **Blob** | File processing | Resize uploaded images |
+| **Queue** | Background tasks | Process orders |
 
 ---
 
-## Hands-on Exercise: Create Your First Function
+## Hands-on Exercise: Deploy Your Function
 
-### Step 1: Create a Function App (Portal)
+### Step 1: Deploy Function Code (Cloud Shell)
 
-1. Go to the [Azure Portal](https://portal.azure.com)
-2. Click **Create a resource** → Search **Function App**
-3. Click **Create** and configure:
+Open **Cloud Shell** (click the `>_` icon in Azure Portal) and run:
 
-| Setting               | Value                                     |
-| --------------------- | ----------------------------------------- |
-| **Subscription**      | Your subscription                         |
-| **Resource Group**    | `rg-azure-essentials-dev` (or create new) |
-| **Function App name** | `func-hello-<yourname>` (must be unique)  |
-| **Runtime stack**     | Python                                    |
-| **Version**           | 3.11                                      |
-| **Region**            | Central US (or your preferred region)     |
-| **Operating System**  | Linux                                     |
-| **Hosting plan**      | Consumption (Serverless)                  |
+```bash
+# Clone the repository
+git clone https://github.com/codetocloudorg/azure_essentials.git
+cd azure_essentials/lessons/08-serverless/src/sample-function
 
-4. Click **Review + create** → **Create**
-5. Wait for deployment (about 1-2 minutes)
+# Auto-discover your Function App and Resource Group
+FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
+echo "Deploying to: $FUNC_APP in $RG"
 
-### Step 2: Create an HTTP Function (Portal)
+# Configure Python runtime
+az functionapp config appsettings set \
+  --name $FUNC_APP \
+  --resource-group $RG \
+  --settings FUNCTIONS_WORKER_RUNTIME=python
 
-1. Go to your new Function App
-2. In the left menu, click **Functions** → **+ Create**
-3. Select **HTTP trigger**
-4. Configure:
-   - **New Function**: Keep the default name (e.g., `http_trigger1`) or enter `HttpTrigger`
-   - **Authorization level**: Anonymous
-5. Click **Create**
+# Zip and deploy
+zip -r function.zip . -x "*.git*" -x "__pycache__/*"
+az functionapp deployment source config-zip \
+  --name $FUNC_APP \
+  --resource-group $RG \
+  --src function.zip
 
-### Step 3: Edit the Function Code (Portal)
+# Get the test URL
+echo ""
+echo "✅ Deployment complete!"
+echo "Test URL: https://$FUNC_APP.azurewebsites.net/api/HttpTrigger?name=Azure"
+```
 
-1. Click on your new function (whatever name was created)
-2. Click **Code + Test** in the left menu
-3. Replace the code with:
+### Step 2: Test Your Function
+
+Open the URL in your browser:
+```
+https://<your-func-app>.azurewebsites.net/api/HttpTrigger?name=YourName
+```
+
+**Expected Response:**
+```json
+{
+  "message": "Hello, YourName! Welcome to Azure Functions.",
+  "timestamp": "2026-03-23T10:30:00.000000",
+  "function": "HttpTrigger",
+  "course": "Azure Essentials"
+}
+```
+
+---
+
+## Understanding the Code
+
+### Project Structure
+
+```
+sample-function/
+├── HttpTrigger/
+│   ├── __init__.py      # Function code (Python)
+│   └── function.json    # Trigger configuration
+├── host.json            # App-level settings
+└── requirements.txt     # Python dependencies
+```
+
+### The Function Code (`__init__.py`)
 
 ```python
 import azure.functions as func
@@ -93,101 +126,51 @@ import json
 from datetime import datetime
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    name = req.params.get('name', 'World')
+    """
+    HTTP trigger function that returns a greeting.
+    """
+    # Get 'name' from query string (?name=Azure) or request body
+    name = req.params.get('name')
+    
+    if not name:
+        try:
+            req_body = req.get_json()
+            name = req_body.get('name')
+        except ValueError:
+            pass
+
+    # Build the response message
+    if name:
+        message = f"Hello, {name}! Welcome to Azure Functions."
+    else:
+        message = "Hello! Pass a name in the query string or request body."
+
+    # Return JSON response
+    response_data = {
+        "message": message,
+        "timestamp": datetime.utcnow().isoformat(),
+        "function": "HttpTrigger",
+        "course": "Azure Essentials"
+    }
 
     return func.HttpResponse(
-        json.dumps({
-            "message": f"Hello, {name}!",
-            "timestamp": datetime.utcnow().isoformat(),
-            "course": "Azure Essentials"
-        }),
-        mimetype="application/json"
+        json.dumps(response_data, indent=2),
+        mimetype="application/json",
+        status_code=200
     )
 ```
 
-4. Click **Save**
+**Code Breakdown:**
 
-### Step 4: Test Your Function
+| Line | What it does |
+|------|--------------|
+| `req: func.HttpRequest` | The incoming HTTP request object |
+| `req.params.get('name')` | Gets `?name=value` from the URL |
+| `req.get_json()` | Gets JSON body for POST requests |
+| `func.HttpResponse(...)` | Returns the HTTP response |
+| `mimetype="application/json"` | Tells browsers this is JSON |
 
-1. Click **Get function URL** at the top
-2. In the **Key** dropdown, select **default (function key)**
-3. Click **Copy** (or copy the URL manually)
-4. Open the URL in a **new browser tab**
-5. Add `?name=YourName` to the end of the URL
-
-> **Important**: Use the exact URL from "Get function URL" - it includes your function name!
-
-**Your URL will look like:**
-```
-https://func-xxxxx.azurewebsites.net/api/http_trigger1?name=Azure
-```
-
-**Expected Response:**
-```json
-{
-  "message": "Hello, Azure!",
-  "timestamp": "2026-03-23T10:30:00.000000",
-  "course": "Azure Essentials"
-}
-```
-
----
-
-## Deploy from Cloud Shell (Alternative)
-
-If the Portal approach doesn't work, you can deploy from Cloud Shell:
-
-### Step 1: Clone the Repository
-
-```bash
-# Open the Cloud Shell (>_ icon in Azure Portal)
-git clone https://github.com/codetocloudorg/azure_essentials.git
-cd azure_essentials/lessons/08-serverless/src/sample-function
-```
-
-### Step 2: Deploy to Your Function App
-
-```bash
-# Auto-discover your Function App and Resource Group
-FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
-RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
-echo "Deploying to: $FUNC_APP in $RG"
-
-# Ensure Python runtime is configured (fixes "WorkerConfig not found" error)
-az functionapp config appsettings set \
-  --name $FUNC_APP \
-  --resource-group $RG \
-  --settings FUNCTIONS_WORKER_RUNTIME=python
-
-# Zip and deploy
-zip -r function.zip . -x "*.git*" -x "__pycache__/*" -x ".venv/*"
-az functionapp deployment source config-zip \
-  --name $FUNC_APP \
-  --resource-group $RG \
-  --src function.zip
-
-# Restart and test
-az functionapp restart --name $FUNC_APP --resource-group $RG
-sleep 30
-echo "Test URL: https://$FUNC_APP.azurewebsites.net/api/HttpTrigger?name=Azure"
-```
-
----
-
-## Understand the Code
-
-The sample function in `src/sample-function/` contains:
-
-```
-sample-function/
-├── HttpTrigger/
-│   ├── __init__.py      # Function code
-│   └── function.json    # Trigger configuration
-├── host.json            # App settings
-└── requirements.txt     # Python dependencies
-```
-
-**function.json** - Defines the HTTP trigger:
+### The Trigger Configuration (`function.json`)
 
 ```json
 {
@@ -208,13 +191,47 @@ sample-function/
 }
 ```
 
+**What each setting means:**
+
+| Setting | Value | Description |
+|---------|-------|-------------|
+| `authLevel` | `anonymous` | No API key required |
+| `type` | `httpTrigger` | Triggered by HTTP requests |
+| `methods` | `["get", "post"]` | Accepts GET and POST |
+| `direction` | `in` / `out` | Input binding / Output binding |
+
+---
+
+## Edit Code in the Portal
+
+After deployment, you can edit your function directly in the Azure Portal:
+
+1. Go to your **Function App** in the Portal
+2. Click **Functions** → Click on **HttpTrigger**
+3. Click **Code + Test** in the left menu
+4. Edit the code in the browser editor
+5. Click **Save**
+6. Click **Test/Run** to test your changes
+
+> **Tip**: Portal editing is great for quick changes. For larger projects, use VS Code with the Azure Functions extension.
+
+### Try This: Modify the Response
+
+Change the message in the Portal:
+
+```python
+message = f"Hello, {name}! You're learning Azure Functions 🎉"
+```
+
+Click **Save** and test your URL again!
+
 ---
 
 ## View Logs and Monitor
 
-1. In your Function App, click **Monitor** under Functions
-2. Click on your function → **Invocations** tab
-3. View logs for each execution
+1. In your Function App, click **Functions** → **HttpTrigger**
+2. Click **Monitor** in the left menu
+3. View the **Invocations** tab to see execution history
 4. Click **Application Insights** for detailed metrics
 
 ---
@@ -223,10 +240,10 @@ sample-function/
 
 Azure Functions Consumption plan pricing:
 
-| Resource           | Free Tier          | Additional Cost   |
-| ------------------ | ------------------ | ----------------- |
-| **Executions**     | 1 million/month    | $0.20 per million |
-| **Compute (GB-s)** | 400,000 GB-s/month | $0.000016/GB-s    |
+| Resource | Free Tier | Additional Cost |
+|----------|-----------|-----------------|
+| **Executions** | 1 million/month | $0.20 per million |
+| **Compute (GB-s)** | 400,000 GB-s/month | $0.000016/GB-s |
 
 > **Tip**: For this lesson, you'll stay well within the free tier!
 
@@ -236,20 +253,11 @@ Azure Functions Consumption plan pricing:
 
 ### Error: "WorkerConfig for runtime: python not found"
 
-This means the Function App doesn't have Python runtime configured.
+The Function App isn't configured for Python.
 
-**Fix via Portal:**
-
-1. Go to your Function App
-2. Click **Configuration** → **General settings**
-3. Set **Runtime stack** to **Python**
-4. Set **Version** to **3.11**
-5. Click **Save**
-
-**Fix via CLI:**
-
+**Fix:**
 ```bash
-# Auto-discover resource group
+FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
 RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
 az functionapp config appsettings set \
   --name $FUNC_APP \
@@ -259,31 +267,13 @@ az functionapp config appsettings set \
 
 ### Function returns 404 Not Found
 
-1. **Use the URL from "Get function URL"** - don't construct it manually
-2. **Restart the Function App**: Overview → Restart → Wait 30 seconds
-3. **Verify the function exists**: Check it's listed under Functions in the Portal
-4. **Try the Cloud Shell deployment** (see above) as a fallback
-
-### Function not responding after deployment
-
-1. Go to **Overview** → click **Restart**
-2. Wait 30 seconds and test again
+1. **Verify function name**: Use `HttpTrigger` (capital H and T)
+2. **Check the URL format**: `https://<app>.azurewebsites.net/api/HttpTrigger`
+3. **Restart the app**: Portal → Overview → Restart
 
 ### CORS error when testing from Portal
 
-If you see "Running your function requires CORS" message:
-
-**Fix via Portal:**
-
-1. Go to your Function App → **Settings** section
-2. Click **CORS**
-3. Add `https://portal.azure.com` to **Allowed Origins**
-4. Click **Save**
-
-**Fix via CLI:**
-
 ```bash
-# Auto-discover Function App and resource group
 FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
 RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
 az functionapp cors add \
@@ -292,32 +282,29 @@ az functionapp cors add \
   --allowed-origins https://portal.azure.com
 ```
 
-> **Tip**: You can skip CORS and just test directly in your browser using the function URL!
-
 ---
 
 ## Summary
 
 In this lesson, you:
 
-- ✅ Created a Function App from the Azure Portal
-- ✅ Built an HTTP-triggered serverless function
-- ✅ Tested your function with a browser
-- ✅ Learned about serverless pricing and monitoring
+- ✅ Deployed a Python function from Cloud Shell
+- ✅ Understood the function code structure
+- ✅ Learned how triggers and bindings work
+- ✅ Edited code directly in the Azure Portal
+- ✅ Tested your serverless API in a browser
 
 ---
 
 ## Cleanup (Optional)
 
-To avoid charges, delete the Function App when done:
+Delete the Function App when done:
 
-1. **Portal**: Go to your Function App → **Delete**
-2. **CLI**:
-   ```bash
-   FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
-   RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
-   az functionapp delete --name $FUNC_APP --resource-group $RG
-   ```
+```bash
+FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+RG=$(az functionapp list --query "[0].resourceGroup" -o tsv)
+az functionapp delete --name $FUNC_APP --resource-group $RG
+```
 
 ---
 
@@ -329,6 +316,6 @@ Continue to [Lesson 09: Database Services](../09-database-services/README.md) to
 
 ## Additional Resources
 
-- [Azure Functions Quick Start](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-python)
+- [Azure Functions Python Developer Guide](https://learn.microsoft.com/azure/azure-functions/functions-reference-python)
 - [HTTP Trigger Reference](https://learn.microsoft.com/azure/azure-functions/functions-bindings-http-webhook)
 - [Functions Pricing](https://azure.microsoft.com/pricing/details/functions/)
