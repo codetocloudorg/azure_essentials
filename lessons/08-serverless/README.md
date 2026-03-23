@@ -257,11 +257,32 @@ az functionapp config appsettings set \
 
 - Check the function URL includes `/api/` (e.g., `/api/HttpTrigger`)
 - Verify the function is listed under **Functions** in the Portal
+- The function name is **case-sensitive** - match exactly what's shown in the Portal
 
 ### Function not responding after deployment
 
 1. Go to **Overview** → click **Restart**
 2. Wait 30 seconds and test again
+
+### CORS error when testing from Portal
+
+If you see "Running your function requires CORS" message:
+
+**Fix via Portal:**
+1. Go to your Function App → **Settings** section
+2. Click **CORS**
+3. Add `https://portal.azure.com` to **Allowed Origins**
+4. Click **Save**
+
+**Fix via CLI:**
+```bash
+az functionapp cors add \
+  --name <func-app-name> \
+  --resource-group rg-azure-essentials-dev \
+  --allowed-origins https://portal.azure.com
+```
+
+> **Tip**: You can skip CORS and just test directly in your browser using the function URL!
 
 ---
 
