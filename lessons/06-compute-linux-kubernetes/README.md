@@ -20,21 +20,23 @@ When you deploy this lesson using the deploy script, you get:
 
 > ⚠️ **Cost Note**: The VM uses B1s size (~$8/month if running 24/7). Stop/deallocate the VM when not in use.
 
+> 💡 **Need More RAM?** B1s (1GB) is tight for MicroK8s with all addons. Use B2s (4GB, ~$30/month) for better performance. The Bicep module supports both sizes.
+
 ### Connecting to Your Linux VM
 
 After deployment, connect via SSH:
 
 ```bash
-# Using the output from deployment
-ssh -i ~/.ssh/id_ed25519 azureuser@<your-vm-ip>
+# Using the deployment script's generated key
+ssh -i ~/.ssh/id_ed25519_azure azureuser@<your-vm-ip>
 
-# Or use the FQDN
-ssh azureuser@<your-vm-fqdn>
+# When prompted for passphrase, enter: azure
 ```
 
 **Connection Details**:
 - **Username**: `azureuser`
-- **Authentication**: SSH key (provided during deployment)
+- **SSH Key**: `~/.ssh/id_ed25519_azure`
+- **Passphrase**: `azure`
 - **Port**: 22 (SSH)
 
 > ✅ **SSH Access Ready**: The deployment automatically creates an NSG rule allowing SSH (port 22) from any IP. You can connect immediately after deployment completes. In production, restrict this to specific IP addresses or use Azure Bastion.

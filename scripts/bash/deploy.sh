@@ -1421,6 +1421,92 @@ setup_ssh_key() {
 #   - AKS: 5-10 minutes
 #   - AI Foundry: 5-10 minutes
 #===============================================================================
+
+#===============================================================================
+# VM QUOTA CHECK - Verify vCPU quota before VM deployments
+#===============================================================================
+check_vm_quota() {
+    # Skip if not deploying VMs (lessons 5, 6, or all)
+    if [ "$SELECTED_LESSON" != "05" ] && [ "$SELECTED_LESSON" != "06" ] && [ -n "$SELECTED_LESSON" ]; then
+        return 0
+    fi
+
+    print_section "🔍 VM Quota Check"
+
+    # Calculate required vCPUs based on lesson
+    local required_vcpus=0
+    local vm_details=""
+    
+    if [ "$SELECTED_LESSON" = "05" ] || [ -z "$SELECTED_LESSON" ]; then
+        required_vcpus=$((required_vcpus + 1))
+        vm_details="${vm_details}\n    • Lesson 05 Windows VM (B1s): 1 vCPU"
+    fi
+    if [ "$SELECTED_LESSON" = "06" ] || [ -z "$SELECTED_LESSON" ]; then
+        required_vcpus=$((required_vcpus + 1))
+        vm_details="${vm_details}\n    • Lesson 06 Linux VM (B1s): 1 vCPU"
+    fi
+
+    echo -e "${CYAN}CHECKING B-SERIES vCPU QUOTA${NC}"
+    echo "  Azure VMs require available vCPU quota in your subscription."
+    echo ""
+    echo "  VMs to deploy:"
+    echo -e "$vm_details"
+    echo "  Total required: $required_vcpus vCPU(s)"
+    echo ""
+
+    # Check B-series quota
+    local quota_info
+    quota_info=$(az vm list-usage --location "$SELECTED_REGION" --query "[?contains(name.value, 'standardBSFamily')].{current:currentValue, limit:limit}" -o json 2>/dev/null)
+
+    if [ -n "$quota_info" ] && [ "$quota_info" != "[]" ]; then
+        local current=$(echo "$quota_info" | jq -r '.[0].current // 0')
+        local limit=$(echo "$quota_info" | jq -r '.[0].limit // 0')
+        local available=$((limit - current))
+
+        echo "  B-series quota in $SELECTED_REGION:"
+        echo "    • Limit:     $limit vCPUs"
+        echo "    • In use:    $current vCPUs"
+        echo "    • Available: $available vCPUs"
+        echo "    • Required:  $required_vcpus vCPUs"
+        echo ""
+
+        if [ "$limit" -eq 0 ]; then
+            echo -e "${RED}  ❌ NO QUOTA: Your subscription has 0 B-series vCPU quota.${NC}"
+            echo ""
+            echo -e "${YELLOW}  OPTIONS:${NC}"
+            echo "    1. Request quota increase: https://aka.ms/azurequotarequest"
+            echo "    2. Try a different region (some have better availability)"
+            echo "    3. Use the \$200 free credit in first 30 days (includes quota)"
+            echo "    4. Deploy non-VM lessons instead: 3, 4, 7, 8, 9"
+            echo ""
+            echo -n "  Continue anyway? (deployment will likely fail) [y/N]: "
+            read continue_anyway
+            if [ "$continue_anyway" != "y" ] && [ "$continue_anyway" != "Y" ]; then
+                return 1
+            fi
+        elif [ "$available" -lt "$required_vcpus" ]; then
+            echo -e "${YELLOW}  ⚠️  INSUFFICIENT QUOTA: Need $required_vcpus vCPUs but only $available available.${NC}"
+            echo ""
+            echo -e "${YELLOW}  OPTIONS:${NC}"
+            echo "    1. Delete existing VMs to free up quota"
+            echo "    2. Request quota increase: https://aka.ms/azurequotarequest"
+            echo "    3. Try a different region"
+            echo ""
+            echo -n "  Continue anyway? [y/N]: "
+            read continue_anyway
+            if [ "$continue_anyway" != "y" ] && [ "$continue_anyway" != "Y" ]; then
+                return 1
+            fi
+        else
+            echo -e "${GREEN}  ✅ QUOTA OK: $available vCPUs available (need $required_vcpus)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}  ⚠️  Could not verify quota. Proceeding with deployment...${NC}"
+    fi
+
+    return 0
+}
+
 confirm_and_deploy() {
     print_section "🚀 Ready to Deploy"
 
@@ -1591,6 +1677,12 @@ confirm_and_deploy() {
     read confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo -e "${YELLOW}Deployment cancelled.${NC}"
+        exit 0
+    fi
+
+    # Check VM quota before proceeding (for lessons 5, 6, or all)
+    if ! check_vm_quota; then
+        echo -e "${YELLOW}Deployment cancelled due to quota check.${NC}"
         exit 0
     fi
 

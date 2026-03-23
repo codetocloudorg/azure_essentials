@@ -91,3 +91,4 @@ credentials/
 *.exe
 *.dll
 *.dylib
+lessons/00-prerequisites/slides/~$*

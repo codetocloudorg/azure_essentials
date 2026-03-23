@@ -33,6 +33,8 @@ When you deploy this lesson using the deploy script, you get:
 
 > ⚠️ **Cost Note**: The VM uses B1s size (~$8/month if running 24/7). An auto-shutdown is configured for 7 PM UTC to save costs. Stop/deallocate the VM when not in use.
 
+> 💡 **Need More Performance?** B1s (1GB) is sufficient for basic demos. For heavier workloads, use B2s (4GB, ~$30/month). The Bicep module supports both sizes.
+
 ### Connecting to Your Windows VM
 
 After deployment, the outputs will show your connection information:

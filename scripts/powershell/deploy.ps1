@@ -1001,6 +1001,94 @@ function Deploy-ManagementGroupsSilent {
 }
 
 #===============================================================================
+# VM QUOTA CHECK - Verify vCPU quota before VM deployments
+#===============================================================================
+function Test-VMQuota {
+    # Skip if not deploying VMs
+    if ($script:SelectedLesson -notin @("05", "06", "")) {
+        return $true
+    }
+
+    Show-Section "🔍 VM Quota Check"
+
+    # Calculate required vCPUs based on lesson
+    $requiredVCPUs = 0
+    $vmDetails = @()
+    
+    if ($script:SelectedLesson -eq "05" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
+        $requiredVCPUs += 1
+        $vmDetails += "Lesson 05 Windows VM (B1s): 1 vCPU"
+    }
+    if ($script:SelectedLesson -eq "06" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
+        $requiredVCPUs += 1
+        $vmDetails += "Lesson 06 Linux VM (B1s): 1 vCPU"
+    }
+
+    Write-ColorOutput "  CHECKING B-SERIES vCPU QUOTA" Cyan
+    Write-Host "  Azure VMs require available vCPU quota in your subscription."
+    Write-Host ""
+    Write-Host "  VMs to deploy:"
+    foreach ($detail in $vmDetails) {
+        Write-Host "    • $detail"
+    }
+    Write-Host "  Total required: $requiredVCPUs vCPU(s)"
+    Write-Host ""
+
+    try {
+        $quotaJson = az vm list-usage --location $script:SelectedRegion --query "[?contains(name.value, 'standardBSFamily')].{current:currentValue, limit:limit}" -o json 2>`$null
+        $quota = $quotaJson | ConvertFrom-Json
+
+        if ($quota -and $quota.Count -gt 0) {
+            $current = [int]$quota[0].current
+            $limit = [int]$quota[0].limit
+            $available = $limit - $current
+
+            Write-Host "  B-series quota in $($script:SelectedRegion):"
+            Write-Host "    • Limit:     $limit vCPUs"
+            Write-Host "    • In use:    $current vCPUs"
+            Write-Host "    • Available: $available vCPUs"
+            Write-Host "    • Required:  $requiredVCPUs vCPUs"
+            Write-Host ""
+
+            if ($limit -eq 0) {
+                Write-ColorOutput "  ❌ NO QUOTA: Your subscription has 0 B-series vCPU quota." Red
+                Write-Host ""
+                Write-ColorOutput "  OPTIONS:" Yellow
+                Write-Host "    1. Request quota increase: https://aka.ms/azurequotarequest"
+                Write-Host "    2. Try a different region (some have better availability)"
+                Write-Host "    3. Use the \`$200 free credit in first 30 days (includes quota)"
+                Write-Host "    4. Deploy non-VM lessons instead: 3, 4, 7, 8, 9"
+                Write-Host ""
+                $continueAnyway = Read-Host "  Continue anyway? (deployment will likely fail) [y/N]"
+                if ($continueAnyway -ne "y" -and $continueAnyway -ne "Y") {
+                    return $false
+                }
+            } elseif ($available -lt $requiredVCPUs) {
+                Write-ColorOutput "  ⚠️  INSUFFICIENT QUOTA: Need $requiredVCPUs vCPUs but only $available available." Yellow
+                Write-Host ""
+                Write-ColorOutput "  OPTIONS:" Yellow
+                Write-Host "    1. Delete existing VMs to free up quota"
+                Write-Host "    2. Request quota increase: https://aka.ms/azurequotarequest"
+                Write-Host "    3. Try a different region"
+                Write-Host ""
+                $continueAnyway = Read-Host "  Continue anyway? [y/N]"
+                if ($continueAnyway -ne "y" -and $continueAnyway -ne "Y") {
+                    return $false
+                }
+            } else {
+                Write-ColorOutput "  ✅ QUOTA OK: $available vCPUs available (need $requiredVCPUs)" Green
+            }
+        } else {
+            Write-ColorOutput "  ⚠️  Could not verify quota. Proceeding with deployment..." Yellow
+        }
+    } catch {
+        Write-ColorOutput "  ⚠️  Could not verify quota. Proceeding with deployment..." Yellow
+    }
+
+    return $true
+}
+
+#===============================================================================
 # DEPLOYMENT CONFIRMATION & EXECUTION
 #===============================================================================
 function Confirm-AndDeploy {
@@ -1025,6 +1113,12 @@ function Confirm-AndDeploy {
     $confirm = Read-Host "  Proceed with deployment? (y/n)"
     if ($confirm -ne "y" -and $confirm -ne "Y") {
         Write-ColorOutput "  Deployment cancelled." Yellow
+        exit 0
+    }
+
+    # Check VM quota before proceeding (for lessons 5, 6, or all)
+    if (-not (Test-VMQuota)) {
+        Write-ColorOutput "  Deployment cancelled due to quota check." Yellow
         exit 0
     }
 
