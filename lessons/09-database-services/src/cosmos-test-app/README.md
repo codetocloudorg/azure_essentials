@@ -1,50 +1,48 @@
 # Cosmos DB Test Application
 
-This folder contains the Cosmos DB test application for Lesson 09.
+Demonstrates CRUD operations with Azure Cosmos DB.
 
-## Overview
+## Quick Start
 
-This application demonstrates CRUD operations with Azure Cosmos DB using the Python SDK.
+### Bash/Zsh (macOS/Linux/Cloud Shell)
 
-## Prerequisites
+```bash
+# Auto-discover Cosmos DB and run
+COSMOS_ACCOUNT=$(az cosmosdb list --query "[0].name" -o tsv)
+RG=$(az cosmosdb list --query "[0].resourceGroup" -o tsv)
 
-- Python 3.12 or later
-- Azure Cosmos DB account (created via `azd up`)
-- Environment variables set:
-  - `COSMOS_ENDPOINT`: Your Cosmos DB endpoint URL
-  - `COSMOS_KEY`: Your Cosmos DB primary key
+export COSMOS_ENDPOINT=$(az cosmosdb show --name $COSMOS_ACCOUNT --resource-group $RG --query documentEndpoint -o tsv)
+export COSMOS_KEY=$(az cosmosdb keys list --name $COSMOS_ACCOUNT --resource-group $RG --query primaryMasterKey -o tsv)
 
-## Setup
+pip install -r requirements.txt
+python app.py
+```
 
-1. Create a virtual environment:
+### PowerShell (Windows)
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # macOS/Linux
-   ```
+```powershell
+# Auto-discover Cosmos DB and run
+$cosmosAccount = (az cosmosdb list --query "[0].name" -o tsv)
+$rg = (az cosmosdb list --query "[0].resourceGroup" -o tsv)
 
-2. Install dependencies:
+$env:COSMOS_ENDPOINT = (az cosmosdb show --name $cosmosAccount --resource-group $rg --query documentEndpoint -o tsv)
+$env:COSMOS_KEY = (az cosmosdb keys list --name $cosmosAccount --resource-group $rg --query primaryMasterKey -o tsv)
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+pip install -r requirements.txt
+python app.py
+```
 
-3. Set environment variables:
+## Requirements
 
-   ```bash
-   export COSMOS_ENDPOINT="https://your-account.documents.azure.com:443/"
-   export COSMOS_KEY="your-primary-key"
-   ```
+- Python 3.10+
+- Azure CLI logged in
+- Cosmos DB account with:
+  - Database: `azure-essentials`
+  - Container: `items` (partition key: `/category`)
 
-4. Run the application:
-   ```bash
-   python app.py
-   ```
+## What It Does
 
-## Features
-
-- Create items with automatic ID generation
-- Read items with partition key queries
-- Update existing items
-- Delete items
-- Query items with SQL syntax
+1. **Create** - Adds sample items (laptop, phone, book)
+2. **Read** - Queries items by category
+3. **Update** - Modifies an item's description and price
+4. **Delete** - Removes an item

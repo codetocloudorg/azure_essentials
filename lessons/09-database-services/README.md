@@ -1,354 +1,360 @@
-# Lesson 09: Database and Data Services
+# Lesson 09: Database Services - Azure Cosmos DB
 
-> **Duration**: 60 minutes | **Day**: 2
+> **Duration**: 45 minutes | **Day**: 2
 
-## Overview
+## Quick Start
 
-Azure offers a comprehensive suite of database and data services for different workloads. This lesson covers relational databases, Cosmos DB for NoSQL, and introduces Microsoft Fabric for analytics.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Lesson 09 Workflow                           │
+├─────────────────────────────────────────────────────────────────┤
+│  1. PORTAL: Create Cosmos DB account (5 min)                    │
+│  2. PORTAL: Create database and container (3 min)               │
+│  3. PORTAL: Add data using Data Explorer (5 min)                │
+│  4. TERMINAL: Run Python app to test CRUD operations (10 min)   │
+│  5. PORTAL: Query data with SQL syntax (5 min)                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-## Learning Objectives
+---
 
-By the end of this lesson, you will be able to:
+## Prerequisites
 
-- Compare Azure database options for different scenarios
-- Create and configure a Cosmos DB account
-- Perform CRUD operations with Cosmos DB
-- Understand Microsoft Fabric components
-- Choose the right data service for your workload
+- Completed infrastructure deployment (`azd up`)
+- Azure Portal access
+
+---
+
+## Part 1: Create Cosmos DB (Azure Portal)
+
+### Step 1: Create Cosmos DB Account
+
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Search **"Cosmos DB"** → Click **Create**
+3. Select **Azure Cosmos DB for NoSQL** → **Create**
+4. Fill in:
+   | Setting | Value |
+   |---------|-------|
+   | Subscription | Your subscription |
+   | Resource Group | `rg-azure-essentials-dev` (or create new) |
+   | Account Name | `cosmos-yourname-dev` (must be globally unique) |
+   | Location | Same as other resources |
+   | Capacity mode | **Serverless** (pay per request - best for learning) |
+
+5. Click **Review + create** → **Create**
+6. Wait for deployment (~3 minutes)
+
+### Step 2: Create Database and Container
+
+1. Go to your Cosmos DB account
+2. Click **Data Explorer** in the left menu
+3. Click **New Container**
+4. Fill in:
+   | Setting | Value |
+   |---------|-------|
+   | Database id | `azure-essentials` (check "Create new") |
+   | Container id | `items` |
+   | Partition key | `/category` |
+
+5. Click **OK**
+
+### Step 3: Add Test Data
+
+1. In Data Explorer, expand **azure-essentials** → **items**
+2. Click **Items** → **New Item**
+3. Replace the JSON with:
+
+```json
+{
+  "id": "1",
+  "category": "electronics",
+  "name": "Laptop",
+  "description": "High-performance laptop",
+  "price": 999.99
+}
+```
+
+4. Click **Save**
+5. Add a second item:
+
+```json
+{
+  "id": "2",
+  "category": "electronics",
+  "name": "Phone",
+  "description": "Smartphone with 5G",
+  "price": 799.99
+}
+```
+
+6. Add a third item in a different category:
+
+```json
+{
+  "id": "3",
+  "category": "books",
+  "name": "Azure Guide",
+  "description": "Learn Azure fundamentals",
+  "price": 49.99
+}
+```
+
+### Step 4: Query Your Data
+
+1. In Data Explorer, click **New SQL Query**
+2. Try these queries:
+
+```sql
+-- Get all items
+SELECT * FROM c
+
+-- Get items by category (uses partition key - efficient!)
+SELECT * FROM c WHERE c.category = "electronics"
+
+-- Get item names and prices
+SELECT c.name, c.price FROM c
+
+-- Filter by price
+SELECT * FROM c WHERE c.price > 100
+```
+
+3. Click **Execute Query** to run each one
+
+---
+
+## Part 2: Test with Python App (Terminal)
+
+### Option A: Bash/Zsh (macOS/Linux/Cloud Shell)
+
+```bash
+# 1. Auto-discover your Cosmos DB account
+COSMOS_ACCOUNT=$(az cosmosdb list --query "[0].name" -o tsv)
+RG=$(az cosmosdb list --query "[0].resourceGroup" -o tsv)
+echo "Found: $COSMOS_ACCOUNT in $RG"
+
+# 2. Get credentials
+export COSMOS_ENDPOINT=$(az cosmosdb show --name $COSMOS_ACCOUNT --resource-group $RG --query documentEndpoint -o tsv)
+export COSMOS_KEY=$(az cosmosdb keys list --name $COSMOS_ACCOUNT --resource-group $RG --query primaryMasterKey -o tsv)
+
+# 3. Clone repo and run the test app
+git clone https://github.com/codetocloudorg/azure_essentials.git 2>/dev/null || true
+cd azure_essentials/lessons/09-database-services/src/cosmos-test-app
+
+# 4. Install dependencies and run
+pip install -r requirements.txt
+python app.py
+```
+
+### Option B: PowerShell (Windows)
+
+```powershell
+# 1. Auto-discover your Cosmos DB account
+$cosmosAccount = (az cosmosdb list --query "[0].name" -o tsv)
+$rg = (az cosmosdb list --query "[0].resourceGroup" -o tsv)
+Write-Host "Found: $cosmosAccount in $rg"
+
+# 2. Get credentials
+$env:COSMOS_ENDPOINT = (az cosmosdb show --name $cosmosAccount --resource-group $rg --query documentEndpoint -o tsv)
+$env:COSMOS_KEY = (az cosmosdb keys list --name $cosmosAccount --resource-group $rg --query primaryMasterKey -o tsv)
+
+# 3. Clone repo and run the test app
+git clone https://github.com/codetocloudorg/azure_essentials.git 2>$null
+cd azure_essentials/lessons/09-database-services/src/cosmos-test-app
+
+# 4. Install dependencies and run
+pip install -r requirements.txt
+python app.py
+```
+
+**Expected Output:**
+
+```
+==================================================
+Cosmos DB CRUD Operations Demo
+==================================================
+
+1. Creating items...
+Created item: abc123-...
+
+2. Reading items...
+Found 2 items in category 'electronics'
+  - Laptop: High-performance laptop
+  - Phone: Smartphone with 5G
+
+3. Updating item...
+Updated item: abc123-...
+
+4. Verifying update...
+  Updated description: Updated: High-performance gaming laptop
+  New price: $1299.99
+
+5. Deleting item...
+Deleted item: def456-...
+
+==================================================
+Demo complete!
+==================================================
+```
+
+---
+
+## Part 3: Verify in Portal
+
+1. Go back to **Data Explorer** in Azure Portal
+2. Click **Refresh** on the container
+3. You should see new items created by the Python app
+4. Run a query to see all items:
+
+```sql
+SELECT * FROM c ORDER BY c.createdAt DESC
+```
+
+---
+
+## Understanding the Code
+
+The Python app in `src/cosmos-test-app/app.py` demonstrates CRUD operations:
+
+| Operation  | Method                     | Description                            |
+| ---------- | -------------------------- | -------------------------------------- |
+| **Create** | `container.create_item()`  | Adds a new JSON document               |
+| **Read**   | `container.query_items()`  | Queries with SQL syntax                |
+| **Update** | `container.replace_item()` | Replaces entire document               |
+| **Delete** | `container.delete_item()`  | Removes document by id + partition key |
+
+### Key Code Patterns
+
+**Connect to Cosmos DB:**
+
+```python
+from azure.cosmos import CosmosClient
+
+client = CosmosClient(ENDPOINT, KEY)
+database = client.get_database_client("azure-essentials")
+container = database.get_container_client("items")
+```
+
+**Create an item:**
+
+```python
+item = {
+    "id": str(uuid.uuid4()),       # Unique ID (required)
+    "category": "electronics",      # Partition key (required)
+    "name": "Laptop",
+    "price": 999.99
+}
+container.create_item(body=item)
+```
+
+**Query items (using partition key for efficiency):**
+
+```python
+query = "SELECT * FROM c WHERE c.category = @category"
+items = container.query_items(
+    query=query,
+    parameters=[{"name": "@category", "value": "electronics"}]
+)
+```
 
 ---
 
 ## Key Concepts
 
-### Azure Database Options
+### Cosmos DB Basics
 
-| Service | Type | Best For |
-|---------|------|----------|
-| **Azure SQL Database** | Relational (PaaS) | Enterprise apps, existing SQL workloads |
-| **Azure SQL Managed Instance** | Relational (PaaS) | Lift-and-shift SQL Server |
-| **PostgreSQL Flexible Server** | Relational (PaaS) | Open-source PostgreSQL apps |
-| **MySQL Flexible Server** | Relational (PaaS) | Open-source MySQL apps |
-| **Cosmos DB** | NoSQL (PaaS) | Global distribution, multiple data models |
-| **Table Storage** | NoSQL | Simple key-value, low cost |
+| Concept           | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| **Account**       | Top-level resource, globally unique name             |
+| **Database**      | Logical container for multiple containers            |
+| **Container**     | Where your data lives (like a table)                 |
+| **Partition Key** | Property used to distribute data (e.g., `/category`) |
+| **Item**          | A single JSON document                               |
 
-### Cosmos DB APIs
+### Why Serverless?
 
-Cosmos DB supports multiple APIs for different data models:
+| Mode            | Best For                               | Billing             |
+| --------------- | -------------------------------------- | ------------------- |
+| **Serverless**  | Development, learning, spiky workloads | Pay per request     |
+| **Provisioned** | Production, predictable workloads      | Reserved throughput |
 
-| API | Data Model | Use Case |
-|-----|------------|----------|
-| **NoSQL** | Document (JSON) | Modern applications, flexible schema |
-| **MongoDB** | Document | MongoDB compatibility |
-| **PostgreSQL** | Relational | Distributed PostgreSQL |
-| **Apache Cassandra** | Wide-column | High-scale write workloads |
-| **Table** | Key-value | Azure Table Storage migration |
-| **Apache Gremlin** | Graph | Relationship-heavy data |
+### Consistency Levels
 
-### Cosmos DB Consistency Levels
-
-| Level | Consistency | Performance | Use Case |
-|-------|-------------|-------------|----------|
-| **Strong** | Highest | Lowest | Financial transactions |
-| **Bounded Staleness** | High | Medium | Inventory systems |
-| **Session** | Medium | Medium | User sessions (default) |
-| **Consistent Prefix** | Low | High | Social updates |
-| **Eventual** | Lowest | Highest | Analytics, metrics |
+| Level        | Guarantee            | Use Case                    |
+| ------------ | -------------------- | --------------------------- |
+| **Strong**   | Always read latest   | Financial transactions      |
+| **Session**  | Read your own writes | Most applications (default) |
+| **Eventual** | May read stale data  | Analytics, metrics          |
 
 ---
 
-## Hands-on Exercises
+## Troubleshooting
 
-### Exercise 9.1: Create a Cosmos DB Account
+### "Environment variable not set"
 
-**Objective**: Create a Cosmos DB account with the NoSQL API.
-
-```bash
-# Variables
-RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="centralus"
-COSMOS_ACCOUNT="cosmos-essentials-$(openssl rand -hex 4)"
-DATABASE_NAME="azure-essentials"
-CONTAINER_NAME="items"
-
-# Create Cosmos DB account (serverless for cost efficiency)
-az cosmosdb create \
-  --name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --locations regionName=$LOCATION \
-  --capabilities EnableServerless \
-  --default-consistency-level Session
-
-# Create a database
-az cosmosdb sql database create \
-  --account-name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --name $DATABASE_NAME
-
-# Create a container with partition key
-az cosmosdb sql container create \
-  --account-name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --database-name $DATABASE_NAME \
-  --name $CONTAINER_NAME \
-  --partition-key-path "/category"
-
-# Get the connection string
-az cosmosdb keys list \
-  --name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --type connection-strings \
-  --query "connectionStrings[0].connectionString" \
-  --output tsv
-```
-
-### Exercise 9.2: Work with Data in Cosmos DB
-
-**Objective**: Perform CRUD operations using Python.
-
-Create the test application:
+**Bash/Zsh:**
 
 ```bash
-mkdir -p cosmos-test-app && cd cosmos-test-app
-
-cat > app.py << 'EOF'
-"""
-Cosmos DB Test Application
-Azure Essentials - Lesson 09
-"""
-from azure.cosmos import CosmosClient, PartitionKey, exceptions
-import os
-import uuid
-from datetime import datetime
-
-# Configuration
-ENDPOINT = os.environ.get("COSMOS_ENDPOINT")
-KEY = os.environ.get("COSMOS_KEY")
-DATABASE_NAME = "azure-essentials"
-CONTAINER_NAME = "items"
-
-def get_container():
-    """Get the Cosmos DB container client."""
-    client = CosmosClient(ENDPOINT, KEY)
-    database = client.get_database_client(DATABASE_NAME)
-    container = database.get_container_client(CONTAINER_NAME)
-    return container
-
-def create_item(container, category: str, name: str, description: str):
-    """Create a new item in the container."""
-    item = {
-        "id": str(uuid.uuid4()),
-        "category": category,
-        "name": name,
-        "description": description,
-        "createdAt": datetime.utcnow().isoformat(),
-        "status": "active"
-    }
-    
-    result = container.create_item(body=item)
-    print(f"Created item: {result['id']}")
-    return result
-
-def read_items(container, category: str):
-    """Read items from a specific category."""
-    query = "SELECT * FROM c WHERE c.category = @category"
-    parameters = [{"name": "@category", "value": category}]
-    
-    items = list(container.query_items(
-        query=query,
-        parameters=parameters,
-        enable_cross_partition_query=False
-    ))
-    
-    print(f"Found {len(items)} items in category '{category}'")
-    return items
-
-def update_item(container, item_id: str, category: str, updates: dict):
-    """Update an existing item."""
-    # Read the item first
-    item = container.read_item(item=item_id, partition_key=category)
-    
-    # Apply updates
-    for key, value in updates.items():
-        item[key] = value
-    item["updatedAt"] = datetime.utcnow().isoformat()
-    
-    # Replace the item
-    result = container.replace_item(item=item_id, body=item)
-    print(f"Updated item: {result['id']}")
-    return result
-
-def delete_item(container, item_id: str, category: str):
-    """Delete an item."""
-    container.delete_item(item=item_id, partition_key=category)
-    print(f"Deleted item: {item_id}")
-
-def main():
-    """Run CRUD demonstration."""
-    print("=" * 50)
-    print("Cosmos DB CRUD Operations Demo")
-    print("=" * 50)
-    
-    container = get_container()
-    
-    # CREATE
-    print("\n1. Creating items...")
-    item1 = create_item(container, "electronics", "Laptop", "High-performance laptop")
-    item2 = create_item(container, "electronics", "Phone", "Smartphone with 5G")
-    item3 = create_item(container, "books", "Azure Guide", "Learn Azure fundamentals")
-    
-    # READ
-    print("\n2. Reading items...")
-    electronics = read_items(container, "electronics")
-    for item in electronics:
-        print(f"  - {item['name']}: {item['description']}")
-    
-    # UPDATE
-    print("\n3. Updating item...")
-    update_item(container, item1['id'], "electronics", {
-        "description": "Updated: High-performance gaming laptop",
-        "price": 1299.99
-    })
-    
-    # READ again to verify
-    print("\n4. Verifying update...")
-    updated = container.read_item(item=item1['id'], partition_key="electronics")
-    print(f"  Updated description: {updated['description']}")
-    print(f"  New price: ${updated.get('price', 'N/A')}")
-    
-    # DELETE
-    print("\n5. Deleting item...")
-    delete_item(container, item2['id'], "electronics")
-    
-    print("\n" + "=" * 50)
-    print("Demo complete!")
-    print("=" * 50)
-
-if __name__ == "__main__":
-    main()
-EOF
-
-cat > requirements.txt << 'EOF'
-azure-cosmos==4.7.0
-EOF
-
-cd ..
+# Verify credentials are set
+echo $COSMOS_ENDPOINT
+echo $COSMOS_KEY
 ```
 
-Run the application:
+**PowerShell:**
 
-```bash
-# Get Cosmos DB credentials
-COSMOS_ENDPOINT=$(az cosmosdb show \
-  --name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --query documentEndpoint \
-  --output tsv)
-
-COSMOS_KEY=$(az cosmosdb keys list \
-  --name $COSMOS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --query primaryMasterKey \
-  --output tsv)
-
-# Set environment variables
-export COSMOS_ENDPOINT
-export COSMOS_KEY
-
-# Install dependencies and run
-cd cosmos-test-app
-pip install -r requirements.txt
-python app.py
-cd ..
+```powershell
+$env:COSMOS_ENDPOINT
+$env:COSMOS_KEY
 ```
 
-### Exercise 9.3: Explore Data in the Portal
+### "Database/Container not found"
 
-**Objective**: Use the Azure Portal to explore your Cosmos DB data.
+The app expects:
 
-1. Navigate to your Cosmos DB account in the Azure Portal
-2. Select **Data Explorer** from the left menu
-3. Expand your database and container
-4. Select **Items** to view your data
-5. Try the following:
-   - Click **New Item** to add data manually
-   - Use **New SQL Query** to run queries
-   - Explore the **Scale & Settings** for the container
+- Database: `azure-essentials`
+- Container: `items`
+- Partition key: `/category`
 
-### Exercise 9.4: Microsoft Fabric Overview
+Create them in Data Explorer if they don't exist.
 
-**Objective**: Understand the components of Microsoft Fabric.
+### "Request rate too large (429)"
 
-Microsoft Fabric is an end-to-end analytics platform:
-
-| Component | Description |
-|-----------|-------------|
-| **Data Factory** | Data integration and ETL pipelines |
-| **Synapse Data Engineering** | Big data processing with Spark |
-| **Synapse Data Warehouse** | Enterprise data warehousing |
-| **Synapse Data Science** | Machine learning workflows |
-| **Synapse Real-Time Analytics** | Stream processing and analytics |
-| **Power BI** | Business intelligence and visualisation |
-| **OneLake** | Unified data lake storage |
-
-> **Note**: Microsoft Fabric requires a separate license. In this course, we focus on understanding its architecture and use cases.
+Serverless has request limits. Wait a moment and retry.
 
 ---
 
-## Choosing the Right Database
+## Cleanup
 
-Use this decision guide:
+Delete the Cosmos DB account when done:
 
-```
-Is your data relational (tables, joins)?
-├── Yes → Do you need SQL Server compatibility?
-│         ├── Yes → Azure SQL Database or Managed Instance
-│         └── No → PostgreSQL or MySQL Flexible Server
-│
-└── No → Is global distribution required?
-          ├── Yes → Cosmos DB
-          └── No → What's your priority?
-                    ├── Low cost → Table Storage
-                    ├── Flexible schema → Cosmos DB
-                    └── Graph relationships → Cosmos DB (Gremlin)
-```
-
----
-
-## Key Commands Reference
+**Bash/Zsh:**
 
 ```bash
-# Cosmos DB
-az cosmosdb create --name <n> --capabilities EnableServerless
-az cosmosdb sql database create --account-name <a> --name <db>
-az cosmosdb sql container create --database-name <db> --name <c>
-az cosmosdb keys list --name <n> --type connection-strings
+az cosmosdb delete --name $COSMOS_ACCOUNT --resource-group $RG --yes
+```
 
-# Azure SQL (reference)
-az sql server create --name <n> --admin-user <u>
-az sql db create --server <s> --name <db>
+**PowerShell:**
+
+```powershell
+az cosmosdb delete --name $cosmosAccount --resource-group $rg --yes
 ```
 
 ---
 
 ## Summary
 
-In this lesson, you learned:
-
-- ✅ Azure database options comparison
-- ✅ Cosmos DB APIs and consistency models
-- ✅ Creating and configuring Cosmos DB
-- ✅ CRUD operations with Cosmos DB SDK
-- ✅ Microsoft Fabric components overview
+| Task                                   | Completed |
+| -------------------------------------- | --------- |
+| Created Cosmos DB account (Serverless) | ✅        |
+| Created database and container         | ✅        |
+| Added data via Portal                  | ✅        |
+| Queried data with SQL                  | ✅        |
+| Tested CRUD with Python app            | ✅        |
 
 ---
 
 ## Next Steps
 
-Continue to [Lesson 10: Billing and Cost Optimisation](../10-billing-cost/README.md) to manage Azure spending.
-
----
-
-## Additional Resources
+Continue to [Lesson 10: Billing and Cost Optimisation](../10-billing-cost/README.md)
 
 - [Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Azure SQL Documentation](https://learn.microsoft.com/azure/azure-sql/)
