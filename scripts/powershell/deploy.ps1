@@ -1085,6 +1085,77 @@ function Confirm-AndDeploy {
     if ($script:SelectedLesson -eq "07" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
         Build-HelloContainer
     }
+
+    # Show post-deployment connection info
+    Show-PostDeploymentInfo
+}
+
+function Show-PostDeploymentInfo {
+    Write-Host ""
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
+    Write-ColorOutput "  ✅ DEPLOYMENT COMPLETE" Green
+    Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Green
+    Write-Host ""
+
+    # Lesson 05: Windows VM
+    if ($script:SelectedLesson -eq "05" -or $script:DeployAll) {
+        $rgWin = "rg-$($script:EnvName)-lesson05-compute-windows"
+        try {
+            $winIp = az vm list-ip-addresses -g $rgWin --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" -o tsv 2>$null
+            if ($winIp) {
+                Write-ColorOutput "  📺 Windows VM (Lesson 05):" Cyan
+                Write-Host "     RDP: mstsc /v:$winIp"
+                Write-Host "     User: azureuser"
+                Write-Host ""
+            }
+        } catch {}
+    }
+
+    # Lesson 06: Linux VM
+    if ($script:SelectedLesson -eq "06" -or $script:DeployAll) {
+        $rgLinux = "rg-$($script:EnvName)-lesson06-linux-k8s"
+        try {
+            $linuxIp = az vm list-ip-addresses -g $rgLinux --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" -o tsv 2>$null
+            if ($linuxIp) {
+                Write-ColorOutput "  🐧 Linux VM (Lesson 06):" Cyan
+                Write-Host "     ssh -i ~/.ssh/id_ed25519_azure azureuser@$linuxIp"
+                Write-Host ""
+            }
+        } catch {}
+    }
+
+    # Lesson 07: Containers
+    if ($script:SelectedLesson -eq "07" -or $script:DeployAll) {
+        $rgAks = "rg-$($script:EnvName)-lesson07-containers"
+        try {
+            $aksName = az aks list -g $rgAks --query "[0].name" -o tsv 2>$null
+            if ($aksName) {
+                Write-ColorOutput "  📦 AKS Cluster (Lesson 07):" Cyan
+                Write-Host "     az aks get-credentials -g $rgAks -n $aksName"
+                Write-Host "     kubectl get nodes"
+                Write-Host ""
+            }
+        } catch {}
+    }
+
+    # Lesson 08: Serverless
+    if ($script:SelectedLesson -eq "08" -or $script:DeployAll) {
+        $rgFunc = "rg-$($script:EnvName)-lesson08-serverless"
+        try {
+            $funcUrl = az functionapp list -g $rgFunc --query "[0].defaultHostName" -o tsv 2>$null
+            if ($funcUrl) {
+                Write-ColorOutput "  ⚡ Function App (Lesson 08):" Cyan
+                Write-Host "     https://$funcUrl"
+                Write-Host ""
+            }
+        } catch {}
+    }
+
+    Write-ColorOutput "  🔧 Useful Commands:" Yellow
+    Write-Host "     azd show              - View all outputs"
+    Write-Host "     azd down              - Delete all resources"
+    Write-Host "     az group list -o table - List resource groups"
+    Write-Host ""
 }
 
 function Build-HelloContainer {

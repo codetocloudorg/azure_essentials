@@ -1733,6 +1733,40 @@ show_completion() {
     echo "  2. Follow the README for your selected lesson"
     echo "  3. Explore resources in the Azure Portal"
     echo ""
+
+    # Show connection info for specific lessons
+    if [ "$SELECTED_LESSON" = "05" ] || [ -z "$SELECTED_LESSON" ]; then
+        local win_rg="rg-${ENV_NAME}-lesson05-compute-windows"
+        local win_ip=$(az vm list-ip-addresses -g "$win_rg" --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" -o tsv 2>/dev/null)
+        if [ -n "$win_ip" ]; then
+            echo -e "${CYAN}📺 Windows VM (Lesson 05):${NC}"
+            echo "     RDP: mstsc /v:$win_ip"
+            echo "     User: azureuser"
+            echo ""
+        fi
+    fi
+
+    if [ "$SELECTED_LESSON" = "06" ] || [ -z "$SELECTED_LESSON" ]; then
+        local linux_rg="rg-${ENV_NAME}-lesson06-linux-k8s"
+        local linux_ip=$(az vm list-ip-addresses -g "$linux_rg" --query "[0].virtualMachine.network.publicIpAddresses[0].ipAddress" -o tsv 2>/dev/null)
+        if [ -n "$linux_ip" ]; then
+            echo -e "${CYAN}🐧 Linux VM (Lesson 06):${NC}"
+            echo "     ssh -i ~/.ssh/id_ed25519_azure azureuser@$linux_ip"
+            echo ""
+        fi
+    fi
+
+    if [ "$SELECTED_LESSON" = "07" ] || [ -z "$SELECTED_LESSON" ]; then
+        local aks_rg="rg-${ENV_NAME}-lesson07-containers"
+        local aks_name=$(az aks list -g "$aks_rg" --query "[0].name" -o tsv 2>/dev/null)
+        if [ -n "$aks_name" ]; then
+            echo -e "${CYAN}📦 AKS Cluster (Lesson 07):${NC}"
+            echo "     az aks get-credentials -g $aks_rg -n $aks_name"
+            echo "     kubectl get nodes"
+            echo ""
+        fi
+    fi
+
     echo -e "${BOLD}Useful Commands:${NC}"
     echo -e "  ${CYAN}azd show${NC}          - View deployed resources"
     echo -e "  ${CYAN}azd down${NC}          - Delete all resources when done"
