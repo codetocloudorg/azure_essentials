@@ -114,13 +114,15 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     name: 'Y1'
     tier: 'Dynamic'
   }
-  properties: {}
+  properties: {
+    reserved: true  // Required for Linux
+  }
 }
 
 // ============================================================================
 // FUNCTION APP - The serverless compute resource
 // ============================================================================
-// This creates a Python 3.13 Function App with:
+// This creates a Python 3.11 Function App on Linux with:
 //   - HTTP trigger support (built-in)
 //   - Storage triggers/bindings (via connection string)
 //   - Application Insights integration (automatic logging)
@@ -133,14 +135,14 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   tags: union(tags, {
     'azd-service-name': 'sample-function'
   })
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
   properties: {
     serverFarmId: hostingPlan.id
     httpsOnly: true
     siteConfig: {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
-      pythonVersion: '3.13'
+      linuxFxVersion: 'Python|3.11'
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
