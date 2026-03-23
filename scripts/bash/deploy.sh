@@ -1363,13 +1363,16 @@ setup_ssh_key() {
             rm -f "$HOME/.ssh/id_ed25519_azure" "$HOME/.ssh/id_ed25519_azure.pub"
         fi
 
-        ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_azure" -N "" -C "azure-essentials-vm" -q
+        # Passphrase is "azure" for easy access during training
+        ssh-keygen -t ed25519 -f "$HOME/.ssh/id_ed25519_azure" -N "azure" -C "azure-essentials-vm" -q
         SSH_PUBLIC_KEY=$(cat "$HOME/.ssh/id_ed25519_azure.pub")
         echo -e "${GREEN}✓ Generated: ~/.ssh/id_ed25519_azure${NC}"
+        echo -e "${YELLOW}✓ Passphrase: azure${NC}"
     fi
 
     echo ""
     echo -e "${CYAN}💡 SSH command: ssh -i ~/.ssh/id_ed25519_azure azureuser@<vm-ip>${NC}"
+    echo -e "${YELLOW}💡 Passphrase: azure${NC}"
     echo ""
 }
 

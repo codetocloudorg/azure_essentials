@@ -873,15 +873,17 @@ function Setup-SshKey {
             Remove-Item "$keyPath.pub" -Force -ErrorAction SilentlyContinue
         }
 
-        # -N "" sets empty passphrase (no prompt)
-        & ssh-keygen -t ed25519 -f $keyPath -N "" -C "azure-essentials-vm" -q
+        # Passphrase is "azure" for easy access during training
+        & ssh-keygen -t ed25519 -f $keyPath -N "azure" -C "azure-essentials-vm" -q
 
         $script:SshPublicKey = (Get-Content "$keyPath.pub" -Raw).Trim()
         Write-ColorOutput "  ✓ Generated: $keyPath" Green
+        Write-ColorOutput "  ✓ Passphrase: azure" Yellow
     }
 
     Write-Host ""
     Write-ColorOutput "  💡 SSH command: ssh -i ~/.ssh/id_ed25519_azure azureuser@<vm-ip>" Cyan
+    Write-ColorOutput "  💡 Passphrase: azure" Yellow
     Write-Host ""
 }
 
