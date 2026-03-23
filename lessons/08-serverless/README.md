@@ -1,20 +1,29 @@
 # Lesson 08: Serverless Services
 
-> **Duration**: 60 minutes | **Day**: 2
+> **Duration**: 45 minutes | **Day**: 2
 
 ## Overview
 
-Serverless computing lets you run code without managing infrastructure. This lesson covers Azure Functions for event-driven compute and Logic Apps for workflow automation.
+Serverless computing lets you run code without managing infrastructure. This lesson focuses on **Azure Functions** - the fastest way to build event-driven APIs and microservices.
 
 ## Learning Objectives
 
-By the end of this lesson, you will be able to:
+- Create an Azure Function App from the Portal
+- Build and test an HTTP-triggered function
+- Deploy code from the Cloud Shell
+- Understand serverless pricing and scaling
 
-- Explain serverless computing concepts and benefits
-- Create and deploy Azure Functions with various triggers
-- Configure bindings for input and output data
-- Build automated workflows with Logic Apps
-- Choose between Functions and Logic Apps for different scenarios
+---
+
+## Quick Start (Portal + Cloud Shell)
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Create     │ ──▶ │   Add HTTP   │ ──▶ │    Test      │
+│ Function App │     │   Function   │     │    URL       │
+└──────────────┘     └──────────────┘     └──────────────┘
+     Portal              Portal             Browser
+```
 
 ---
 
@@ -22,84 +31,151 @@ By the end of this lesson, you will be able to:
 
 ### What is Serverless?
 
-Serverless computing provides:
-
 | Benefit | Description |
 |---------|-------------|
-| **No infrastructure management** | Focus on code, not servers |
-| **Automatic scaling** | Scale from zero to thousands |
-| **Pay per execution** | Only pay when code runs |
-| **Event-driven** | Respond to triggers automatically |
+| **No servers to manage** | Azure handles all infrastructure |
+| **Auto-scaling** | Scales from zero to thousands of instances |
+| **Pay per execution** | Only pay when your code runs |
+| **Event-driven** | Triggered by HTTP, timers, queues, etc. |
 
-### Azure Functions Triggers and Bindings
+### Common Trigger Types
 
-| Trigger Type | Description | Example Use Case |
-|--------------|-------------|------------------|
-| **HTTP** | REST API requests | Web APIs, webhooks |
-| **Timer** | Scheduled execution | Cleanup jobs, reports |
-| **Blob** | Storage changes | Image processing |
-| **Queue** | Message processing | Order processing |
-| **Cosmos DB** | Database changes | Data synchronisation |
-| **Event Hub** | Stream processing | IoT data, telemetry |
-
-### Functions vs Logic Apps
-
-| Aspect | Azure Functions | Logic Apps |
-|--------|-----------------|------------|
-| **Primary use** | Code-first | Designer-first |
-| **Development** | Write code | Visual workflow |
-| **Integrations** | Custom connectors | 400+ built-in connectors |
-| **Best for** | Complex logic | Integration workflows |
-| **Pricing** | Per execution | Per action |
+| Trigger | Use Case | Example |
+|---------|----------|---------|
+| **HTTP** | REST APIs, webhooks | `GET /api/greeting?name=Azure` |
+| **Timer** | Scheduled jobs | Run cleanup every hour |
+| **Blob** | File processing | Resize uploaded images |
+| **Queue** | Background tasks | Process orders |
 
 ---
 
-## Hands-on Exercises
+## Hands-on Exercise: Create Your First Function
 
-### Exercise 8.1: Create an Azure Function (HTTP Trigger)
+### Step 1: Create a Function App (Portal)
 
-**Objective**: Build and deploy a simple HTTP-triggered function.
+1. Go to the [Azure Portal](https://portal.azure.com)
+2. Click **Create a resource** → Search **Function App**
+3. Click **Create** and configure:
 
-#### Create the Function App in Azure
+| Setting | Value |
+|---------|-------|
+| **Subscription** | Your subscription |
+| **Resource Group** | `rg-azure-essentials-dev` (or create new) |
+| **Function App name** | `func-hello-<yourname>` (must be unique) |
+| **Runtime stack** | Python |
+| **Version** | 3.11 |
+| **Region** | Central US (or your preferred region) |
+| **Operating System** | Linux |
+| **Hosting plan** | Consumption (Serverless) |
 
-```bash
-# Variables
-RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="centralus"
-STORAGE_NAME="stfunc$(openssl rand -hex 4)"
-FUNCTION_APP="func-essentials-$(openssl rand -hex 4)"
+4. Click **Review + create** → **Create**
+5. Wait for deployment (about 1-2 minutes)
 
-# Create storage account for the function
-az storage account create \
-  --name $STORAGE_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --sku Standard_LRS
+### Step 2: Create an HTTP Function (Portal)
 
-# Create the Function App
-az functionapp create \
-  --name $FUNCTION_APP \
-  --resource-group $RESOURCE_GROUP \
-  --storage-account $STORAGE_NAME \
-  --consumption-plan-location $LOCATION \
-  --runtime python \
-  --runtime-version 3.11 \
-  --functions-version 4 \
-  --os-type Linux
+1. Go to your new Function App
+2. In the left menu, click **Functions** → **Create**
+3. Select **HTTP trigger**
+4. Configure:
+   - **New Function**: `HttpTrigger`
+   - **Authorization level**: Anonymous
+5. Click **Create**
 
-echo "Function App URL: https://$FUNCTION_APP.azurewebsites.net"
+### Step 3: Edit the Function Code (Portal)
+
+1. Click on your new function `HttpTrigger`
+2. Click **Code + Test** in the left menu
+3. Replace the code with:
+
+```python
+import azure.functions as func
+import json
+from datetime import datetime
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    name = req.params.get('name', 'World')
+    
+    return func.HttpResponse(
+        json.dumps({
+            "message": f"Hello, {name}!",
+            "timestamp": datetime.utcnow().isoformat(),
+            "course": "Azure Essentials"
+        }),
+        mimetype="application/json"
+    )
 ```
 
-#### Create the Function Code Locally
+4. Click **Save**
+
+### Step 4: Test Your Function
+
+1. Click **Get function URL** at the top
+2. Copy the URL and open in a browser
+3. Add a name parameter: `?name=YourName`
+
+**Example:**
+```
+https://func-hello-yourname.azurewebsites.net/api/HttpTrigger?name=Azure
+```
+
+**Response:**
+```json
+{
+  "message": "Hello, Azure!",
+  "timestamp": "2026-03-23T10:30:00.000000",
+  "course": "Azure Essentials"
+}
+```
+
+---
+
+## Deploy from Cloud Shell (Optional)
+
+If you want to deploy the sample function from code:
+
+### Step 1: Clone the Repository
 
 ```bash
-# Create function project directory
-mkdir -p sample-function && cd sample-function
+# Open the Cloud Shell (>_ icon in Azure Portal)
+git clone https://github.com/codetocloudorg/azure_essentials.git
+cd azure_essentials/lessons/08-serverless/src/sample-function
+```
 
-# Create the function code
-mkdir -p HttpTrigger
+### Step 2: Deploy to Your Function App
 
-cat > HttpTrigger/function.json << 'EOF'
+```bash
+# Find your Function App name
+FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+echo "Deploying to: $FUNC_APP"
+
+# Zip and deploy
+zip -r function.zip . -x "*.git*" -x "__pycache__/*" -x ".venv/*"
+az functionapp deployment source config-zip \
+  --name $FUNC_APP \
+  --resource-group rg-azure-essentials-dev \
+  --src function.zip
+
+# Test the function
+echo "Test URL: https://$FUNC_APP.azurewebsites.net/api/HttpTrigger?name=Azure"
+```
+
+---
+
+## Understand the Code
+
+The sample function in `src/sample-function/` contains:
+
+```
+sample-function/
+├── HttpTrigger/
+│   ├── __init__.py      # Function code
+│   └── function.json    # Trigger configuration
+├── host.json            # App settings
+└── requirements.txt     # Python dependencies
+```
+
+**function.json** - Defines the HTTP trigger:
+```json
 {
   "bindings": [
     {
@@ -116,299 +192,60 @@ cat > HttpTrigger/function.json << 'EOF'
     }
   ]
 }
-EOF
-
-cat > HttpTrigger/__init__.py << 'EOF'
-import azure.functions as func
-import json
-from datetime import datetime
-
-def main(req: func.HttpRequest) -> func.HttpResponse:
-    """HTTP trigger function that returns a greeting."""
-    
-    # Get name from query string or request body
-    name = req.params.get('name')
-    if not name:
-        try:
-            req_body = req.get_json()
-            name = req_body.get('name')
-        except ValueError:
-            pass
-    
-    if name:
-        message = f"Hello, {name}! Welcome to Azure Functions."
-    else:
-        message = "Hello! Pass a name in the query string or request body."
-    
-    response_data = {
-        "message": message,
-        "timestamp": datetime.utcnow().isoformat(),
-        "function": "HttpTrigger"
-    }
-    
-    return func.HttpResponse(
-        json.dumps(response_data),
-        mimetype="application/json",
-        status_code=200
-    )
-EOF
-
-# Create requirements.txt
-cat > requirements.txt << 'EOF'
-azure-functions
-EOF
-
-# Create host.json
-cat > host.json << 'EOF'
-{
-  "version": "2.0",
-  "logging": {
-    "applicationInsights": {
-      "samplingSettings": {
-        "isEnabled": true
-      }
-    }
-  },
-  "extensionBundle": {
-    "id": "Microsoft.Azure.Functions.ExtensionBundle",
-    "version": "[4.*, 5.0.0)"
-  }
-}
-EOF
-
-# Create local.settings.json
-cat > local.settings.json << 'EOF'
-{
-  "IsEncrypted": false,
-  "Values": {
-    "FUNCTIONS_WORKER_RUNTIME": "python",
-    "AzureWebJobsStorage": ""
-  }
-}
-EOF
-```
-
-#### Deploy to Azure
-
-```bash
-# Zip the function for deployment
-zip -r function.zip . -x "*.git*"
-
-# Deploy to Azure
-az functionapp deployment source config-zip \
-  --name $FUNCTION_APP \
-  --resource-group $RESOURCE_GROUP \
-  --src function.zip
-
-# Test the function
-curl "https://$FUNCTION_APP.azurewebsites.net/api/HttpTrigger?name=Azure"
-
-cd ..
-```
-
-### Exercise 8.2: Create a Timer-Triggered Function
-
-**Objective**: Create a function that runs on a schedule.
-
-```bash
-# Add a timer trigger function
-cd sample-function
-mkdir -p TimerTrigger
-
-cat > TimerTrigger/function.json << 'EOF'
-{
-  "bindings": [
-    {
-      "name": "timer",
-      "type": "timerTrigger",
-      "direction": "in",
-      "schedule": "0 */5 * * * *"
-    }
-  ]
-}
-EOF
-
-cat > TimerTrigger/__init__.py << 'EOF'
-import azure.functions as func
-import logging
-from datetime import datetime
-
-def main(timer: func.TimerRequest) -> None:
-    """Timer trigger function that runs every 5 minutes."""
-    
-    if timer.past_due:
-        logging.info('Timer is past due!')
-    
-    logging.info(f'Timer trigger executed at: {datetime.utcnow().isoformat()}')
-    
-    # Add your scheduled task logic here
-    # Examples: cleanup, report generation, data sync
-EOF
-
-# Redeploy
-zip -r function.zip . -x "*.git*"
-az functionapp deployment source config-zip \
-  --name $FUNCTION_APP \
-  --resource-group $RESOURCE_GROUP \
-  --src function.zip
-
-cd ..
-```
-
-### Exercise 8.3: Create a Logic App Workflow
-
-**Objective**: Build a simple automated workflow using Logic Apps.
-
-#### Using Azure CLI
-
-```bash
-# Create a Logic App
-LOGIC_APP="logic-essentials-$(openssl rand -hex 4)"
-
-az logic workflow create \
-  --name $LOGIC_APP \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --definition '{
-    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-    "contentVersion": "1.0.0.0",
-    "triggers": {
-      "manual": {
-        "type": "Request",
-        "kind": "Http",
-        "inputs": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "name": {"type": "string"},
-              "email": {"type": "string"}
-            }
-          }
-        }
-      }
-    },
-    "actions": {
-      "Response": {
-        "type": "Response",
-        "kind": "Http",
-        "inputs": {
-          "statusCode": 200,
-          "body": {
-            "message": "Workflow triggered successfully",
-            "receivedName": "@triggerBody()?['\''name'\'']"
-          }
-        },
-        "runAfter": {}
-      }
-    }
-  }'
-
-# Get the callback URL
-az logic workflow show \
-  --name $LOGIC_APP \
-  --resource-group $RESOURCE_GROUP \
-  --query "accessEndpoint" \
-  --output tsv
-```
-
-#### Using the Azure Portal (Recommended for Complex Workflows)
-
-1. Navigate to **Logic Apps** in the Azure Portal
-2. Select **Create**
-3. Choose **Consumption** plan type
-4. Configure:
-   - **Subscription**: Your subscription
-   - **Resource group**: `rg-azure-essentials-dev`
-   - **Logic app name**: `logic-workflow-demo`
-   - **Region**: Your region
-5. Select **Review + create**, then **Create**
-6. Open the Logic App Designer
-7. Choose **When an HTTP request is received** trigger
-8. Add actions from the connector library
-
----
-
-## Function Bindings Example
-
-Bindings connect functions to other services without code:
-
-```python
-# function.json with queue output binding
-{
-  "bindings": [
-    {
-      "type": "httpTrigger",
-      "direction": "in",
-      "name": "req"
-    },
-    {
-      "type": "http",
-      "direction": "out",
-      "name": "$return"
-    },
-    {
-      "type": "queue",
-      "direction": "out",
-      "name": "msg",
-      "queueName": "outqueue",
-      "connection": "AzureWebJobsStorage"
-    }
-  ]
-}
-```
-
-```python
-# __init__.py
-import azure.functions as func
-
-def main(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
-    name = req.params.get('name', 'Anonymous')
-    
-    # Write to queue using output binding
-    msg.set(f"New request from: {name}")
-    
-    return func.HttpResponse(f"Hello, {name}!")
 ```
 
 ---
 
-## Key Commands Reference
+## View Logs and Monitor
 
-```bash
-# Azure Functions
-az functionapp create --name <n> --runtime python
-az functionapp deployment source config-zip --src <zip>
-az functionapp function show --name <app> --function-name <func>
-func start  # Local development
+1. In your Function App, click **Monitor** under Functions
+2. Click on your function → **Invocations** tab
+3. View logs for each execution
+4. Click **Application Insights** for detailed metrics
 
-# Logic Apps
-az logic workflow create --name <n> --definition <json>
-az logic workflow show --name <n>
-az logic workflow start --name <n>
-```
+---
+
+## Cost Considerations
+
+Azure Functions Consumption plan pricing:
+
+| Resource | Free Tier | Additional Cost |
+|----------|-----------|-----------------|
+| **Executions** | 1 million/month | $0.20 per million |
+| **Compute (GB-s)** | 400,000 GB-s/month | $0.000016/GB-s |
+
+> **Tip**: For this lesson, you'll stay well within the free tier!
 
 ---
 
 ## Summary
 
-In this lesson, you learned:
+In this lesson, you:
 
-- ✅ Serverless computing concepts and benefits
-- ✅ Creating Azure Functions with HTTP and timer triggers
-- ✅ Understanding bindings for input/output data
-- ✅ Building workflows with Logic Apps
-- ✅ Choosing between Functions and Logic Apps
+- ✅ Created a Function App from the Azure Portal
+- ✅ Built an HTTP-triggered serverless function
+- ✅ Tested your function with a browser
+- ✅ Learned about serverless pricing and monitoring
+
+---
+
+## Cleanup (Optional)
+
+To avoid charges, delete the Function App when done:
+
+1. **Portal**: Go to your Function App → **Delete**
+2. **CLI**: `az functionapp delete --name <func-name> --resource-group rg-azure-essentials-dev`
 
 ---
 
 ## Next Steps
 
-Continue to [Lesson 09: Database and Data Services](../09-database-services/README.md) to explore Azure data platforms.
+Continue to [Lesson 09: Database Services](../09-database-services/README.md) to work with Azure Cosmos DB.
 
 ---
 
 ## Additional Resources
 
-- [Azure Functions Documentation](https://learn.microsoft.com/azure/azure-functions/)
-- [Logic Apps Documentation](https://learn.microsoft.com/azure/logic-apps/)
-- [Serverless Best Practices](https://learn.microsoft.com/azure/azure-functions/functions-best-practices)
+- [Azure Functions Quick Start](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-python)
+- [HTTP Trigger Reference](https://learn.microsoft.com/azure/azure-functions/functions-bindings-http-webhook)
+- [Functions Pricing](https://azure.microsoft.com/pricing/details/functions/)
