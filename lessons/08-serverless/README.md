@@ -31,21 +31,21 @@ Serverless computing lets you run code without managing infrastructure. This les
 
 ### What is Serverless?
 
-| Benefit | Description |
-|---------|-------------|
-| **No servers to manage** | Azure handles all infrastructure |
-| **Auto-scaling** | Scales from zero to thousands of instances |
-| **Pay per execution** | Only pay when your code runs |
-| **Event-driven** | Triggered by HTTP, timers, queues, etc. |
+| Benefit                  | Description                                |
+| ------------------------ | ------------------------------------------ |
+| **No servers to manage** | Azure handles all infrastructure           |
+| **Auto-scaling**         | Scales from zero to thousands of instances |
+| **Pay per execution**    | Only pay when your code runs               |
+| **Event-driven**         | Triggered by HTTP, timers, queues, etc.    |
 
 ### Common Trigger Types
 
-| Trigger | Use Case | Example |
-|---------|----------|---------|
-| **HTTP** | REST APIs, webhooks | `GET /api/greeting?name=Azure` |
-| **Timer** | Scheduled jobs | Run cleanup every hour |
-| **Blob** | File processing | Resize uploaded images |
-| **Queue** | Background tasks | Process orders |
+| Trigger   | Use Case            | Example                        |
+| --------- | ------------------- | ------------------------------ |
+| **HTTP**  | REST APIs, webhooks | `GET /api/greeting?name=Azure` |
+| **Timer** | Scheduled jobs      | Run cleanup every hour         |
+| **Blob**  | File processing     | Resize uploaded images         |
+| **Queue** | Background tasks    | Process orders                 |
 
 ---
 
@@ -57,16 +57,16 @@ Serverless computing lets you run code without managing infrastructure. This les
 2. Click **Create a resource** → Search **Function App**
 3. Click **Create** and configure:
 
-| Setting | Value |
-|---------|-------|
-| **Subscription** | Your subscription |
-| **Resource Group** | `rg-azure-essentials-dev` (or create new) |
-| **Function App name** | `func-hello-<yourname>` (must be unique) |
-| **Runtime stack** | Python |
-| **Version** | 3.11 |
-| **Region** | Central US (or your preferred region) |
-| **Operating System** | Linux |
-| **Hosting plan** | Consumption (Serverless) |
+| Setting               | Value                                     |
+| --------------------- | ----------------------------------------- |
+| **Subscription**      | Your subscription                         |
+| **Resource Group**    | `rg-azure-essentials-dev` (or create new) |
+| **Function App name** | `func-hello-<yourname>` (must be unique)  |
+| **Runtime stack**     | Python                                    |
+| **Version**           | 3.11                                      |
+| **Region**            | Central US (or your preferred region)     |
+| **Operating System**  | Linux                                     |
+| **Hosting plan**      | Consumption (Serverless)                  |
 
 4. Click **Review + create** → **Create**
 5. Wait for deployment (about 1-2 minutes)
@@ -94,7 +94,7 @@ from datetime import datetime
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     name = req.params.get('name', 'World')
-    
+
     return func.HttpResponse(
         json.dumps({
             "message": f"Hello, {name}!",
@@ -114,11 +114,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 3. Add a name parameter: `?name=YourName`
 
 **Example:**
+
 ```
 https://func-hello-yourname.azurewebsites.net/api/HttpTrigger?name=Azure
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Hello, Azure!",
@@ -146,13 +148,20 @@ cd azure_essentials/lessons/08-serverless/src/sample-function
 ```bash
 # Find your Function App name
 FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)
+RG="rg-azure-essentials-dev"
 echo "Deploying to: $FUNC_APP"
+
+# Ensure Python runtime is configured (fixes "WorkerConfig not found" error)
+az functionapp config appsettings set \
+  --name $FUNC_APP \
+  --resource-group $RG \
+  --settings FUNCTIONS_WORKER_RUNTIME=python
 
 # Zip and deploy
 zip -r function.zip . -x "*.git*" -x "__pycache__/*" -x ".venv/*"
 az functionapp deployment source config-zip \
   --name $FUNC_APP \
-  --resource-group rg-azure-essentials-dev \
+  --resource-group $RG \
   --src function.zip
 
 # Test the function
@@ -175,6 +184,7 @@ sample-function/
 ```
 
 **function.json** - Defines the HTTP trigger:
+
 ```json
 {
   "bindings": [
@@ -209,12 +219,45 @@ sample-function/
 
 Azure Functions Consumption plan pricing:
 
-| Resource | Free Tier | Additional Cost |
-|----------|-----------|-----------------|
-| **Executions** | 1 million/month | $0.20 per million |
-| **Compute (GB-s)** | 400,000 GB-s/month | $0.000016/GB-s |
+| Resource           | Free Tier          | Additional Cost   |
+| ------------------ | ------------------ | ----------------- |
+| **Executions**     | 1 million/month    | $0.20 per million |
+| **Compute (GB-s)** | 400,000 GB-s/month | $0.000016/GB-s    |
 
 > **Tip**: For this lesson, you'll stay well within the free tier!
+
+---
+
+## Troubleshooting
+
+### Error: "WorkerConfig for runtime: python not found"
+
+This means the Function App doesn't have Python runtime configured.
+
+**Fix via Portal:**
+1. Go to your Function App
+2. Click **Configuration** → **General settings**
+3. Set **Runtime stack** to **Python**
+4. Set **Version** to **3.11**
+5. Click **Save**
+
+**Fix via CLI:**
+```bash
+az functionapp config appsettings set \
+  --name $FUNC_APP \
+  --resource-group rg-azure-essentials-dev \
+  --settings FUNCTIONS_WORKER_RUNTIME=python
+```
+
+### Function returns 404 Not Found
+
+- Check the function URL includes `/api/` (e.g., `/api/HttpTrigger`)
+- Verify the function is listed under **Functions** in the Portal
+
+### Function not responding after deployment
+
+1. Go to **Overview** → click **Restart**
+2. Wait 30 seconds and test again
 
 ---
 
