@@ -1,5 +1,5 @@
 # Simple Python container - Alpine-based for small size
-FROM python:3.11-alpine
+FROM python:3.13-alpine
 
 # Set working directory
 WORKDIR /app

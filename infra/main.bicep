@@ -211,7 +211,8 @@ module ai './modules/ai-foundry.bicep' = if (deployAI) {
   params: {
     location: location
     tags: defaultTags
-    aiHubName: '${abbrs.aiHub}${environmentName}'
+    aiFoundryName: '${abbrs.aiHub}${environmentName}'
+    enableHostedAgents: false
   }
 }
 
@@ -275,7 +276,8 @@ output COSMOS_DB_ACCOUNT_NAME string = database.?outputs.?cosmosDbAccountName ??
 output COSMOS_DB_ENDPOINT string = database.?outputs.?cosmosDbEndpoint ?? ''
 
 // AI outputs
-output AI_HUB_NAME string = ai.?outputs.?aiHubName ?? ''
+output AI_SERVICES_NAME string = ai.?outputs.?aiServicesName ?? ''
+output AI_SERVICES_ENDPOINT string = ai.?outputs.?aiServicesEndpoint ?? ''
 
 // Linux K8s VM outputs (Lesson 06)
 output LINUX_K8S_VM_NAME string = linuxK8s.?outputs.?vmName ?? ''

@@ -12,8 +12,8 @@ Before attending, please ensure you have:
 ### Required Setup
 
 - [ ] **Azure Account** — Free account works for most lessons ([Create free account](https://azure.microsoft.com/free/))
-- [ ] **Azure CLI** — Version 2.50+ ([Install guide](https://learn.microsoft.com/cli/azure/install-azure-cli))
-- [ ] **Azure Developer CLI (azd)** — Version 1.5+ ([Install guide](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd))
+- [ ] **Azure CLI** — Version 2.60+ ([Install guide](https://learn.microsoft.com/cli/azure/install-azure-cli))
+- [ ] **Azure Developer CLI (azd)** — Version 1.10+ ([Install guide](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd))
 - [ ] **Git** — For cloning the repository ([Install Git](https://git-scm.com/downloads))
 - [ ] **VS Code** with extensions:
   - Azure Tools

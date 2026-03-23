@@ -69,17 +69,17 @@ RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash \
 RUN curl -fsSL https://aka.ms/install-azd.sh | bash
 
 # =============================================================================
-# Python 3.11
+# Python 3.13
 # =============================================================================
 RUN add-apt-repository ppa:deadsnakes/ppa -y \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        python3.11 \
-        python3.11-venv \
-        python3.11-dev \
+        python3.13 \
+        python3.13-venv \
+        python3.13-dev \
         python3-pip \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 \
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.13 1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages for Azure
@@ -95,25 +95,25 @@ RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
 # =============================================================================
 # Node.js LTS
 # =============================================================================
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
-# .NET 8 SDK
+# .NET 9 SDK
 # =============================================================================
 RUN wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
     && dpkg -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
     && apt-get update \
-    && apt-get install -y dotnet-sdk-8.0 \
+    && apt-get install -y dotnet-sdk-9.0 \
     && rm -rf /var/lib/apt/lists/*
 
 # =============================================================================
 # kubectl
 # =============================================================================
-RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
-    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
+RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg \
+    && echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list \
     && apt-get update \
     && apt-get install -y kubectl \
     && rm -rf /var/lib/apt/lists/*

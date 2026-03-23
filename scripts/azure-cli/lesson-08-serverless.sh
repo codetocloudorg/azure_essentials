@@ -119,7 +119,7 @@ deploy() {
     #---------------------------------------------------------------------------
     # Step 3: Create Function App (Consumption Plan - Serverless)
     #---------------------------------------------------------------------------
-    print_step "Creating Function App (Python 3.11, Consumption Plan)..."
+    print_step "Creating Function App (Python 3.13, Consumption Plan)..."
 
     az functionapp create \
         --name "$FUNCTION_APP" \
@@ -127,7 +127,7 @@ deploy() {
         --storage-account "$STORAGE_ACCOUNT" \
         --consumption-plan-location "$LOCATION" \
         --runtime python \
-        --runtime-version 3.11 \
+        --runtime-version 3.13 \
         --functions-version 4 \
         --os-type Linux
 
@@ -179,7 +179,7 @@ deploy() {
     echo -e "${CYAN}Azure Function App:${NC}"
     echo "  Name:         ${FUNCTION_APP}"
     echo "  URL:          https://${func_url}"
-    echo "  Runtime:      Python 3.11"
+    echo "  Runtime:      Python 3.13"
     echo "  Plan:         Consumption (Serverless)"
     echo "  Storage:      ${STORAGE_ACCOUNT}"
     echo ""
@@ -218,7 +218,7 @@ show_commands() {
     echo "# Create function app (Consumption Plan)"
     echo "az functionapp create --name <func> --resource-group <rg> \\"
     echo "    --storage-account <storage> --consumption-plan-location <loc> \\"
-    echo "    --runtime python --runtime-version 3.11 --functions-version 4"
+    echo "    --runtime python --runtime-version 3.13 --functions-version 4"
     echo ""
     echo "# Create function app (Dedicated Plan)"
     echo "az functionapp plan create --name <plan> --resource-group <rg> --sku B1"

@@ -8,7 +8,7 @@ This application demonstrates CRUD operations with Azure Cosmos DB using the Pyt
 
 ## Prerequisites
 
-- Python 3.9 or later
+- Python 3.12 or later
 - Azure Cosmos DB account (created via `azd up`)
 - Environment variables set:
   - `COSMOS_ENDPOINT`: Your Cosmos DB endpoint URL

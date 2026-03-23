@@ -598,7 +598,7 @@ deploy_lesson_5() {
         --name "$app_name" \
         --resource-group "$rg_name" \
         --plan "$plan_name" \
-        --runtime "DOTNET|8.0" \
+        --runtime "DOTNET|9.0" \
         --output none 2>/dev/null || az webapp create \
         --name "$app_name" \
         --resource-group "$rg_name" \

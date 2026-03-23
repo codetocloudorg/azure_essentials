@@ -4,13 +4,13 @@
 
 ## Overview
 
-Azure AI Foundry provides a unified platform for building intelligent applications. This lesson covers AI workspaces, the model catalog, and building a simple chatbot.
+Azure AI Foundry provides a unified platform for building intelligent applications. This lesson covers creating Foundry resources, deploying models from the catalog, and building a simple chatbot.
 
 ## Learning Objectives
 
 By the end of this lesson, you will be able to:
 
-- Navigate Azure AI Foundry and its components
+- Create Azure AI Services (Foundry resource)
 - Explore the model catalog and deployment options
 - Understand prompt engineering fundamentals
 - Build and test a simple chatbot
@@ -24,19 +24,19 @@ By the end of this lesson, you will be able to:
 
 | Component | Description |
 |-----------|-------------|
-| **AI Hub** | Central resource for AI projects and shared resources |
-| **AI Project** | Workspace for building AI applications |
+| **AI Services** | Multi-service resource providing access to AI capabilities |
+| **Foundry Portal** | Web interface for managing AI projects (ai.azure.com) |
 | **Model Catalog** | Library of pre-trained models to deploy |
-| **Prompt Flow** | Visual tool for orchestrating AI workflows |
 | **Deployments** | Hosted model endpoints for inference |
+| **Hosted Agents** | Container-based agents running custom code |
 
 ### Model Categories
 
 | Category | Models | Use Cases |
 |----------|--------|-----------|
-| **OpenAI** | GPT-4, GPT-4o, GPT-3.5 | Chat, text generation, reasoning |
-| **Microsoft** | Phi-3, Phi-4 | Efficient small language models |
-| **Embedding** | text-embedding-ada-002 | Semantic search, RAG |
+| **OpenAI** | GPT-4o, GPT-4o-mini, o1 | Chat, text generation, reasoning |
+| **Microsoft** | Phi-4, Phi-3 | Efficient small language models |
+| **Embedding** | text-embedding-3-large | Semantic search, RAG |
 | **Image** | DALL-E 3 | Image generation |
 | **Speech** | Whisper | Speech-to-text |
 
@@ -54,46 +54,79 @@ By the end of this lesson, you will be able to:
 
 ## Hands-on Exercises
 
-### Exercise 11.1: Create an AI Hub and Project
+### Exercise 11.1: Create Azure AI Services (Foundry Resource)
 
 **Objective**: Set up the Azure AI Foundry environment.
 
-#### Using Azure Portal (Recommended)
-
-1. Navigate to [Azure AI Foundry](https://ai.azure.com)
-2. Select **Create a project**
-3. Configure:
-   - **Hub name**: `aihub-azure-essentials`
-   - **Project name**: `ai-chatbot-project`
-   - **Subscription**: Your subscription
-   - **Resource group**: `rg-azure-essentials-dev`
-   - **Region**: Select a region with AI model availability
-4. Select **Create**
-
-#### Using Azure CLI
+#### Using Azure CLI (Recommended)
 
 ```bash
 # Variables
 RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="centralus"
-HUB_NAME="aihub-essentials-$(openssl rand -hex 4)"
+LOCATION="northcentralus"  # Recommended for hosted agents
+AI_SERVICES="ai-essentials-$(openssl rand -hex 4)"
 
-# Create the AI Hub (requires supporting resources)
-# This creates Storage, Key Vault, and Application Insights automatically
-az ml workspace create \
-  --name $HUB_NAME \
+# Register the Cognitive Services provider (if needed)
+az provider register --namespace Microsoft.CognitiveServices
+
+# Create the resource group
+az group create \
+  --name $RESOURCE_GROUP \
+  --location $LOCATION
+
+# Create Azure AI Services (Foundry resource)
+az cognitiveservices account create \
+  --name $AI_SERVICES \
   --resource-group $RESOURCE_GROUP \
   --location $LOCATION \
-  --kind hub
+  --kind AIServices \
+  --sku S0 \
+  --custom-domain $AI_SERVICES \
+  --yes
 
-# Create an AI Project within the hub
-az ml workspace create \
-  --name "${HUB_NAME}-project" \
+# Get the endpoint and key
+az cognitiveservices account show \
+  --name $AI_SERVICES \
   --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --kind project \
-  --hub-id "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.MachineLearningServices/workspaces/$HUB_NAME"
+  --query properties.endpoint -o tsv
+
+az cognitiveservices account keys list \
+  --name $AI_SERVICES \
+  --resource-group $RESOURCE_GROUP \
+  --query key1 -o tsv
 ```
+
+#### Using Azure Developer CLI (azd)
+
+For a complete Foundry project with hosted agents support:
+
+```bash
+# Create and initialize project
+mkdir my-foundry-project && cd my-foundry-project
+azd init -t https://github.com/Azure-Samples/azd-ai-starter-basic -e my-foundry-project --no-prompt
+
+# Optional: Enable hosted agents
+azd env set ENABLE_HOSTED_AGENTS true
+
+# Provision infrastructure (5-10 minutes)
+azd provision --no-prompt
+
+# Get project details
+azd env get-values
+```
+
+#### Using Azure Portal
+
+1. Navigate to [Azure AI Foundry](https://ai.azure.com)
+2. Select **Create a resource**
+3. Choose **AI Services** (multi-service resource)
+4. Configure:
+   - **Name**: `ai-azure-essentials`
+   - **Subscription**: Your subscription
+   - **Resource group**: `rg-azure-essentials-dev`
+   - **Region**: North Central US (recommended)
+   - **Pricing tier**: Standard S0
+5. Select **Create**
 
 ### Exercise 11.2: Explore the Model Catalog
 
@@ -157,7 +190,7 @@ def create_client():
     return AzureOpenAI(
         azure_endpoint=ENDPOINT,
         api_key=API_KEY,
-        api_version="2024-02-15-preview"
+        api_version="2024-10-01-preview"
     )
 
 def chat(client, messages: list, user_input: str) -> str:
@@ -305,14 +338,30 @@ response = client.chat.completions.create(
 ## Key Commands Reference
 
 ```bash
-# Azure ML CLI (AI Foundry)
-az ml workspace create --kind hub
-az ml workspace create --kind project --hub-id <hub>
-az ml online-endpoint list
-az ml online-deployment list
+# Azure AI Services (Foundry resource)
+az cognitiveservices account create --name <name> --resource-group <rg> \
+    --location <loc> --kind AIServices --sku S0 --custom-domain <domain>
 
-# Model deployment (via Portal or SDK)
-# Use Azure AI Foundry portal for model deployments
+# Get endpoint and keys
+az cognitiveservices account show --name <name> --resource-group <rg> \
+    --query properties.endpoint -o tsv
+az cognitiveservices account keys list --name <name> --resource-group <rg>
+
+# List available models in a region
+az cognitiveservices model list --location <loc> -o table
+
+# Deploy a model
+az cognitiveservices account deployment create --name <acct> \
+    --resource-group <rg> --deployment-name <deploy> \
+    --model-name gpt-4o-mini --model-format OpenAI \
+    --sku-capacity 10 --sku-name Standard
+
+# List deployments
+az cognitiveservices account deployment list --name <acct> --resource-group <rg>
+
+# azd (alternative approach)
+azd init -t https://github.com/Azure-Samples/azd-ai-starter-basic
+azd provision
 ```
 
 ---

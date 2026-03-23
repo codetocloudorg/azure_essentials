@@ -79,7 +79,7 @@ az functionapp create \
 **What this creates:**
 - Function App container
 - Consumption plan (pay-per-execution)
-- Python 3.11 runtime
+- Python 3.13 runtime
 
 ### Step 3: Get the URL
 

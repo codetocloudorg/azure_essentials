@@ -21,6 +21,7 @@
 #
 # Usage:
 #   ./lesson-07-containers.sh              # Deploy ACR + AKS + app
+#   ./lesson-07-containers.sh --yes        # Deploy without confirmation prompt
 #   ./lesson-07-containers.sh --cleanup    # Delete all resources
 #   ./lesson-07-containers.sh --commands   # Show key commands
 #===============================================================================
@@ -41,6 +42,7 @@ RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-containers}"
 UNIQUE_SUFFIX=$(openssl rand -hex 4)
 ACR_NAME="acressentials${UNIQUE_SUFFIX}"
 AKS_NAME="aks-essentials-${UNIQUE_SUFFIX}"
+SKIP_CONFIRM="${SKIP_CONFIRM:-false}"
 
 # Get script directory for finding sample app
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -110,11 +112,15 @@ deploy() {
     print_info "AKS Cluster: ${AKS_NAME}"
     echo ""
 
-    print_warning "This will create AKS (~\$30/month). Continue? (y/n)"
-    read -r confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-        echo "Deployment cancelled."
-        exit 0
+    if [[ "$SKIP_CONFIRM" != "true" ]]; then
+        print_warning "This will create AKS (~\$30/month). Continue? (y/n)"
+        read -r confirm
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            echo "Deployment cancelled."
+            exit 0
+        fi
+    else
+        print_info "Skipping confirmation (--yes flag)"
     fi
     echo ""
 
@@ -368,6 +374,10 @@ case "${1:-}" in
         ;;
     --commands|-h)
         show_commands
+        ;;
+    --yes|-y)
+        SKIP_CONFIRM=true
+        deploy
         ;;
     *)
         deploy

@@ -336,11 +336,11 @@ echo -e "${BLUE}━━━ Core Development Tools ━━━${NC}"
 echo -e "${CYAN}These tools are required for all lessons:${NC}"
 echo ""
 
-check_tool "az" "2.50.0" "https://learn.microsoft.com/cli/azure/install-azure-cli"
-check_tool "azd" "1.5.0" "https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd"
+check_tool "az" "2.60.0" "https://learn.microsoft.com/cli/azure/install-azure-cli"
+check_tool "azd" "1.10.0" "https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd"
 check_tool "git" "2.0.0" "https://git-scm.com/downloads"
-check_tool "python3" "3.9.0" "https://www.python.org/downloads/"
-check_tool "kubectl" "1.28.0" "https://kubernetes.io/docs/tasks/tools/"
+check_tool "python3" "3.13.0" "https://www.python.org/downloads/"
+check_tool "kubectl" "1.32.0" "https://kubernetes.io/docs/tasks/tools/"
 check_tool "jq" "1.6" "https://stedolan.github.io/jq/download/"
 
 #===============================================================================

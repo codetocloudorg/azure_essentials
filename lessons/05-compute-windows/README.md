@@ -198,7 +198,7 @@ az webapp create \
   --name $APP_NAME \
   --resource-group $RESOURCE_GROUP \
   --plan $PLAN_NAME \
-  --runtime "DOTNET|8.0"
+  --runtime "DOTNET|9.0"
 
 # Get the URL
 az webapp show \

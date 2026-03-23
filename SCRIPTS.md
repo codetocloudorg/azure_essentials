@@ -100,7 +100,7 @@ This installs:
 - ✅ Azure CLI (`az`)
 - ✅ Azure Developer CLI (`azd`)
 - ✅ Git
-- ✅ Python 3.11+
+- ✅ Python 3.13+
 - ✅ kubectl
 - ✅ Docker (guided)
 - ✅ VS Code extensions

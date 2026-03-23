@@ -33,7 +33,7 @@ Visit: http://localhost:5000/api/quotes/random
 az webapp up \
     --name "cloudquote-$(openssl rand -hex 4)" \
     --resource-group "rg-essentials-windows" \
-    --runtime "DOTNET|8.0" \
+    --runtime "DOTNET|9.0" \
     --sku F1
 ```
 

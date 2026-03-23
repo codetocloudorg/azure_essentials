@@ -13,7 +13,7 @@ A simple chatbot built with Azure AI Foundry that demonstrates:
 
 ## Prerequisites
 
-- Python 3.9 or later
+- Python 3.12 or later
 - Azure AI Foundry project with deployed model
 - Environment variables set:
   - `AZURE_AI_ENDPOINT`: Your AI endpoint URL

@@ -27,9 +27,9 @@
 
    Azure CLI           az --version
    Azure Developer CLI azd version
-   Python 3.11         python --version
+   Python 3.13         python --version
    Node.js LTS         node --version
-   .NET 8 SDK          dotnet --version
+   .NET 9 SDK          dotnet --version
    kubectl             kubectl version --client
    Docker CLI          docker --version
    Azure Functions     func --version

@@ -137,7 +137,7 @@ if (Test-Command "python") {
     }
 } else {
     Write-ColorOutput "○ Python: Not installed (optional)" Yellow
-    Write-Host "    Install: winget install Python.Python.3.11"
+    Write-Host "    Install: winget install Python.Python.3.13"
 }
 
 #===============================================================================

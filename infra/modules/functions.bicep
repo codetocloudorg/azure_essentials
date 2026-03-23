@@ -120,7 +120,7 @@ resource hostingPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 // ============================================================================
 // FUNCTION APP - The serverless compute resource
 // ============================================================================
-// This creates a Python 3.11 Function App with:
+// This creates a Python 3.13 Function App with:
 //   - HTTP trigger support (built-in)
 //   - Storage triggers/bindings (via connection string)
 //   - Application Insights integration (automatic logging)
@@ -140,7 +140,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
-      pythonVersion: '3.11'
+      pythonVersion: '3.13'
       appSettings: [
         {
           name: 'AzureWebJobsStorage'

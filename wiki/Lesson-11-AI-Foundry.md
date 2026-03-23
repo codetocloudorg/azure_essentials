@@ -5,7 +5,7 @@
 ## 🎯 What You'll Build
 
 By the end of this lesson, you'll have:
-- Created an Azure AI resource
+- Created an Azure AI Services (Foundry) resource
 - Made your first AI API call
 - Built a simple chatbot using Azure OpenAI
 - Understood Azure's AI service offerings
@@ -14,79 +14,92 @@ By the end of this lesson, you'll have:
 
 ## 🤖 Azure AI Services Overview
 
-Azure offers many AI services:
+Azure AI Foundry provides a unified platform for AI:
 
 | Category | Services | Use Cases |
 |----------|----------|-----------|
-| **Language** | OpenAI, Translator, Text Analytics | Chatbots, translation, sentiment |
-| **Vision** | Computer Vision, Custom Vision, Face | Image analysis, OCR, detection |
-| **Speech** | Speech-to-Text, Text-to-Speech | Voice assistants, transcription |
-| **Decision** | Content Moderator, Personalizer | Content safety, recommendations |
+| **Language** | OpenAI GPT-4o, Translator | Chatbots, translation, reasoning |
+| **Vision** | Computer Vision, GPT-4o Vision | Image analysis, OCR, detection |
+| **Speech** | Whisper, Text-to-Speech | Voice assistants, transcription |
+| **Decision** | Content Safety | Content moderation, safety |
 | **Search** | Azure AI Search | Enterprise search, RAG |
 
 ---
 
-## 🚀 Azure OpenAI Service
+## 🚀 Azure AI Foundry
 
-The most popular AI service—access to GPT-4, DALL-E, and more!
+The unified platform for building AI applications—access to GPT-4o, Phi-4, DALL-E, and more!
 
 ### What You Can Build
 
 | Model | Capability | Example |
 |-------|------------|---------|
-| **GPT-4** | Text generation | Chatbots, writing assistants |
-| **GPT-3.5** | Fast text generation | Quick responses, summaries |
-| **DALL-E** | Image generation | Create images from text |
+| **GPT-4o** | Multimodal reasoning | Chatbots, document analysis |
+| **GPT-4o-mini** | Fast, efficient | Quick responses, summaries |
+| **Phi-4** | Small language model | Edge scenarios, low latency |
+| **DALL-E 3** | Image generation | Create images from text |
 | **Whisper** | Speech-to-text | Transcription |
-| **Embeddings** | Vector representations | Semantic search |
+| **text-embedding-3** | Vector embeddings | Semantic search, RAG |
 
 ---
 
-## 🏗️ Set Up Azure OpenAI
+## 🏗️ Set Up Azure AI Foundry
 
-### Step 1: Request Access
-
-Azure OpenAI requires approval:
-1. Go to [aka.ms/oai/access](https://aka.ms/oai/access)
-2. Fill out the form
-3. Wait for email approval (usually 1-2 days)
-
-### Step 2: Create Resource
+### Option 1: Azure CLI (Recommended)
 
 ```bash
 # Variables
 RG_NAME="rg-ai-lesson"
-LOCATION="eastus"  # Note: Not all regions support OpenAI
-AI_NAME="openai-demo-$RANDOM"
+LOCATION="northcentralus"  # Recommended for hosted agents
+AI_NAME="ai-foundry-demo-$(openssl rand -hex 4)"
+
+# Register the provider (first time only)
+az provider register --namespace Microsoft.CognitiveServices
 
 # Create resource group
 az group create --name $RG_NAME --location $LOCATION
 
-# Create OpenAI resource
+# Create Azure AI Services (Foundry resource)
 az cognitiveservices account create \
   --resource-group $RG_NAME \
   --name $AI_NAME \
-  --kind OpenAI \
+  --kind AIServices \
   --sku S0 \
-  --location $LOCATION
+  --location $LOCATION \
+  --custom-domain $AI_NAME \
+  --yes
 ```
 
-### Step 3: Deploy a Model
+### Option 2: Azure Developer CLI (azd)
+
+For a complete Foundry project with hosted agents:
 
 ```bash
-# Deploy GPT-3.5-turbo
+mkdir my-foundry-project && cd my-foundry-project
+azd init -t https://github.com/Azure-Samples/azd-ai-starter-basic -e my-foundry-project --no-prompt
+azd env set ENABLE_HOSTED_AGENTS true  # Optional
+azd provision --no-prompt
+```
+
+### Deploy a Model
+
+```bash
+# List available models
+az cognitiveservices model list --location $LOCATION -o table
+
+# Deploy GPT-4o-mini
 az cognitiveservices account deployment create \
   --resource-group $RG_NAME \
   --name $AI_NAME \
-  --deployment-name gpt-35-turbo \
-  --model-name gpt-35-turbo \
-  --model-version "0613" \
+  --deployment-name gpt-4o-mini \
+  --model-name gpt-4o-mini \
+  --model-version "2024-07-18" \
   --model-format OpenAI \
   --sku-capacity 10 \
   --sku-name Standard
 ```
 
-### Step 4: Get Your Keys
+### Get Your Keys
 
 ```bash
 # Get endpoint
@@ -119,12 +132,12 @@ from openai import AzureOpenAI
 client = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     api_key=os.getenv("AZURE_OPENAI_KEY"),
-    api_version="2024-02-01"
+    api_version="2024-10-01-preview"
 )
 
 # Make a completion request
 response = client.chat.completions.create(
-    model="gpt-35-turbo",  # This is your deployment name
+    model="gpt-4o-mini",  # This is your deployment name
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is Azure in one sentence?"}
@@ -146,7 +159,7 @@ Install SDK: `pip install openai`
 ### Using curl
 
 ```bash
-curl "$ENDPOINT/openai/deployments/gpt-35-turbo/chat/completions?api-version=2024-02-01" \
+curl "$ENDPOINT/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-10-01-preview" \
   -H "Content-Type: application/json" \
   -H "api-key: $KEY" \
   -d '{
@@ -171,7 +184,7 @@ from openai import AzureOpenAI
 client = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     api_key=os.getenv("AZURE_OPENAI_KEY"),
-    api_version="2024-02-01"
+    api_version="2024-10-01-preview"
 )
 
 # Conversation history
@@ -193,7 +206,7 @@ while True:
     
     # Get response
     response = client.chat.completions.create(
-        model="gpt-35-turbo",
+        model="gpt-4o-mini",
         messages=messages,
         max_tokens=500
     )
@@ -266,11 +279,12 @@ Azure AI services charge per API call:
 
 | Service | Pricing (approx) |
 |---------|------------------|
-| **GPT-4** | $0.03/1K input tokens |
-| **GPT-3.5-turbo** | $0.002/1K tokens |
+| **GPT-4o** | $0.005/1K input tokens |
+| **GPT-4o-mini** | $0.00015/1K input tokens |
+| **Phi-4** | $0.00007/1K input tokens |
 | **DALL-E 3** | $0.04/image |
 | **Whisper** | $0.006/minute |
-| **Text Analytics** | $0.25/1K records |
+| **text-embedding-3-large** | $0.00013/1K tokens |
 
 ### What's a Token?
 
@@ -294,7 +308,7 @@ Azure AI includes safety features:
 ### Enable Content Filtering
 
 In the portal:
-1. Go to your Azure OpenAI resource
+1. Go to your Azure AI Services resource
 2. Click **"Content filters"**
 3. Configure severity thresholds for:
    - Hate speech
@@ -304,13 +318,13 @@ In the portal:
 
 ---
 
-## 🧪 Try It: Azure AI Playground
+## 🧪 Try It: Azure AI Foundry Portal
 
 No code needed!
 
-1. Go to [oai.azure.com](https://oai.azure.com)
+1. Go to [ai.azure.com](https://ai.azure.com)
 2. Select your resource and deployment
-3. Use the **Chat** playground
+3. Use the **Playground**
 4. Experiment with different prompts
 
 ### System Prompt Tips
@@ -328,6 +342,9 @@ You are a helpful assistant that specializes in Azure cloud services.
 
 ```bash
 az group delete --name $RG_NAME --yes
+
+# Purge soft-deleted AI Services (optional)
+az cognitiveservices account purge --name $AI_NAME --location $LOCATION
 ```
 
 ---
@@ -336,17 +353,18 @@ az group delete --name $RG_NAME --yes
 
 | Issue | Fix |
 |-------|-----|
-| Access denied | Apply at aka.ms/oai/access |
-| Model not available | Try different region (eastus recommended) |
-| Rate limited | Wait or increase quota |
+| Provider not registered | Run `az provider register --namespace Microsoft.CognitiveServices` |
+| Model not available | Try different region (northcentralus recommended) |
+| Rate limited | Wait or request quota increase |
 | Content filtered | Adjust content filter settings |
+| Soft-deleted resource | Purge with `az cognitiveservices account purge` |
 
 ---
 
 ## ✅ What You Learned
 
-- 🤖 What Azure AI services are available
-- 🚀 How to set up Azure OpenAI
+- 🤖 What Azure AI Foundry services are available
+- 🚀 How to create Azure AI Services (Foundry resource)
 - 💬 How to make API calls with Python
 - 🤖 How to build a simple chatbot
 - 🛡️ Responsible AI considerations

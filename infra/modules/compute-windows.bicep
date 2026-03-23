@@ -300,7 +300,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 //   - Built-in authentication (Easy Auth)
 //   - Custom domains and SSL certificates
 //
-// This web app is configured for .NET 8 applications
+// This web app is configured for .NET 9 applications
 
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
@@ -315,7 +315,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       http20Enabled: true
-      netFrameworkVersion: 'v8.0'
+      netFrameworkVersion: 'v9.0'
       metadata: [
         {
           name: 'CURRENT_STACK'

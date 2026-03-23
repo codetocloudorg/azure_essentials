@@ -180,7 +180,7 @@ if ((Test-Command "python") -or (Test-Command "python3")) {
 } else {
     Write-ColorOutput " Installing..." Yellow
     if ($hasWinget) {
-        winget install Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements
+        winget install Python.Python.3.13 --silent --accept-package-agreements --accept-source-agreements
     } elseif ($hasChoco) {
         choco install python -y
     } else {

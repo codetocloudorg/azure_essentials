@@ -25,7 +25,7 @@ This guide will help you set up everything you need to complete the Azure Essent
 | **Visual Studio Code**        | Code editor with Azure extensions      | ✅ Yes         |
 | **kubectl**                   | Kubernetes CLI for Lesson 06           | 📌 Recommended |
 | **Docker Desktop**            | Container development (Lesson 07)      | 📌 Recommended |
-| **Python 3.11+**              | For serverless and AI lessons          | 📌 Recommended |
+| **Python 3.13+**              | For serverless and AI lessons          | 📌 Recommended |
 | **jq**                        | JSON processor for CLI workflows       | 📌 Recommended |
 | **Bicep CLI**                 | Infrastructure as Code (via Azure CLI) | 📌 Recommended |
 | **Azure Storage Explorer**    | GUI for storage management             | 📌 Optional    |
@@ -78,8 +78,8 @@ winget install --id Microsoft.Azd -e --source winget
 # Install kubectl (for Lesson 06: Kubernetes)
 winget install --id Kubernetes.kubectl -e --source winget
 
-# Install Python 3.11
-winget install --id Python.Python.3.11 -e --source winget
+# Install Python 3.13
+winget install --id Python.Python.3.13 -e --source winget
 
 # Install Docker Desktop
 winget install --id Docker.DockerDesktop -e --source winget
@@ -142,8 +142,8 @@ brew tap azure/azd && brew install azd
 # Install kubectl (for Lesson 06: Kubernetes)
 brew install kubectl
 
-# Install Python 3.11
-brew install python@3.11
+# Install Python 3.13
+brew install python@3.13
 
 # Install Docker Desktop
 brew install --cask docker
@@ -216,12 +216,12 @@ sudo apt install -y code
 ```bash
 # Add Kubernetes apt repository
 sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update && sudo apt-get install -y kubectl
 ```
 
-7. **Install Python 3.11+**:
+7. **Install Python 3.13+**:
 
 ```bash
 sudo apt install -y python3 python3-pip python3-venv
@@ -462,13 +462,13 @@ chmod +x scripts/*.sh
 
 ### Python version issues
 
-Ensure you have Python 3.11 or later:
+Ensure you have Python 3.13 or later:
 
 ```bash
 python3 --version
 ```
 
-If you have an older version, install Python 3.11 using the instructions above.
+If you have an older version, install Python 3.13 using the instructions above.
 
 ---
 
@@ -494,7 +494,7 @@ Before the training session, confirm you have:
 - [ ] VS Code installed with Bicep extension
 - [ ] Course repository cloned
 - [ ] (Optional) Docker Desktop installed and running
-- [ ] (Optional) Python 3.11+ installed
+- [ ] (Optional) Python 3.13+ installed
 
 ---
 

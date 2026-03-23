@@ -418,12 +418,12 @@ if __name__ == '__main__':
 EOF
 
     cat > /tmp/test-container-app/requirements.txt << 'EOF'
-flask==3.0.0
-gunicorn==21.2.0
+flask==3.1.0
+gunicorn==23.0.0
 EOF
 
     cat > /tmp/test-container-app/Dockerfile << 'EOF'
-FROM python:3.11-slim
+FROM python:3.13-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

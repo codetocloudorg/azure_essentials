@@ -1160,7 +1160,7 @@
               },
               "properties": {
                 "dnsPrefix": "[parameters('aksName')]",
-                "kubernetesVersion": "1.29",
+                "kubernetesVersion": "1.32",
                 "agentPoolProfiles": [
                   {
                     "name": "nodepool1",
@@ -1355,7 +1355,7 @@
                 "siteConfig": {
                   "ftpsState": "Disabled",
                   "minTlsVersion": "1.2",
-                  "pythonVersion": "3.11",
+                  "pythonVersion": "3.13",
                   "appSettings": [
                     {
                       "name": "AzureWebJobsStorage",

@@ -282,7 +282,7 @@ deploy() {
         --name "$APP_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --plan "asp-${UNIQUE_SUFFIX}" \
-        --runtime "DOTNET|8.0" \
+        --runtime "DOTNET|9.0" \
         --output none 2>/dev/null || az webapp create \
         --name "$APP_NAME" \
         --resource-group "$RESOURCE_GROUP" \

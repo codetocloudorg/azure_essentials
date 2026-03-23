@@ -164,7 +164,7 @@ az webapp create \
     --name "$APP_NAME" \
     --resource-group "$RESOURCE_GROUP" \
     --plan "plan-${APP_NAME}" \
-    --runtime "dotnet:8"
+    --runtime "dotnet:9"
 ```
 
 ---

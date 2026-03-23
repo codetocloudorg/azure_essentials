@@ -126,13 +126,13 @@ EOF
 
 # Create requirements file
 cat > requirements.txt << 'EOF'
-flask==3.0.0
-gunicorn==21.2.0
+flask==3.1.0
+gunicorn==23.0.0
 EOF
 
 # Create Dockerfile
 cat > Dockerfile << 'EOF'
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -276,7 +276,7 @@ Follow these practices for production containers:
 
 ```dockerfile
 # 1. Use specific base image versions
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # 2. Set working directory
 WORKDIR /app

@@ -99,7 +99,7 @@ az acr build \
 ```bash
 # Create a simple Dockerfile
 cat << 'EOF' > /tmp/Dockerfile
-FROM python:3.11-alpine
+FROM python:3.13-alpine
 WORKDIR /app
 RUN pip install flask gunicorn
 COPY <<PYEOF app.py
