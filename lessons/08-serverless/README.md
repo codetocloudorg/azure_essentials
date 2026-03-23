@@ -74,16 +74,16 @@ Serverless computing lets you run code without managing infrastructure. This les
 ### Step 2: Create an HTTP Function (Portal)
 
 1. Go to your new Function App
-2. In the centre left menu, click **Functions** → **Create**
+2. In the left menu, click **Functions** → **+ Create**
 3. Select **HTTP trigger**
 4. Configure:
-   - **New Function**: `HttpTrigger`
+   - **New Function**: Keep the default name (e.g., `http_trigger1`) or enter `HttpTrigger`
    - **Authorization level**: Anonymous
 5. Click **Create**
 
 ### Step 3: Edit the Function Code (Portal)
 
-1. Click on your new function `HttpTrigger`
+1. Click on your new function (whatever name was created)
 2. Click **Code + Test** in the left menu
 3. Replace the code with:
 
@@ -111,18 +111,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
 1. Click **Get function URL** at the top
 2. In the **Key** dropdown, select **default (function key)**
-   > Since we set Authorization to Anonymous, any key works - the URL won't require it
-3. Copy the URL and open in a browser
-4. Add a name parameter: `?name=YourName`
+3. Click **Copy** (or copy the URL manually)
+4. Open the URL in a **new browser tab**
+5. Add `?name=YourName` to the end of the URL
 
-**Example:**
+> **Important**: Use the exact URL from "Get function URL" - it includes your function name!
 
+**Your URL will look like:**
 ```
-https://func-hello-yourname.azurewebsites.net/api/HttpTrigger?name=Azure
+https://func-xxxxx.azurewebsites.net/api/http_trigger1?name=Azure
 ```
 
-**Response:**
-
+**Expected Response:**
 ```json
 {
   "message": "Hello, Azure!",
@@ -133,9 +133,9 @@ https://func-hello-yourname.azurewebsites.net/api/HttpTrigger?name=Azure
 
 ---
 
-## Deploy from Cloud Shell (Optional)
+## Deploy from Cloud Shell (Alternative)
 
-If you want to deploy the sample function from code:
+If the Portal approach doesn't work, you can deploy from Cloud Shell:
 
 ### Step 1: Clone the Repository
 
@@ -259,9 +259,10 @@ az functionapp config appsettings set \
 
 ### Function returns 404 Not Found
 
-- Check the function URL includes `/api/` (e.g., `/api/HttpTrigger`)
-- Verify the function is listed under **Functions** in the Portal
-- The function name is **case-sensitive** - match exactly what's shown in the Portal
+1. **Use the URL from "Get function URL"** - don't construct it manually
+2. **Restart the Function App**: Overview → Restart → Wait 30 seconds
+3. **Verify the function exists**: Check it's listed under Functions in the Portal
+4. **Try the Cloud Shell deployment** (see above) as a fallback
 
 ### Function not responding after deployment
 
@@ -273,12 +274,14 @@ az functionapp config appsettings set \
 If you see "Running your function requires CORS" message:
 
 **Fix via Portal:**
+
 1. Go to your Function App → **Settings** section
 2. Click **CORS**
 3. Add `https://portal.azure.com` to **Allowed Origins**
 4. Click **Save**
 
 **Fix via CLI:**
+
 ```bash
 # Auto-discover Function App and resource group
 FUNC_APP=$(az functionapp list --query "[0].name" -o tsv)

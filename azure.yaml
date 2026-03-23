@@ -33,6 +33,6 @@ infra:
 # Quick Start (CLI):
 #   azd init
 #   azd env set AZURE_LOCATION eastus
-#   azd env set LESSON_NUMBER 03
+#   azd env set LESSON_NUMBER 08
 #   azd up
 

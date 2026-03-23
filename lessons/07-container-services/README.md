@@ -9,9 +9,11 @@ Azure provides managed container services for building, storing, and orchestrati
 ## Prerequisites
 
 **Deploy Lesson 7 first** using the deploy script:
+
 ```bash
 ./scripts/bash/deploy.sh    # Select option 7
 ```
+
 This creates your resource group and ACR automatically.
 
 > 💡 **Using Cloud Shell?** Clone the repo first: `git clone https://github.com/codetocloudorg/azure_essentials.git && cd azure_essentials`
