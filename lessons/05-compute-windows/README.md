@@ -24,16 +24,16 @@ When you deploy this lesson using the deploy script, you get:
 
 | Resource | Description | Purpose |
 |----------|-------------|---------|
-| **Windows Server 2022 VM** | Standard_B1s (1 vCPU, 1GB RAM) | Practice RDP connections, Windows administration |
+| **Windows Server 2022 VM** | Standard_B2s (2 vCPU, 4GB RAM) | Practice RDP connections, Windows administration |
 | **Virtual Network** | 10.1.0.0/16 with default subnet | Isolated network for the VM |
 | **Public IP Address** | Static allocation with DNS label | RDP access from internet |
 | **Network Security Group** | Allow RDP (port 3389) | Secure inbound access |
 | **App Service Plan** | F1 (Free tier) | Host web applications |
 | **Web App** | .NET runtime | Deploy sample applications |
 
-> ⚠️ **Cost Note**: The VM uses B1s size (~$8/month if running 24/7). An auto-shutdown is configured for 7 PM UTC to save costs. Stop/deallocate the VM when not in use.
+> ⚠️ **Cost Note**: The VM uses B2s size (~$30/month if running 24/7). An auto-shutdown is configured for 7 PM UTC to save costs. Stop/deallocate the VM when not in use.
 
-> 💡 **Need More Performance?** B1s (1GB) is sufficient for basic demos. For heavier workloads, use B2s (4GB, ~$30/month). The Bicep module supports both sizes.
+> 💡 **Budget Tight?** You can override to B1s (1GB, ~$8/month) for basic demos. B2s is recommended for better performance.
 
 ### Connecting to Your Windows VM
 

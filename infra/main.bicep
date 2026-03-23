@@ -40,6 +40,10 @@ param windowsAdminPassword string = ''
 @secure()
 param sshPublicKey string = ''
 
+@description('VM size for Windows and Linux VMs. B1s is free tier eligible, B2s has more RAM for MicroK8s.')
+@allowed(['Standard_B1s', 'Standard_B2s'])
+param vmSize string = 'Standard_B2s'
+
 @description('Tags to apply to all resources')
 param tags object = {}
 
@@ -166,6 +170,7 @@ module computeWindows './modules/compute-windows.bicep' = if (deployComputeWindo
     appServicePlanSku: appServicePlanSku
     vmName: 'vm-${environmentName}-win'
     adminPassword: windowsAdminPassword
+    vmSize: vmSize
   }
 }
 
@@ -226,7 +231,7 @@ module linuxK8s './modules/linux-microk8s.bicep' = if (deployLinuxK8s) {
     namePrefix: environmentName
     adminUsername: 'azureuser'
     sshPublicKey: sshPublicKey
-    vmSize: 'Standard_B1s'
+    vmSize: vmSize
   }
 }
 

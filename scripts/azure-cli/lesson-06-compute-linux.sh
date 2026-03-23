@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - Sufficient quota for B1s VMs (1 vCPU)
+#   - Sufficient quota for B2s VMs (2 vCPUs)
 #
 # Usage:
 #   ./lesson-06-compute-linux.sh
@@ -144,7 +144,7 @@ EOF
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
         --image "Canonical:ubuntu-24_04-lts:server:latest" \
-        --size "Standard_B1s" \
+        --size "Standard_B2s" \
         --admin-username "azureuser" \
         --generate-ssh-keys \
         --public-ip-sku Standard \
@@ -221,7 +221,7 @@ EOF
     echo -e "${CYAN}Linux VM:${NC}"
     echo "  Name:        ${VM_NAME}"
     echo "  Image:       Ubuntu 24.04 LTS"
-    echo "  Size:        ${vm_size} (1 vCPU, 1 GB RAM)"
+    echo "  Size:        ${vm_size} (2 vCPU, 4 GB RAM)"
     echo "  Public IP:   ${public_ip}"
     echo "  Username:    azureuser"
     echo ""
@@ -254,7 +254,7 @@ show_commands() {
     echo ""
     echo "# Create Linux VM with SSH key"
     echo "az vm create --name <vm> --resource-group <rg> --image Ubuntu2204 \\"
-    echo "    --size Standard_B1s --admin-username azureuser --generate-ssh-keys"
+    echo "    --size Standard_B2s --admin-username azureuser --generate-ssh-keys"
     echo ""
     echo "# Create VM with cloud-init"
     echo "az vm create --name <vm> --resource-group <rg> --image Ubuntu2204 \\"

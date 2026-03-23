@@ -706,13 +706,13 @@ select_region() {
 #     Resources: Windows Server VM, IIS, ASP.NET runtime, Public IP
 #     Why: Shows traditional Windows workloads running in Azure IaaS
 #     Bicep: /infra/modules/compute-windows.bicep
-#     Cost: ~$15/month (B1s VM), FREE if you have $200 credits
+#     Cost: ~$30/month (B2s VM), FREE if you have $200 credits
 #
 #   LESSON 06 - COMPUTE (LINUX + KUBERNETES):
 #     Resources: Ubuntu VM with MicroK8s pre-installed via cloud-init
 #     Why: Demonstrates Linux VMs and intro to Kubernetes concepts
 #     Bicep: /infra/modules/linux-microk8s.bicep
-#     Cost: ~$10/month (B1s VM)
+#     Cost: ~$30/month (B2s VM)
 #
 #   LESSON 07 - CONTAINER SERVICES:
 #     Resources: Azure Container Registry (ACR), container images
@@ -762,8 +762,8 @@ select_lesson() {
     echo -e "   ${CYAN}2)${NC} Getting Started            ${YELLOW}[TENANT]${NC}       Management Groups & Policy"
     echo -e "   ${CYAN}3)${NC} Storage Services           ${GREEN}[FREE]${NC}         Blobs, queues, tables"
     echo -e "   ${CYAN}4)${NC} Networking Services        ${GREEN}[FREE]${NC}         VNets, subnets, NSGs"
-    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B1s]${NC}  Windows VM + App Service"
-    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B1s]${NC}  Ubuntu VM + MicroK8s"
+    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B2s]${NC}  Windows VM + App Service"
+    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B2s]${NC}  Ubuntu VM + MicroK8s"
     echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$35/mo]${NC}      ACR + AKS + Hello World"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -1438,12 +1438,12 @@ check_vm_quota() {
     local vm_details=""
     
     if [ "$SELECTED_LESSON" = "05" ] || [ -z "$SELECTED_LESSON" ]; then
-        required_vcpus=$((required_vcpus + 1))
-        vm_details="${vm_details}\n    • Lesson 05 Windows VM (B1s): 1 vCPU"
+        required_vcpus=$((required_vcpus + 2))
+        vm_details="${vm_details}\n    • Lesson 05 Windows VM (B2s): 2 vCPUs"
     fi
     if [ "$SELECTED_LESSON" = "06" ] || [ -z "$SELECTED_LESSON" ]; then
-        required_vcpus=$((required_vcpus + 1))
-        vm_details="${vm_details}\n    • Lesson 06 Linux VM (B1s): 1 vCPU"
+        required_vcpus=$((required_vcpus + 2))
+        vm_details="${vm_details}\n    • Lesson 06 Linux VM (B2s): 2 vCPUs"
     fi
 
     echo -e "${CYAN}CHECKING B-SERIES vCPU QUOTA${NC}"
@@ -1587,13 +1587,13 @@ confirm_and_deploy() {
         echo ""
         echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
         echo "    🖥️  Resource Group: rg-$ENV_NAME-lesson05-compute"
-        echo "    ├─ Windows Server 2022 VM (Standard_B1s)"
+        echo "    ├─ Windows Server 2022 VM (Standard_B2s)"
         echo "    ├─ IIS Web Server (installed via extension)"
         echo "    ├─ Public IP Address (for RDP access)"
         echo "    └─ Network Security Group (RDP port 3389)"
         echo ""
         echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/compute-windows.bicep"
-        echo -e "  ${YELLOW}COST: ~\$15/month (B1s VM) - stop VM when not in use${NC}"
+        echo -e "  ${YELLOW}COST: ~\$30/month (B2s VM) - stop VM when not in use${NC}"
     elif [ "$SELECTED_LESSON" = "06" ]; then
         echo -e "  Lesson:       ${BOLD}Lesson 06 - Linux & Kubernetes${NC}"
         echo ""
@@ -1602,13 +1602,13 @@ confirm_and_deploy() {
         echo ""
         echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
         echo "    🐧 Resource Group: rg-$ENV_NAME-lesson06-linux-k8s"
-        echo "    ├─ Ubuntu 22.04 LTS VM (Standard_B1s)"
+        echo "    ├─ Ubuntu 22.04 LTS VM (Standard_B2s)"
         echo "    ├─ MicroK8s (lightweight Kubernetes) via cloud-init"
         echo "    ├─ Public IP Address (for SSH access)"
         echo "    └─ Network Security Group (SSH port 22)"
         echo ""
         echo -e "  ${CYAN}BICEP FILE:${NC} /infra/modules/linux-microk8s.bicep"
-        echo -e "  ${YELLOW}COST: ~\$10/month (B1s VM) - stop VM when not in use${NC}"
+        echo -e "  ${YELLOW}COST: ~\$30/month (B2s VM) - stop VM when not in use${NC}"
     elif [ "$SELECTED_LESSON" = "07" ]; then
         echo -e "  Lesson:       ${BOLD}Lesson 07 - Container Services${NC}"
         echo ""

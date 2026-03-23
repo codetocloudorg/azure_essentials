@@ -7,7 +7,7 @@
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - Sufficient quota for B1s VMs (1 vCPU)
+#   - Sufficient quota for B2s VMs (2 vCPUs)
 #
 # Usage:
 #   ./lesson-05-compute-windows.sh
@@ -224,7 +224,7 @@ deploy() {
         --location "$LOCATION" \
         --nics "nic-${VM_NAME}" \
         --image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" \
-        --size "Standard_B1s" \
+        --size "Standard_B2s" \
         --admin-username "azureuser" \
         --admin-password "$ADMIN_PASSWORD" \
         --os-disk-name "${VM_NAME}-osdisk" \
@@ -317,7 +317,7 @@ deploy() {
     echo -e "${CYAN}Windows VM:${NC}"
     echo "  Name:        ${VM_NAME}"
     echo "  Image:       Windows Server 2022 Datacenter"
-    echo "  Size:        Standard_B1s (1 vCPU, 1 GB RAM)"
+    echo "  Size:        Standard_B2s (2 vCPU, 4 GB RAM)"
     echo "  Public IP:   ${public_ip}"
     echo "  FQDN:        ${fqdn}"
     echo "  Username:    azureuser"
@@ -347,7 +347,7 @@ show_commands() {
     echo ""
     echo "# Create Windows VM"
     echo "az vm create --name <vm> --resource-group <rg> --image Win2022Datacenter \\"
-    echo "    --size Standard_B1s --admin-username azureuser"
+    echo "    --size Standard_B2s --admin-username azureuser"
     echo ""
     echo "# Open port on VM"
     echo "az vm open-port --name <vm> --resource-group <rg> --port 3389"

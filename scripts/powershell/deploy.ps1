@@ -622,8 +622,8 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "2)" Cyan -NoNewline; Write-Host " Getting Started            " -NoNewline; Write-ColorOutput "[TENANT]" Yellow -NoNewline; Write-Host "       Management Groups"
     Write-Host "     " -NoNewline; Write-ColorOutput "3)" Cyan -NoNewline; Write-Host " Storage Services           " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         Blobs, queues, tables"
     Write-Host "     " -NoNewline; Write-ColorOutput "4)" Cyan -NoNewline; Write-Host " Networking Services        " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         VNets, subnets, NSGs"
-    Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
-    Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B1s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
+    Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
+    Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
     Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$35/mo]" Yellow -NoNewline; Write-Host "      ACR + AKS"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
@@ -1016,12 +1016,12 @@ function Test-VMQuota {
     $vmDetails = @()
     
     if ($script:SelectedLesson -eq "05" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
-        $requiredVCPUs += 1
-        $vmDetails += "Lesson 05 Windows VM (B1s): 1 vCPU"
+        $requiredVCPUs += 2
+        $vmDetails += "Lesson 05 Windows VM (B2s): 2 vCPUs"
     }
     if ($script:SelectedLesson -eq "06" -or [string]::IsNullOrEmpty($script:SelectedLesson)) {
-        $requiredVCPUs += 1
-        $vmDetails += "Lesson 06 Linux VM (B1s): 1 vCPU"
+        $requiredVCPUs += 2
+        $vmDetails += "Lesson 06 Linux VM (B2s): 2 vCPUs"
     }
 
     Write-ColorOutput "  CHECKING B-SERIES vCPU QUOTA" Cyan

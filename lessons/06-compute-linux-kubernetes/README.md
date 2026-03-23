@@ -12,15 +12,15 @@ When you deploy this lesson using the deploy script, you get:
 
 | Resource | Description | Purpose |
 |----------|-------------|---------|
-| **Ubuntu 22.04 LTS VM** | Standard_B1s (1 vCPU, 1GB RAM) | Practice SSH, Linux administration |
+| **Ubuntu 22.04 LTS VM** | Standard_B2s (2 vCPU, 4GB RAM) | Practice SSH, Linux administration |
 | **MicroK8s** | Pre-installed via cloud-init | Learn Kubernetes basics |
 | **Virtual Network** | 10.0.0.0/16 with default subnet | Isolated network for the VM |
 | **Public IP Address** | Static allocation with DNS label | SSH access from internet |
 | **Network Security Group** | Allow SSH (22), K8s Dashboard (10443) | Secure inbound access |
 
-> ⚠️ **Cost Note**: The VM uses B1s size (~$8/month if running 24/7). Stop/deallocate the VM when not in use.
+> ⚠️ **Cost Note**: The VM uses B2s size (~$30/month if running 24/7). Stop/deallocate the VM when not in use.
 
-> 💡 **Need More RAM?** B1s (1GB) is tight for MicroK8s with all addons. Use B2s (4GB, ~$30/month) for better performance. The Bicep module supports both sizes.
+> 💡 **Budget Tight?** You can override to B1s (1GB, ~$8/month) but MicroK8s addons may struggle. B2s is recommended for this lesson.
 
 ### Connecting to Your Linux VM
 

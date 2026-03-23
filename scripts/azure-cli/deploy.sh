@@ -127,8 +127,8 @@ select_lesson() {
     echo -e "   ${CYAN}2)${NC} Getting Started            ${YELLOW}[TENANT]${NC}       Management Groups"
     echo -e "   ${CYAN}3)${NC} Storage Services           ${GREEN}[FREE]${NC}         Storage Account"
     echo -e "   ${CYAN}4)${NC} Networking Services        ${GREEN}[FREE]${NC}         VNet, Subnet, NSG"
-    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B1s]${NC}  Windows VM + App Service"
-    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B1s]${NC}  Ubuntu VM + MicroK8s"
+    echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B2s]${NC}  Windows VM + App Service"
+    echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B2s]${NC}  Ubuntu VM + MicroK8s"
     echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$5/mo]${NC}       Container Registry"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -554,7 +554,7 @@ deploy_lesson_5() {
         --location "$LOCATION" \
         --nics "$nic_name" \
         --image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" \
-        --size "Standard_B1s" \
+        --size "Standard_B2s" \
         --admin-username "azureuser" \
         --admin-password "$WIN_PASSWORD" \
         --os-disk-name "${vm_name}-osdisk" \
@@ -664,7 +664,7 @@ EOF
         --resource-group "$rg_name" \
         --location "$LOCATION" \
         --image "Canonical:ubuntu-24_04-lts:server:latest" \
-        --size "Standard_B1s" \
+        --size "Standard_B2s" \
         --admin-username "azureuser" \
         --generate-ssh-keys \
         --public-ip-sku Standard \
