@@ -46,7 +46,7 @@ All tools pre-installed, ready to go in your browser!
 | 08  | [Serverless Services](08-serverless/README.md)          | 60 min   | Azure Functions, triggers, bindings, Logic Apps          | Function App |
 | 09  | [Database Services](09-database-services/README.md)     | 60 min   | Azure SQL, Cosmos DB, Microsoft Fabric intro             | Cosmos DB    |
 | 10  | [Billing & Cost](10-billing-cost/README.md)             | 20 min   | Cost management, budgets, resource tagging               | None         |
-| 11  | [Azure AI Foundry](11-ai-foundry/README.md)             | 45 min   | AI workspaces, model catalog, chatbot development        | AI Hub       |
+| 11  | [Azure AI Foundry](11-ai-foundry/README.md)             | 45 min   | AI workspaces, model catalog, chatbot development        | AI Foundry   |
 | 12  | [Architecture Design](12-architecture-design/README.md) | 45 min   | Collaborative design session, Well-Architected Framework | None         |
 
 ---

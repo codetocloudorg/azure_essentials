@@ -216,7 +216,7 @@ module ai './modules/ai-foundry.bicep' = if (deployAI) {
   params: {
     location: location
     tags: defaultTags
-    aiFoundryName: '${abbrs.aiHub}${environmentName}'
+    aiFoundryName: '${abbrs.aiFoundry}${environmentName}'
     enableHostedAgents: false
   }
 }

@@ -2,7 +2,7 @@
 
 > **Duration**: 45 minutes | **Day**: 2
 
-## What You'll Learn
+## Learning Objectives
 
 In this lesson, you'll work with **Azure Cosmos DB**, a globally distributed NoSQL database. By the end, you'll be able to:
 
@@ -400,6 +400,10 @@ az cosmosdb delete --name $cosmosAccount --resource-group $rg --yes
 ## Next Steps
 
 Continue to [Lesson 10: Billing and Cost Optimisation](../10-billing-cost/README.md)
+
+---
+
+## Additional Resources
 
 - [Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Azure SQL Documentation](https://learn.microsoft.com/azure/azure-sql/)

@@ -10,7 +10,7 @@ from openai import AzureOpenAI
 # Configuration from environment variables
 ENDPOINT = os.environ.get("AZURE_AI_ENDPOINT")
 API_KEY = os.environ.get("AZURE_AI_KEY")
-DEPLOYMENT = os.environ.get("AZURE_AI_DEPLOYMENT", "gpt-4o-mini-deployment")
+DEPLOYMENT = os.environ.get("AZURE_AI_DEPLOYMENT", "gpt-4.1-mini-deployment")
 
 # System prompt defines the chatbot's personality and behaviour
 SYSTEM_PROMPT = """You are a helpful Azure learning assistant.

@@ -40,7 +40,7 @@ A simple chatbot built with Azure AI Foundry that demonstrates:
    ```bash
    export AZURE_AI_ENDPOINT="https://your-endpoint.openai.azure.com/"
    export AZURE_AI_KEY="your-api-key"
-   export AZURE_AI_DEPLOYMENT="gpt-4o-mini-deployment"
+   export AZURE_AI_DEPLOYMENT="gpt-4.1-mini-deployment"
    ```
 
 4. Run the chatbot:

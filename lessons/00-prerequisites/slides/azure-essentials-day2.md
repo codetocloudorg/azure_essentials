@@ -310,7 +310,7 @@ style: |
 
 | Component | Description |
 |-----------|-------------|
-| **AI Hub** | Central resource for AI projects |
+| **AI Foundry** | Central platform for AI projects |
 | **AI Project** | Workspace for building AI apps |
 | **Model Catalog** | Library of pre-trained models |
 | **Prompt Flow** | Visual AI workflow orchestration |
@@ -349,12 +349,12 @@ style: |
 
 # 🖐️ Hands-on: AI Foundry
 
-**Exercise 11.1** — Create AI Hub & Project
+**Exercise 11.1** — Create AI Foundry Project
 - Navigate to ai.azure.com
-- Create hub and project
+- Create project in AI Foundry
 
 **Exercise 11.2** — Deploy a Model
-- Select and deploy gpt-4o-mini
+- Select and deploy gpt-4.1-mini
 
 **Exercise 11.3** — Build Simple Chatbot
 - Test the deployed model

@@ -36,7 +36,7 @@ The unified platform for building AI applications—access to GPT-4o, Phi-4, DAL
 | Model                | Capability           | Example                     |
 | -------------------- | -------------------- | --------------------------- |
 | **GPT-4o**           | Multimodal reasoning | Chatbots, document analysis |
-| **GPT-4o-mini**      | Fast, efficient      | Quick responses, summaries  |
+| **GPT-4.1-mini**      | Fast, efficient      | Quick responses, summaries  |
 | **Phi-4**            | Small language model | Edge scenarios, low latency |
 | **DALL-E 3**         | Image generation     | Create images from text     |
 | **Whisper**          | Speech-to-text       | Transcription               |
@@ -88,12 +88,12 @@ azd provision --no-prompt
 # List available models
 az cognitiveservices model list --location $LOCATION -o table
 
-# Deploy GPT-4o-mini
+# Deploy GPT-4.1-mini
 az cognitiveservices account deployment create \
   --resource-group $RG_NAME \
   --name $AI_NAME \
-  --deployment-name gpt-4o-mini \
-  --model-name gpt-4o-mini \
+  --deployment-name gpt-4.1-mini \
+  --model-name gpt-4.1-mini \
   --model-version "2024-07-18" \
   --model-format OpenAI \
   --sku-capacity 10 \
@@ -138,7 +138,7 @@ client = AzureOpenAI(
 
 # Make a completion request
 response = client.chat.completions.create(
-    model="gpt-4o-mini",  # This is your deployment name
+    model="gpt-4.1-mini",  # This is your deployment name
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "What is Azure in one sentence?"}
@@ -161,7 +161,7 @@ Install SDK: `pip install openai`
 ### Using curl
 
 ```bash
-curl "$ENDPOINT/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-10-01-preview" \
+curl "$ENDPOINT/openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-10-01-preview" \
   -H "Content-Type: application/json" \
   -H "api-key: $KEY" \
   -d '{
@@ -208,7 +208,7 @@ while True:
 
     # Get response
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         messages=messages,
         max_tokens=500
     )
@@ -283,7 +283,7 @@ Azure AI services charge per API call:
 | Service                    | Pricing (approx)         |
 | -------------------------- | ------------------------ |
 | **GPT-4o**                 | $0.005/1K input tokens   |
-| **GPT-4o-mini**            | $0.00015/1K input tokens |
+| **GPT-4.1-mini**            | $0.00015/1K input tokens |
 | **Phi-4**                  | $0.00007/1K input tokens |
 | **DALL-E 3**               | $0.04/image              |
 | **Whisper**                | $0.006/minute            |

@@ -210,7 +210,7 @@ _☕ Break_
 | Time   | Topic                                    | Type            |
 | ------ | ---------------------------------------- | --------------- |
 | 20 min | AI Foundry Platform Overview             | Presentation    |
-|        | • AI Hub and Project workspaces          |                 |
+|        | • AI Foundry project workspaces             |                 |
 |        | • Model catalog: OpenAI, Phi, embeddings |                 |
 |        | • Prompt flow and orchestration          |                 |
 | 20 min | Build & Test a Simple Chatbot            | Demo + Hands-on |

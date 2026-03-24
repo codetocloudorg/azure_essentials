@@ -2,12 +2,12 @@
 
 > **Duration**: 45 minutes | **Day**: 2
 
-## What You'll Learn
+## Learning Objectives
 
 In this lesson, you'll work with **Azure AI Foundry**, the platform for building AI applications. By the end, you'll be able to:
 
 - Create an AI Foundry project in the Portal
-- Deploy a language model (GPT-4o-mini)
+- Deploy a language model (GPT-4.1-mini)
 - Test the model in the Playground
 - Build a simple chatbot with Python
 
@@ -31,7 +31,7 @@ In this lesson, you'll work with **Azure AI Foundry**, the platform for building
 │                    Lesson 11 Workflow                           │
 ├─────────────────────────────────────────────────────────────────┤
 │  1. PORTAL: Create AI Foundry project (5 min)                   │
-│  2. PORTAL: Deploy GPT-4o-mini model (3 min)                    │
+│  2. PORTAL: Deploy GPT-4.1-mini model (3 min)                    │
 │  3. PORTAL: Test in Playground (5 min)                          │
 │  4. CLOUD SHELL: Run Python chatbot (10 min)                    │
 └─────────────────────────────────────────────────────────────────┘
@@ -301,7 +301,7 @@ az cognitiveservices account purge --name $AI_ACCOUNT --location northcentralus
 | Task                                          | Completed |
 | --------------------------------------------- | --------- |
 | Created AI Foundry project (azure-essentials) | ✅        |
-| Deployed GPT-4o-mini model                    | ✅        |
+| Deployed GPT-4.1-mini model                    | ✅        |
 | Tested in Playground                          | ✅        |
 | Built Python chatbot                          | ✅        |
 

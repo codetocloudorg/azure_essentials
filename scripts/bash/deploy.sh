@@ -733,7 +733,7 @@ select_region() {
 #     Cost: Pay-per-request (very low for demos)
 #
 #   LESSON 11 - AI FOUNDRY:
-#     Resources: Azure OpenAI, AI Hub, Model deployments
+#     Resources: Azure OpenAI, AI Foundry project, Model deployments
 #     Why: Shows Azure's AI capabilities and GPT integration
 #     Bicep: /infra/modules/ai-foundry.bicep
 #     Cost: $1-5/day depending on usage
@@ -772,7 +772,7 @@ select_lesson() {
     echo -e "   ${CYAN}8)${NC} Serverless Services        ${YELLOW}[QUOTA: Dynamic]${NC} Azure Functions, Logic Apps"
     echo -e "   ${CYAN}9)${NC} Database & Data Services   ${YELLOW}[Pay-per-use]${NC}  Cosmos DB Serverless"
     echo -e "  ${CYAN}10)${NC} Billing & Cost Mgmt        ${GREEN}[NO RESOURCES]${NC} Cost management demo"
-    echo -e "  ${CYAN}11)${NC} Azure AI Foundry           ${RED}[\$1-5/day]${NC}     AI Hub, model catalog"
+    echo -e "  ${CYAN}11)${NC} Azure AI Foundry           ${RED}[\$1-5/day]${NC}     AI Foundry, model catalog"
     echo -e "  ${CYAN}12)${NC} Architecture Design        ${GREEN}[NO RESOURCES]${NC} Whiteboard session"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -1546,7 +1546,7 @@ confirm_and_deploy() {
         echo "       └─ Cosmos DB (Serverless NoSQL)"
         echo ""
         echo "    🤖 rg-$ENV_NAME-lesson11-ai-foundry"
-        echo "       └─ Azure AI Hub + OpenAI models"
+        echo "       └─ Azure AI Foundry + OpenAI models"
     elif [ "$SELECTED_LESSON" = "03" ]; then
         echo -e "  Lesson:       ${BOLD}Lesson 03 - Storage Services${NC}"
         echo ""
@@ -1658,7 +1658,7 @@ confirm_and_deploy() {
         echo ""
         echo -e "  ${CYAN}INFRASTRUCTURE BEING DEPLOYED:${NC}"
         echo "    🤖 Resource Group: rg-$ENV_NAME-lesson11-ai-foundry"
-        echo "    ├─ Azure AI Hub (central AI management)"
+        echo "    ├─ Azure AI Foundry project"
         echo "    ├─ Azure OpenAI Service"
         echo "    │  └─ GPT model deployment"
         echo "    └─ Storage Account (for AI artifacts)"

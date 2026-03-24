@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.39.26.7824",
-      "templateHash": "5980888845612473489"
+      "version": "0.41.2.15936",
+      "templateHash": "4158290501447944691"
     }
   },
   "parameters": {
@@ -33,7 +33,17 @@
     "lessonNumber": {
       "type": "string",
       "defaultValue": "",
-      "allowedValues": ["", "03", "04", "05", "06", "07", "08", "09", "11"],
+      "allowedValues": [
+        "",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "11"
+      ],
       "metadata": {
         "description": "Optional: Specific lesson number to deploy. Leave empty for full deployment."
       }
@@ -41,7 +51,10 @@
     "appServicePlanSku": {
       "type": "string",
       "defaultValue": "B1",
-      "allowedValues": ["F1", "B1"],
+      "allowedValues": [
+        "F1",
+        "B1"
+      ],
       "metadata": {
         "description": "App Service Plan SKU. Use B1 if your subscription has no F1 quota."
       }
@@ -58,6 +71,17 @@
       "defaultValue": "",
       "metadata": {
         "description": "SSH public key for Lesson 06 Linux VM. Generate with: ssh-keygen -t rsa -b 4096"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "allowedValues": [
+        "Standard_B1s",
+        "Standard_B2s"
+      ],
+      "metadata": {
+        "description": "VM size for Windows and Linux VMs. B1s is free tier eligible, B2s has more RAM for MicroK8s."
       }
     },
     "tags": {
@@ -90,7 +114,7 @@
       "keyVault": "kv-",
       "logAnalytics": "log-",
       "applicationInsights": "appi-",
-      "aiHub": "aihub-",
+      "aiFoundry": "ai-",
       "aiProject": "aiproj-"
     },
     "abbrs": "[variables('$fxv#0')]",
@@ -199,8 +223,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "12537952921657253321"
+              "version": "0.41.2.15936",
+              "templateHash": "16098654491754287131"
             }
           },
           "parameters": {
@@ -240,7 +264,11 @@
             "kind": {
               "type": "string",
               "defaultValue": "StorageV2",
-              "allowedValues": ["StorageV2", "BlobStorage", "Storage"],
+              "allowedValues": [
+                "StorageV2",
+                "BlobStorage",
+                "Storage"
+              ],
               "metadata": {
                 "description": "Storage account kind"
               }
@@ -420,8 +448,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "8861035177302982357"
+              "version": "0.41.2.15936",
+              "templateHash": "14600294385318773535"
             }
           },
           "parameters": {
@@ -566,7 +594,9 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": ["[parameters('vnetAddressPrefix')]"]
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
                 },
                 "subnets": [
                   {
@@ -665,6 +695,9 @@
           },
           "adminPassword": {
             "value": "[parameters('windowsAdminPassword')]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
           }
         },
         "template": {
@@ -673,8 +706,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "12228237351651713496"
+              "version": "0.41.2.15936",
+              "templateHash": "3573888410561732243"
             }
           },
           "parameters": {
@@ -724,7 +757,7 @@
             },
             "vmSize": {
               "type": "string",
-              "defaultValue": "Standard_B1s",
+              "defaultValue": "Standard_B2s",
               "allowedValues": [
                 "Standard_B1s",
                 "Standard_B2s",
@@ -738,7 +771,13 @@
             "appServicePlanSku": {
               "type": "string",
               "defaultValue": "F1",
-              "allowedValues": ["F1", "B1", "B2", "S1", "P1v2"],
+              "allowedValues": [
+                "F1",
+                "B1",
+                "B2",
+                "S1",
+                "P1v2"
+              ],
               "metadata": {
                 "description": "App Service Plan SKU"
               }
@@ -753,7 +792,9 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": ["10.1.0.0/16"]
+                  "addressPrefixes": [
+                    "10.1.0.0/16"
+                  ]
                 },
                 "subnets": [
                   {
@@ -940,7 +981,7 @@
                   "ftpsState": "Disabled",
                   "minTlsVersion": "1.2",
                   "http20Enabled": true,
-                  "netFrameworkVersion": "v8.0",
+                  "netFrameworkVersion": "v9.0",
                   "metadata": [
                     {
                       "name": "CURRENT_STACK",
@@ -1041,8 +1082,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "2385971380839121448"
+              "version": "0.41.2.15936",
+              "templateHash": "17599755320759477935"
             }
           },
           "parameters": {
@@ -1075,7 +1116,11 @@
             "acrSku": {
               "type": "string",
               "defaultValue": "Basic",
-              "allowedValues": ["Basic", "Standard", "Premium"],
+              "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+              ],
               "metadata": {
                 "description": "ACR SKU"
               }
@@ -1129,7 +1174,7 @@
               },
               "properties": {
                 "dnsPrefix": "[parameters('aksName')]",
-                "kubernetesVersion": "1.32",
+                "kubernetesVersion": "1.33",
                 "agentPoolProfiles": [
                   {
                     "name": "nodepool1",
@@ -1149,7 +1194,7 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', parameters('acrName'))]",
+              "scope": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName'))]",
               "name": "[guid(resourceId('Microsoft.ContainerRegistry/registries', parameters('acrName')), resourceId('Microsoft.ContainerService/managedClusters', parameters('aksName')), 'acrpull')]",
               "properties": {
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')]",
@@ -1225,8 +1270,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "6472496541807711586"
+              "version": "0.41.2.15936",
+              "templateHash": "7310939223979969303"
             }
           },
           "parameters": {
@@ -1309,7 +1354,9 @@
                 "name": "Y1",
                 "tier": "Dynamic"
               },
-              "properties": {}
+              "properties": {
+                "reserved": true
+              }
             },
             {
               "type": "Microsoft.Web/sites",
@@ -1317,14 +1364,14 @@
               "name": "[parameters('functionAppName')]",
               "location": "[parameters('location')]",
               "tags": "[union(parameters('tags'), createObject('azd-service-name', 'sample-function'))]",
-              "kind": "functionapp",
+              "kind": "functionapp,linux",
               "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', format('asp-{0}', parameters('functionAppName')))]",
                 "httpsOnly": true,
                 "siteConfig": {
                   "ftpsState": "Disabled",
                   "minTlsVersion": "1.2",
-                  "pythonVersion": "3.13",
+                  "linuxFxVersion": "Python|3.11",
                   "appSettings": [
                     {
                       "name": "AzureWebJobsStorage",
@@ -1420,8 +1467,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "6656123314703581450"
+              "version": "0.41.2.15936",
+              "templateHash": "16543952323167158184"
             }
           },
           "parameters": {
@@ -1503,7 +1550,9 @@
                 "resource": {
                   "id": "items",
                   "partitionKey": {
-                    "paths": ["/category"],
+                    "paths": [
+                      "/category"
+                    ],
                     "kind": "Hash"
                   },
                   "indexingPolicy": {
@@ -1572,8 +1621,11 @@
           "tags": {
             "value": "[variables('defaultTags')]"
           },
-          "aiHubName": {
-            "value": "[format('{0}{1}', variables('abbrs').aiHub, parameters('environmentName'))]"
+          "aiFoundryName": {
+            "value": "[format('{0}{1}', variables('abbrs').aiFoundry, parameters('environmentName'))]"
+          },
+          "enableHostedAgents": {
+            "value": false
           }
         },
         "template": {
@@ -1582,8 +1634,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "113051236502570350"
+              "version": "0.41.2.15936",
+              "templateHash": "13761789746818331595"
             }
           },
           "parameters": {
@@ -1599,50 +1651,25 @@
                 "description": "Tags to apply to resources"
               }
             },
-            "aiHubName": {
+            "aiFoundryName": {
               "type": "string",
               "metadata": {
-                "description": "Name of the AI Hub"
+                "description": "Name prefix for AI Foundry resources"
+              }
+            },
+            "enableHostedAgents": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Enable hosted agents support (creates Container Registry)"
               }
             }
           },
           "resources": [
             {
-              "type": "Microsoft.Storage/storageAccounts",
-              "apiVersion": "2023-05-01",
-              "name": "[format('st{0}', uniqueString(resourceGroup().id, parameters('aiHubName')))]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
-              "sku": {
-                "name": "Standard_LRS"
-              },
-              "kind": "StorageV2",
-              "properties": {
-                "supportsHttpsTrafficOnly": true,
-                "minimumTlsVersion": "TLS1_2"
-              }
-            },
-            {
-              "type": "Microsoft.KeyVault/vaults",
-              "apiVersion": "2023-07-01",
-              "name": "[format('kv-{0}', uniqueString(resourceGroup().id, parameters('aiHubName')))]",
-              "location": "[parameters('location')]",
-              "tags": "[parameters('tags')]",
-              "properties": {
-                "sku": {
-                  "family": "A",
-                  "name": "standard"
-                },
-                "tenantId": "[subscription().tenantId]",
-                "enableRbacAuthorization": true,
-                "enableSoftDelete": true,
-                "softDeleteRetentionInDays": 7
-              }
-            },
-            {
               "type": "Microsoft.OperationalInsights/workspaces",
               "apiVersion": "2023-09-01",
-              "name": "[format('log-{0}', parameters('aiHubName'))]",
+              "name": "[format('log-{0}', parameters('aiFoundryName'))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "properties": {
@@ -1655,79 +1682,92 @@
             {
               "type": "Microsoft.Insights/components",
               "apiVersion": "2020-02-02",
-              "name": "[format('appi-{0}', parameters('aiHubName'))]",
+              "name": "[format('appi-{0}', parameters('aiFoundryName'))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "kind": "web",
               "properties": {
                 "Application_Type": "web",
-                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}', parameters('aiHubName')))]"
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}', parameters('aiFoundryName')))]"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}', parameters('aiHubName')))]"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}', parameters('aiFoundryName')))]"
               ]
             },
             {
-              "type": "Microsoft.MachineLearningServices/workspaces",
-              "apiVersion": "2024-04-01",
-              "name": "[parameters('aiHubName')]",
+              "type": "Microsoft.CognitiveServices/accounts",
+              "apiVersion": "2024-10-01",
+              "name": "[format('ai-{0}', parameters('aiFoundryName'))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
-              "kind": "Hub",
+              "kind": "AIServices",
+              "sku": {
+                "name": "S0"
+              },
               "identity": {
                 "type": "SystemAssigned"
               },
               "properties": {
-                "friendlyName": "Azure Essentials AI Hub",
-                "description": "AI Hub for Azure Essentials training course",
-                "storageAccount": "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', uniqueString(resourceGroup().id, parameters('aiHubName'))))]",
-                "keyVault": "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}', uniqueString(resourceGroup().id, parameters('aiHubName'))))]",
-                "applicationInsights": "[resourceId('Microsoft.Insights/components', format('appi-{0}', parameters('aiHubName')))]",
-                "publicNetworkAccess": "Enabled"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Insights/components', format('appi-{0}', parameters('aiHubName')))]",
-                "[resourceId('Microsoft.KeyVault/vaults', format('kv-{0}', uniqueString(resourceGroup().id, parameters('aiHubName'))))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', format('st{0}', uniqueString(resourceGroup().id, parameters('aiHubName'))))]"
-              ]
+                "customSubDomainName": "[format('ai-{0}', parameters('aiFoundryName'))]",
+                "publicNetworkAccess": "Enabled",
+                "networkAcls": {
+                  "defaultAction": "Allow"
+                },
+                "disableLocalAuth": false
+              }
             },
             {
-              "type": "Microsoft.MachineLearningServices/workspaces",
-              "apiVersion": "2024-04-01",
-              "name": "[format('{0}-project', parameters('aiHubName'))]",
+              "condition": "[parameters('enableHostedAgents')]",
+              "type": "Microsoft.ContainerRegistry/registries",
+              "apiVersion": "2023-11-01-preview",
+              "name": "[format('cr{0}', uniqueString(resourceGroup().id, parameters('aiFoundryName')))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
-              "kind": "Project",
-              "identity": {
-                "type": "SystemAssigned"
+              "sku": {
+                "name": "Basic"
               },
               "properties": {
-                "friendlyName": "Azure Essentials AI Project",
-                "description": "AI Project for chatbot development exercises",
-                "hubResourceId": "[resourceId('Microsoft.MachineLearningServices/workspaces', parameters('aiHubName'))]",
+                "adminUserEnabled": true,
                 "publicNetworkAccess": "Enabled"
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.MachineLearningServices/workspaces', parameters('aiHubName'))]"
-              ]
+              }
             }
           ],
           "outputs": {
-            "aiHubName": {
+            "aiServicesName": {
               "type": "string",
-              "value": "[parameters('aiHubName')]"
+              "value": "[format('ai-{0}', parameters('aiFoundryName'))]"
             },
-            "aiHubId": {
+            "aiServicesId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', parameters('aiHubName'))]"
+              "value": "[resourceId('Microsoft.CognitiveServices/accounts', format('ai-{0}', parameters('aiFoundryName')))]"
             },
-            "aiProjectName": {
+            "aiServicesEndpoint": {
               "type": "string",
-              "value": "[format('{0}-project', parameters('aiHubName'))]"
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('ai-{0}', parameters('aiFoundryName'))), '2024-10-01').endpoint]"
             },
-            "aiProjectId": {
+            "aiServicesPrincipalId": {
               "type": "string",
-              "value": "[resourceId('Microsoft.MachineLearningServices/workspaces', format('{0}-project', parameters('aiHubName')))]"
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('ai-{0}', parameters('aiFoundryName'))), '2024-10-01', 'full').identity.principalId]"
+            },
+            "applicationInsightsId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Insights/components', format('appi-{0}', parameters('aiFoundryName')))]"
+            },
+            "applicationInsightsConnectionString": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Insights/components', format('appi-{0}', parameters('aiFoundryName'))), '2020-02-02').ConnectionString]"
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.OperationalInsights/workspaces', format('log-{0}', parameters('aiFoundryName')))]"
+            },
+            "containerRegistryName": {
+              "type": "string",
+              "value": "[if(parameters('enableHostedAgents'), format('cr{0}', uniqueString(resourceGroup().id, parameters('aiFoundryName'))), '')]"
+            },
+            "containerRegistryLoginServer": {
+              "type": "string",
+              "value": "[if(parameters('enableHostedAgents'), reference(resourceId('Microsoft.ContainerRegistry/registries', format('cr{0}', uniqueString(resourceGroup().id, parameters('aiFoundryName')))), '2023-11-01-preview').loginServer, '')]"
             }
           }
         }
@@ -1764,7 +1804,7 @@
             "value": "[parameters('sshPublicKey')]"
           },
           "vmSize": {
-            "value": "Standard_B1s"
+            "value": "[parameters('vmSize')]"
           }
         },
         "template": {
@@ -1773,8 +1813,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.39.26.7824",
-              "templateHash": "14946360107488344040"
+              "version": "0.41.2.15936",
+              "templateHash": "4608495219507513905"
             }
           },
           "parameters": {
@@ -1811,7 +1851,7 @@
             },
             "vmSize": {
               "type": "string",
-              "defaultValue": "Standard_B1s",
+              "defaultValue": "Standard_B2s",
               "allowedValues": [
                 "Standard_B1s",
                 "Standard_B2s",
@@ -1877,7 +1917,9 @@
               "tags": "[parameters('tags')]",
               "properties": {
                 "addressSpace": {
-                  "addressPrefixes": ["10.100.0.0/16"]
+                  "addressPrefixes": [
+                    "10.100.0.0/16"
+                  ]
                 },
                 "subnets": [
                   {
@@ -2128,9 +2170,13 @@
       "type": "string",
       "value": "[coalesce(tryGet(tryGet(tryGet(if(variables('deployDatabase'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('rg-{0}-lesson09-database', parameters('environmentName'))), 'Microsoft.Resources/deployments', format('database-{0}', variables('resourceToken'))), '2025-04-01'), null()), 'outputs'), 'cosmosDbEndpoint'), 'value'), '')]"
     },
-    "AI_HUB_NAME": {
+    "AI_SERVICES_NAME": {
       "type": "string",
-      "value": "[coalesce(tryGet(tryGet(tryGet(if(variables('deployAI'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('rg-{0}-lesson11-ai-foundry', parameters('environmentName'))), 'Microsoft.Resources/deployments', format('ai-{0}', variables('resourceToken'))), '2025-04-01'), null()), 'outputs'), 'aiHubName'), 'value'), '')]"
+      "value": "[coalesce(tryGet(tryGet(tryGet(if(variables('deployAI'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('rg-{0}-lesson11-ai-foundry', parameters('environmentName'))), 'Microsoft.Resources/deployments', format('ai-{0}', variables('resourceToken'))), '2025-04-01'), null()), 'outputs'), 'aiServicesName'), 'value'), '')]"
+    },
+    "AI_SERVICES_ENDPOINT": {
+      "type": "string",
+      "value": "[coalesce(tryGet(tryGet(tryGet(if(variables('deployAI'), reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('rg-{0}-lesson11-ai-foundry', parameters('environmentName'))), 'Microsoft.Resources/deployments', format('ai-{0}', variables('resourceToken'))), '2025-04-01'), null()), 'outputs'), 'aiServicesEndpoint'), 'value'), '')]"
     },
     "LINUX_K8S_VM_NAME": {
       "type": "string",

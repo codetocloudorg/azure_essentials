@@ -1,6 +1,6 @@
 # Lesson 11: Azure AI Foundry - Copy-Paste Commands
 
-> AI Hub, model catalog (OpenAI, Phi, embeddings), and prompt flow
+> AI Foundry, model catalog (OpenAI, Phi, embeddings), and prompt flow
 >
 > ⚠️ **Azure OpenAI requires approval** - You must request access at https://aka.ms/oai/access
 
@@ -92,12 +92,12 @@ echo "Endpoint: $OPENAI_ENDPOINT"
 ## Step 4: Deploy a GPT Model
 
 ```bash
-# Deploy GPT-4o-mini model
+# Deploy GPT-4.1-mini model
 az cognitiveservices account deployment create \
     --name "$COGNITIVE_ACCOUNT" \
     --resource-group "$RESOURCE_GROUP" \
-    --deployment-name "gpt-4o-mini" \
-    --model-name "gpt-4o-mini" \
+    --deployment-name "gpt-4.1-mini" \
+    --model-name "gpt-4.1-mini" \
     --model-version "2024-07-18" \
     --model-format OpenAI \
     --sku-capacity 10 \
@@ -137,7 +137,7 @@ client = AzureOpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4.1-mini",
     messages=[
         {"role": "system", "content": "You are a helpful Azure expert."},
         {"role": "user", "content": "What are the main benefits of Azure?"}
@@ -157,7 +157,7 @@ EOF
 
 ```bash
 # Test using cURL
-curl "${OPENAI_ENDPOINT}openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-02-15-preview" \
+curl "${OPENAI_ENDPOINT}openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-02-15-preview" \
     -H "Content-Type: application/json" \
     -H "api-key: ${OPENAI_KEY}" \
     -d '{
@@ -256,7 +256,7 @@ az cognitiveservices account keys regenerate \
 az cognitiveservices account deployment delete \
     --name "$COGNITIVE_ACCOUNT" \
     --resource-group "$RESOURCE_GROUP" \
-    --deployment-name "gpt-4o-mini"
+    --deployment-name "gpt-4.1-mini"
 ```
 
 ### List Available Models
@@ -301,7 +301,7 @@ echo "Cleanup initiated - resources deleting in background"
 | Model | Use Case | Input | Output |
 |-------|----------|-------|--------|
 | gpt-4o | General purpose | Text | Text |
-| gpt-4o-mini | Cost-effective | Text | Text |
+| gpt-4.1-mini | Cost-effective | Text | Text |
 | text-embedding-3-large | Embeddings | Text | Vector |
 | dall-e-3 | Image generation | Text | Image |
 | whisper | Transcription | Audio | Text |

@@ -19,6 +19,6 @@
   "keyVault": "kv-",
   "logAnalytics": "log-",
   "applicationInsights": "appi-",
-  "aiHub": "aihub-",
+  "aiFoundry": "ai-",
   "aiProject": "aiproj-"
 }

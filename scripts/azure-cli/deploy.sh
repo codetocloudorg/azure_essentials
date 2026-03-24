@@ -137,7 +137,7 @@ select_lesson() {
     echo -e "   ${CYAN}8)${NC} Serverless Services        ${YELLOW}[QUOTA]${NC}        Azure Functions"
     echo -e "   ${CYAN}9)${NC} Database Services          ${YELLOW}[Pay-per-use]${NC}  Cosmos DB Serverless"
     echo -e "  ${CYAN}10)${NC} Billing & Cost             ${GREEN}[NO RESOURCES]${NC} Portal demo only"
-    echo -e "  ${CYAN}11)${NC} AI Foundry                 ${YELLOW}[Pay-per-use]${NC}  AI Hub + Project"
+    echo -e "  ${CYAN}11)${NC} AI Foundry                 ${YELLOW}[Pay-per-use]${NC}  AI Foundry project"
     echo -e "  ${CYAN}12)${NC} Architecture & Design      ${GREEN}[NO RESOURCES]${NC} Best practices"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

@@ -665,7 +665,7 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "8)" Cyan -NoNewline; Write-Host " Serverless Services        " -NoNewline; Write-ColorOutput "[QUOTA: Dynamic]" Yellow -NoNewline; Write-Host " Azure Functions"
     Write-Host "     " -NoNewline; Write-ColorOutput "9)" Cyan -NoNewline; Write-Host " Database & Data Services   " -NoNewline; Write-ColorOutput "[Pay-per-use]" Yellow -NoNewline; Write-Host "  Cosmos DB Serverless"
     Write-Host "    " -NoNewline; Write-ColorOutput "10)" Cyan -NoNewline; Write-Host " Billing & Cost Mgmt        " -NoNewline; Write-ColorOutput "[NO RESOURCES]" Green -NoNewline; Write-Host " Cost management demo"
-    Write-Host "    " -NoNewline; Write-ColorOutput "11)" Cyan -NoNewline; Write-Host " Azure AI Foundry           " -NoNewline; Write-ColorOutput "[`$1-5/day]" Red -NoNewline; Write-Host "     AI Hub, model catalog"
+    Write-Host "    " -NoNewline; Write-ColorOutput "11)" Cyan -NoNewline; Write-Host " Azure AI Foundry           " -NoNewline; Write-ColorOutput "[`$1-5/day]" Red -NoNewline; Write-Host "     AI Foundry, model catalog"
     Write-Host "    " -NoNewline; Write-ColorOutput "12)" Cyan -NoNewline; Write-Host " Architecture Design        " -NoNewline; Write-ColorOutput "[NO RESOURCES]" Green -NoNewline; Write-Host " Whiteboard session"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow

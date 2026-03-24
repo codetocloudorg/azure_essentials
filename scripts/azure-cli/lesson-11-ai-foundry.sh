@@ -249,10 +249,10 @@ deploy() {
     echo "  # List available models"
     echo "  az cognitiveservices model list --location ${LOCATION} -o table"
     echo ""
-    echo "  # Deploy GPT-4o-mini model"
+    echo "  # Deploy GPT-4.1-mini model"
     echo "  az cognitiveservices account deployment create \\"
     echo "      --name ${AI_SERVICES} --resource-group ${RESOURCE_GROUP} \\"
-    echo "      --deployment-name gpt-4o-mini --model-name gpt-4o-mini \\"
+    echo "      --deployment-name gpt-4.1-mini --model-name gpt-4.1-mini \\"
     echo "      --model-version '2024-07-18' --model-format OpenAI \\"
     echo "      --sku-capacity 10 --sku-name Standard"
     echo ""
@@ -266,7 +266,7 @@ deploy() {
     echo '  )'
     echo ''
     echo '  response = client.chat.completions.create('
-    echo "      model='gpt-4o-mini',  # deployment name"
+    echo "      model='gpt-4.1-mini',  # deployment name"
     echo '      messages=[{"role": "user", "content": "Hello!"}]'
     echo '  )'
     echo '  print(response.choices[0].message.content)'
@@ -308,7 +308,7 @@ show_commands() {
     echo "# Deploy a model"
     echo "az cognitiveservices account deployment create --name <acct> \\"
     echo "    --resource-group <rg> --deployment-name <deploy> \\"
-    echo "    --model-name gpt-4o-mini --model-format OpenAI \\"
+    echo "    --model-name gpt-4.1-mini --model-format OpenAI \\"
     echo "    --sku-capacity 10 --sku-name Standard"
     echo ""
     echo "# List deployments"

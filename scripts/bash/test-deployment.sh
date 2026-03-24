@@ -46,7 +46,7 @@
 #   Lesson 07: Container Services (ACR, ACI, AKS)
 #   Lesson 08: Serverless (Azure Functions, Logic Apps)
 #   Lesson 09: Database Services (Cosmos DB, SQL)
-#   Lesson 11: AI Foundry (Azure OpenAI, AI Hub)
+#   Lesson 11: AI Foundry (Azure OpenAI, AI Foundry project)
 #
 #===============================================================================
 
@@ -694,7 +694,7 @@ validate_lesson_09() {
 #-------------------------------------------------------------------------------
 # Azure AI Foundry provides a unified platform for AI development:
 #   - Azure OpenAI: GPT models, embeddings, DALL-E
-#   - AI Hub: Central management for AI projects
+#   - AI Foundry: Central platform for AI projects
 #   - Cognitive Services: Pre-built AI APIs
 #
 # KEY CONCEPTS:
