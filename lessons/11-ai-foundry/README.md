@@ -2,390 +2,316 @@
 
 > **Duration**: 45 minutes | **Day**: 2
 
-## Overview
+## What You'll Learn
 
-Azure AI Foundry provides a unified platform for building intelligent applications. This lesson covers creating Foundry resources, deploying models from the catalog, and building a simple chatbot.
+In this lesson, you'll work with **Azure AI Foundry**, the platform for building AI applications. By the end, you'll be able to:
 
-## Learning Objectives
+- Create an AI Foundry project in the Portal
+- Deploy a language model (GPT-4o-mini)
+- Test the model in the Playground
+- Build a simple chatbot with Python
 
-By the end of this lesson, you will be able to:
+## Why Azure AI Foundry?
 
-- Create Azure AI Services (Foundry resource)
-- Explore the model catalog and deployment options
-- Understand prompt engineering fundamentals
-- Build and test a simple chatbot
-- Configure AI model parameters for different use cases
+| Challenge | How Foundry Solves It |
+|-----------|----------------------|
+| Need AI capabilities | Access to GPT-4o, Phi-4, embeddings, vision models |
+| Prompt experimentation | Built-in Playground to test without code |
+| Model management | Deploy, monitor, and scale models from one place |
+| Enterprise ready | Built-in security, compliance, and monitoring |
+
+**Real-world example**: Customer support chatbots, document analysis, content generation, code assistants.
+
+---
+
+## Quick Start
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Lesson 11 Workflow                           │
+├─────────────────────────────────────────────────────────────────┤
+│  1. PORTAL: Create AI Foundry project (5 min)                   │
+│  2. PORTAL: Deploy GPT-4o-mini model (3 min)                    │
+│  3. PORTAL: Test in Playground (5 min)                          │
+│  4. CLOUD SHELL: Run Python chatbot (10 min)                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Prerequisites
+
+- Azure subscription with access to Azure OpenAI
+- Azure Portal access
+
+---
+
+## Part 1: Create AI Foundry Project (Portal)
+
+### Step 1: Open Azure AI Foundry
+
+1. Go to [Azure AI Foundry](https://ai.azure.com)
+2. Sign in with your Azure account
+3. Click **+ Create project**
+
+### Step 2: Create the Project
+
+1. Fill in:
+   | Setting | Value |
+   |---------|-------|
+   | Project name | `azure-essentials` |
+   | Subscription | Your subscription |
+   | Resource group | `rg-azure-essentials-dev` (create new if needed) |
+   | Location | **North Central US** (recommended) or **East US 2** |
+
+2. Click **Create**
+3. Wait for deployment (~2 minutes)
+
+> **Note**: The project automatically creates the underlying AI Services resource.
+
+---
+
+## Part 2: Deploy a Model
+
+### Step 1: Open Model Catalog
+
+1. In your **azure-essentials** project, click **Model catalog** in the left menu
+2. Search for **gpt-4o-mini**
+3. Click on the model card
+
+### Step 2: Deploy the Model
+
+1. Click **Deploy**
+2. Configure:
+   | Setting | Value |
+   |---------|-------|
+   | Deployment name | `gpt-4o-mini` |
+   | Deployment type | **Serverless API** |
+
+3. Click **Deploy**
+4. Wait for deployment (~1 minute)
+
+### Step 3: Note Your Credentials
+
+After deployment, note these values (you'll need them later):
+- **Endpoint URL**: `https://your-project.openai.azure.com/`
+- **API Key**: Click "Show key" to reveal
+
+---
+
+## Part 3: Test in Playground
+
+### Step 1: Open Chat Playground
+
+1. In your project, click **Playgrounds** → **Chat**
+2. Select your **gpt-4o-mini** deployment
+
+### Step 2: Set System Prompt
+
+In the **System message** box, paste:
+
+```
+You are a helpful Azure learning assistant.
+Your role is to:
+- Answer questions about Microsoft Azure services
+- Explain cloud computing concepts in simple terms
+- Be concise but thorough
+
+If you don't know something, say so honestly.
+```
+
+Click **Apply changes**.
+
+### Step 3: Test the Model
+
+Try these prompts:
+
+| Prompt | What You'll Learn |
+|--------|-------------------|
+| "What is Azure Cosmos DB?" | Factual response |
+| "Explain serverless in one sentence" | Concise explanation |
+| "Compare Azure Functions vs App Service" | Comparison capability |
+
+### Step 4: Experiment with Parameters
+
+Click **Parameters** and try:
+
+| Parameter | Low Value | High Value | Effect |
+|-----------|-----------|------------|--------|
+| **Temperature** | 0.2 | 1.2 | Focused → Creative |
+| **Max tokens** | 100 | 1000 | Short → Long responses |
+
+---
+
+## Part 4: Build a Chatbot (Cloud Shell)
+
+### Step 1: Open Cloud Shell
+
+1. In Azure Portal, click the **Cloud Shell** icon (`>_` top right)
+2. Select **Bash**
+
+### Step 2: Get Your Credentials
+
+```bash
+# Auto-discover your AI Services account
+AI_ACCOUNT=$(az cognitiveservices account list --query "[?kind=='AIServices'].name | [0]" -o tsv)
+RG=$(az cognitiveservices account list --query "[?kind=='AIServices'].resourceGroup | [0]" -o tsv)
+
+echo "Found: $AI_ACCOUNT in $RG"
+
+# Get endpoint and key
+export AZURE_AI_ENDPOINT=$(az cognitiveservices account show --name $AI_ACCOUNT --resource-group $RG --query properties.endpoint -o tsv)
+export AZURE_AI_KEY=$(az cognitiveservices account keys list --name $AI_ACCOUNT --resource-group $RG --query key1 -o tsv)
+export AZURE_AI_DEPLOYMENT="gpt-4o-mini"
+
+echo "Endpoint: $AZURE_AI_ENDPOINT"
+```
+
+### Step 3: Run the Chatbot
+
+```bash
+# Clone repo
+git clone https://github.com/codetocloudorg/azure_essentials.git 2>/dev/null || true
+cd azure_essentials/lessons/11-ai-foundry/src/simple-chatbot
+
+# Install and run
+pip install --user -r requirements.txt
+python chatbot.py
+```
+
+**Expected Output:**
+```
+============================================================
+Azure Learning Assistant
+Type 'quit' to exit, 'clear' to reset conversation
+============================================================
+
+You: What is Azure?
+Assistant: Azure is Microsoft's cloud computing platform...
+```
+
+---
+
+## Understanding the Code
+
+The Python chatbot demonstrates:
+
+| Component | What It Does |
+|-----------|--------------|
+| `AzureOpenAI` client | Connects to your Foundry endpoint |
+| System prompt | Defines the assistant's behavior |
+| Message history | Maintains conversation context |
+| `chat.completions.create()` | Sends messages and gets responses |
+
+### Key Code Pattern
+
+```python
+from openai import AzureOpenAI
+
+# Connect to Azure AI Foundry
+client = AzureOpenAI(
+    azure_endpoint=ENDPOINT,
+    api_key=API_KEY,
+    api_version="2024-10-01-preview"
+)
+
+# Send a message
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello!"}
+    ],
+    temperature=0.7
+)
+
+print(response.choices[0].message.content)
+```
 
 ---
 
 ## Key Concepts
 
-### Azure AI Foundry Components
+### Model Parameters
 
-| Component          | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| **AI Services**    | Multi-service resource providing access to AI capabilities |
-| **Foundry Portal** | Web interface for managing AI projects (ai.azure.com)      |
-| **Model Catalog**  | Library of pre-trained models to deploy                    |
-| **Deployments**    | Hosted model endpoints for inference                       |
-| **Hosted Agents**  | Container-based agents running custom code                 |
+| Parameter | What It Does | When to Use |
+|-----------|--------------|-------------|
+| **Temperature** | Controls randomness | Low (0.2) for facts, High (1.0+) for creativity |
+| **Max tokens** | Limits response length | Set based on use case |
+| **Top P** | Alternative to temperature | Usually leave at 0.95 |
 
-### Model Categories
+### Prompt Engineering Tips
 
-| Category      | Models                  | Use Cases                        |
-| ------------- | ----------------------- | -------------------------------- |
-| **OpenAI**    | GPT-4o, GPT-4o-mini, o1 | Chat, text generation, reasoning |
-| **Microsoft** | Phi-4, Phi-3            | Efficient small language models  |
-| **Embedding** | text-embedding-3-large  | Semantic search, RAG             |
-| **Image**     | DALL-E 3                | Image generation                 |
-| **Speech**    | Whisper                 | Speech-to-text                   |
-
-### Key Parameters
-
-| Parameter             | Description                | Range                           |
-| --------------------- | -------------------------- | ------------------------------- |
-| **Temperature**       | Randomness in responses    | 0.0 (focused) to 2.0 (creative) |
-| **Max Tokens**        | Maximum response length    | 1 to model max                  |
-| **Top P**             | Nucleus sampling threshold | 0.0 to 1.0                      |
-| **Frequency Penalty** | Reduces repetition         | 0.0 to 2.0                      |
-| **Presence Penalty**  | Encourages new topics      | 0.0 to 2.0                      |
+| Technique | Example |
+|-----------|---------|
+| **Be specific** | "List 3 benefits of Azure Functions" |
+| **Provide context** | "For a beginner developer..." |
+| **Set format** | "Respond in bullet points" |
+| **Define persona** | "You are an Azure architect" |
 
 ---
 
-## Hands-on Exercises
+## Troubleshooting
 
-### Exercise 11.1: Create Azure AI Services (Foundry Resource)
+### "Resource not found"
 
-**Objective**: Set up the Azure AI Foundry environment.
-
-#### Using Azure CLI (Recommended)
+Verify your AI Services account exists:
 
 ```bash
-# Variables
-RESOURCE_GROUP="rg-azure-essentials-dev"
-LOCATION="northcentralus"  # Recommended for hosted agents
-AI_SERVICES="ai-essentials-$(openssl rand -hex 4)"
-
-# Register the Cognitive Services provider (if needed)
-az provider register --namespace Microsoft.CognitiveServices
-
-# Create the resource group
-az group create \
-  --name $RESOURCE_GROUP \
-  --location $LOCATION
-
-# Create Azure AI Services (Foundry resource)
-az cognitiveservices account create \
-  --name $AI_SERVICES \
-  --resource-group $RESOURCE_GROUP \
-  --location $LOCATION \
-  --kind AIServices \
-  --sku S0 \
-  --custom-domain $AI_SERVICES \
-  --yes
-
-# Get the endpoint and key
-az cognitiveservices account show \
-  --name $AI_SERVICES \
-  --resource-group $RESOURCE_GROUP \
-  --query properties.endpoint -o tsv
-
-az cognitiveservices account keys list \
-  --name $AI_SERVICES \
-  --resource-group $RESOURCE_GROUP \
-  --query key1 -o tsv
+az cognitiveservices account list -o table
 ```
 
-#### Using Azure Developer CLI (azd)
+### "Model deployment not found"
 
-For a complete Foundry project with hosted agents support:
+Check your deployments in the Portal:
+1. Go to [ai.azure.com](https://ai.azure.com)
+2. Open your **azure-essentials** project
+3. Click **Deployments** - verify `gpt-4o-mini` exists
+
+### "Invalid API key"
+
+Regenerate the key in the Portal or via CLI:
 
 ```bash
-# Create and initialize project
-mkdir my-foundry-project && cd my-foundry-project
-azd init -t https://github.com/Azure-Samples/azd-ai-starter-basic -e my-foundry-project --no-prompt
-
-# Optional: Enable hosted agents
-azd env set ENABLE_HOSTED_AGENTS true
-
-# Provision infrastructure (5-10 minutes)
-azd provision --no-prompt
-
-# Get project details
-azd env get-values
-```
-
-#### Using Azure Portal
-
-1. Navigate to [Azure AI Foundry](https://ai.azure.com)
-2. Select **Create a resource**
-3. Choose **AI Services** (multi-service resource)
-4. Configure:
-   - **Name**: `ai-azure-essentials`
-   - **Subscription**: Your subscription
-   - **Resource group**: `rg-azure-essentials-dev`
-   - **Region**: North Central US (recommended)
-   - **Pricing tier**: Standard S0
-5. Select **Create**
-
-### Exercise 11.2: Explore the Model Catalog
-
-**Objective**: Browse available models and understand deployment options.
-
-1. Open your AI project in Azure AI Foundry
-2. Navigate to **Model catalog**
-3. Explore different model categories:
-   - Filter by **Task** (Chat, Embeddings, Image)
-   - Filter by **Provider** (OpenAI, Microsoft, Meta)
-   - Filter by **Deployment type** (Serverless, Managed compute)
-4. Select a model (e.g., `gpt-4o-mini`) to view:
-   - Model card with capabilities
-   - Pricing information
-   - Deployment options
-   - Sample code
-
-### Exercise 11.3: Deploy a Model
-
-**Objective**: Deploy a language model for chat.
-
-1. In the Model catalog, select **gpt-4o-mini** (or available model)
-2. Select **Deploy**
-3. Configure deployment:
-   - **Deployment name**: `gpt-4o-mini-deployment`
-   - **Deployment type**: Serverless API
-4. Note the **Endpoint** and **API Key** after deployment
-
-### Exercise 11.4: Build a Simple Chatbot
-
-**Objective**: Create a Python chatbot using the deployed model.
-
-```bash
-mkdir -p simple-chatbot && cd simple-chatbot
-
-cat > chatbot.py << 'EOF'
-"""
-Simple Chatbot using Azure AI Foundry
-Azure Essentials - Lesson 11
-"""
-import os
-from openai import AzureOpenAI
-
-# Configuration from environment variables
-ENDPOINT = os.environ.get("AZURE_AI_ENDPOINT")
-API_KEY = os.environ.get("AZURE_AI_KEY")
-DEPLOYMENT = os.environ.get("AZURE_AI_DEPLOYMENT", "gpt-4o-mini-deployment")
-
-# System prompt defines the chatbot's personality and behavior
-SYSTEM_PROMPT = """You are a helpful Azure learning assistant.
-Your role is to:
-- Answer questions about Microsoft Azure services
-- Explain cloud computing concepts in simple terms
-- Provide practical examples and best practices
-- Be concise but thorough in your responses
-
-If you don't know something, say so honestly."""
-
-def create_client():
-    """Create the Azure OpenAI client."""
-    return AzureOpenAI(
-        azure_endpoint=ENDPOINT,
-        api_key=API_KEY,
-        api_version="2024-10-01-preview"
-    )
-
-def chat(client, messages: list, user_input: str) -> str:
-    """Send a message and get a response."""
-    # Add user message to history
-    messages.append({
-        "role": "user",
-        "content": user_input
-    })
-
-    # Get response from the model
-    response = client.chat.completions.create(
-        model=DEPLOYMENT,
-        messages=messages,
-        temperature=0.7,
-        max_tokens=500,
-        top_p=0.95
-    )
-
-    # Extract and store assistant response
-    assistant_message = response.choices[0].message.content
-    messages.append({
-        "role": "assistant",
-        "content": assistant_message
-    })
-
-    return assistant_message
-
-def main():
-    """Run the chatbot."""
-    print("=" * 60)
-    print("Azure Learning Assistant")
-    print("Type 'quit' to exit, 'clear' to reset conversation")
-    print("=" * 60)
-
-    client = create_client()
-
-    # Initialize conversation with system prompt
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ]
-
-    while True:
-        try:
-            # Get user input
-            user_input = input("\nYou: ").strip()
-
-            if not user_input:
-                continue
-
-            if user_input.lower() == 'quit':
-                print("Goodbye!")
-                break
-
-            if user_input.lower() == 'clear':
-                messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-                print("Conversation cleared.")
-                continue
-
-            # Get and display response
-            response = chat(client, messages, user_input)
-            print(f"\nAssistant: {response}")
-
-        except KeyboardInterrupt:
-            print("\nGoodbye!")
-            break
-        except Exception as e:
-            print(f"\nError: {e}")
-            print("Please check your credentials and try again.")
-
-if __name__ == "__main__":
-    main()
-EOF
-
-cat > requirements.txt << 'EOF'
-openai>=1.0.0
-EOF
-
-cd ..
-```
-
-Run the chatbot:
-
-```bash
-# Set environment variables (get these from your deployment)
-export AZURE_AI_ENDPOINT="https://your-endpoint.openai.azure.com/"
-export AZURE_AI_KEY="your-api-key"
-export AZURE_AI_DEPLOYMENT="gpt-4o-mini-deployment"
-
-# Install and run
-cd simple-chatbot
-pip install -r requirements.txt
-python chatbot.py
-```
-
-### Exercise 11.5: Experiment with Parameters
-
-**Objective**: Understand how parameters affect model responses.
-
-Try these variations in the chatbot code:
-
-```python
-# Creative responses (storytelling, brainstorming)
-response = client.chat.completions.create(
-    model=DEPLOYMENT,
-    messages=messages,
-    temperature=1.2,      # Higher = more creative
-    max_tokens=1000,
-    top_p=0.95
-)
-
-# Focused responses (factual, consistent)
-response = client.chat.completions.create(
-    model=DEPLOYMENT,
-    messages=messages,
-    temperature=0.2,      # Lower = more focused
-    max_tokens=500,
-    top_p=0.8
-)
-
-# Reduce repetition
-response = client.chat.completions.create(
-    model=DEPLOYMENT,
-    messages=messages,
-    temperature=0.7,
-    frequency_penalty=0.5,  # Reduce word repetition
-    presence_penalty=0.5    # Encourage topic variety
-)
+az cognitiveservices account keys regenerate --name $AI_ACCOUNT --resource-group $RG --key-name key1
 ```
 
 ---
 
-## Prompt Engineering Tips
+## Cleanup
 
-| Technique           | Description            | Example                         |
-| ------------------- | ---------------------- | ------------------------------- |
-| **Be specific**     | Clear instructions     | "Explain in 3 bullet points"    |
-| **Provide context** | Background information | "For a beginner developer..."   |
-| **Use examples**    | Few-shot learning      | "Format like this example: ..." |
-| **Set constraints** | Limit scope            | "In 100 words or less"          |
-| **Define persona**  | Role-based prompts     | "You are an Azure architect..." |
-
----
-
-## Key Commands Reference
+Delete the AI Foundry resources when done:
 
 ```bash
-# Azure AI Services (Foundry resource)
-az cognitiveservices account create --name <name> --resource-group <rg> \
-    --location <loc> --kind AIServices --sku S0 --custom-domain <domain>
+# Delete the resource group
+az group delete --name rg-azure-essentials-dev --yes --no-wait
 
-# Get endpoint and keys
-az cognitiveservices account show --name <name> --resource-group <rg> \
-    --query properties.endpoint -o tsv
-az cognitiveservices account keys list --name <name> --resource-group <rg>
-
-# List available models in a region
-az cognitiveservices model list --location <loc> -o table
-
-# Deploy a model
-az cognitiveservices account deployment create --name <acct> \
-    --resource-group <rg> --deployment-name <deploy> \
-    --model-name gpt-4o-mini --model-format OpenAI \
-    --sku-capacity 10 --sku-name Standard
-
-# List deployments
-az cognitiveservices account deployment list --name <acct> --resource-group <rg>
-
-# azd (alternative approach)
-azd init -t https://github.com/Azure-Samples/azd-ai-starter-basic
-azd provision
+# Note: AI Services are soft-deleted for 48 hours
+# To purge immediately:
+az cognitiveservices account purge --name $AI_ACCOUNT --location northcentralus
 ```
 
 ---
 
 ## Summary
 
-In this lesson, you learned:
-
-- ✅ Azure AI Foundry components and navigation
-- ✅ Model catalog exploration and deployment
-- ✅ Building a chatbot with Python SDK
-- ✅ Parameter tuning for different use cases
-- ✅ Prompt engineering fundamentals
+| Task | Completed |
+|------|-----------|
+| Created AI Foundry project (azure-essentials) | ✅ |
+| Deployed GPT-4o-mini model | ✅ |
+| Tested in Playground | ✅ |
+| Built Python chatbot | ✅ |
 
 ---
 
 ## Next Steps
 
-Continue to [Lesson 12: Architecture Design](../12-architecture-design/README.md) for the collaborative design session.
+Continue to [Lesson 12: Architecture Design](../12-architecture-design/README.md)
 
 ---
 
 ## Additional Resources
 
-- [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-studio/)
-- [Azure OpenAI Service Documentation](https://learn.microsoft.com/azure/ai-services/openai/)
+- [Azure AI Foundry](https://ai.azure.com)
+- [Azure OpenAI Documentation](https://learn.microsoft.com/azure/ai-services/openai/)
 - [Prompt Engineering Guide](https://learn.microsoft.com/azure/ai-services/openai/concepts/prompt-engineering)
