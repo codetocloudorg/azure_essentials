@@ -94,7 +94,7 @@ az cognitiveservices account deployment create \
   --name $AI_NAME \
   --deployment-name gpt-4.1-mini \
   --model-name gpt-4.1-mini \
-  --model-version "2024-07-18" \
+  --model-version "2025-04-14" \
   --model-format OpenAI \
   --sku-capacity 10 \
   --sku-name Standard
@@ -133,7 +133,7 @@ from openai import AzureOpenAI
 client = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     api_key=os.getenv("AZURE_OPENAI_KEY"),
-    api_version="2024-10-01-preview"
+    api_version="2024-10-21"
 )
 
 # Make a completion request
@@ -161,7 +161,7 @@ Install SDK: `pip install openai`
 ### Using curl
 
 ```bash
-curl "$ENDPOINT/openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-10-01-preview" \
+curl "$ENDPOINT/openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-10-21" \
   -H "Content-Type: application/json" \
   -H "api-key: $KEY" \
   -d '{
@@ -186,7 +186,7 @@ from openai import AzureOpenAI
 client = AzureOpenAI(
     azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
     api_key=os.getenv("AZURE_OPENAI_KEY"),
-    api_version="2024-10-01-preview"
+    api_version="2024-10-21"
 )
 
 # Conversation history

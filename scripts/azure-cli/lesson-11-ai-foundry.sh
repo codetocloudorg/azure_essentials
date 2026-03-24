@@ -253,7 +253,7 @@ deploy() {
     echo "  az cognitiveservices account deployment create \\"
     echo "      --name ${AI_SERVICES} --resource-group ${RESOURCE_GROUP} \\"
     echo "      --deployment-name gpt-4.1-mini --model-name gpt-4.1-mini \\"
-    echo "      --model-version '2024-07-18' --model-format OpenAI \\"
+    echo "      --model-version '2025-04-14' --model-format OpenAI \\"
     echo "      --sku-capacity 10 --sku-name Standard"
     echo ""
     echo -e "${CYAN}Python SDK Example:${NC}"
@@ -262,7 +262,7 @@ deploy() {
     echo '  client = AzureOpenAI('
     echo "      azure_endpoint='${endpoint}',"
     echo "      api_key='<your-key>',"
-    echo "      api_version='2024-10-01-preview'"
+    echo "      api_version='2024-10-21'"
     echo '  )'
     echo ''
     echo '  response = client.chat.completions.create('

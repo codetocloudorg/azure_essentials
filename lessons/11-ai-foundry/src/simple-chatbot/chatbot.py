@@ -34,7 +34,7 @@ def create_client() -> AzureOpenAI:
     return AzureOpenAI(
         azure_endpoint=ENDPOINT,
         api_key=API_KEY,
-        api_version="2024-02-15-preview"
+        api_version="2024-10-21"
     )
 
 

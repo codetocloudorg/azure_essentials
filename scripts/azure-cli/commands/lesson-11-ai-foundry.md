@@ -98,7 +98,7 @@ az cognitiveservices account deployment create \
     --resource-group "$RESOURCE_GROUP" \
     --deployment-name "gpt-4.1-mini" \
     --model-name "gpt-4.1-mini" \
-    --model-version "2024-07-18" \
+    --model-version "2025-04-14" \
     --model-format OpenAI \
     --sku-capacity 10 \
     --sku-name Standard
@@ -132,7 +132,7 @@ from openai import AzureOpenAI
 
 client = AzureOpenAI(
     api_key=os.environ.get("OPENAI_KEY"),
-    api_version="2024-02-15-preview",
+    api_version="2024-10-21",
     azure_endpoint=os.environ.get("OPENAI_ENDPOINT")
 )
 
@@ -157,7 +157,7 @@ EOF
 
 ```bash
 # Test using cURL
-curl "${OPENAI_ENDPOINT}openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-02-15-preview" \
+curl "${OPENAI_ENDPOINT}openai/deployments/gpt-4.1-mini/chat/completions?api-version=2024-10-21" \
     -H "Content-Type: application/json" \
     -H "api-key: ${OPENAI_KEY}" \
     -d '{

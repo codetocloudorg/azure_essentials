@@ -214,7 +214,7 @@ from openai import AzureOpenAI
 client = AzureOpenAI(
     azure_endpoint=ENDPOINT,
     api_key=API_KEY,
-    api_version="2024-10-01-preview"
+    api_version="2024-10-21"
 )
 
 # Send a message
