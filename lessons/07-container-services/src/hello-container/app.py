@@ -47,7 +47,7 @@ def hello():
             <p>Your container is running successfully.</p>
             <div class="info">
                 <p>Container hostname: <code>{hostname}</code></p>
-                <p>Running on: <code>Azure Container Registry + AKS</code></p>
+                <p>Running on: <code>Azure Container Registry + Container Apps</code></p>
             </div>
         </div>
     </body>
@@ -56,7 +56,7 @@ def hello():
 
 @app.route('/health')
 def health():
-    """Health check endpoint for Kubernetes."""
+    """Health check endpoint."""
     return {"status": "healthy", "hostname": socket.gethostname()}
 
 if __name__ == '__main__':

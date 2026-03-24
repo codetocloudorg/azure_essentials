@@ -1,22 +1,21 @@
 // ============================================================================
-// Azure Container Services Module (ACR + AKS)
+// Azure Container Services Module (ACR + Container Apps)
 // ============================================================================
 // Code to Cloud | www.codetocloud.io
 // Lesson 07: Container Services
 //
 // WHAT THIS CREATES:
 //   - Azure Container Registry (ACR)
-//   - Azure Kubernetes Service (AKS) cluster
+//   - Azure Container Apps Environment
 //
 // COST ESTIMATE:
 //   ACR Basic:  ~$5/month
-//   AKS (1 node Standard_B2s): ~$30/month
-//   Total: ~$35/month
+//   Container Apps: ~$0 at low traffic (consumption plan)
+//   Total: ~$5/month
 //
 // NOTE: After deployment, use Azure CLI to:
 //   1. Build container: az acr build --registry <acr> --image hello:v1 .
-//   2. Get credentials: az aks get-credentials --name <aks> --resource-group <rg>
-//   3. Deploy app:      kubectl create deployment hello --image=<acr>.azurecr.io/hello:v1
+//   2. Deploy app:      az containerapp create --name <app> --environment <env> --image <acr>.azurecr.io/hello:v1
 // ============================================================================
 
 // ============================================================================
@@ -34,8 +33,8 @@ param tags object
 @maxLength(50)
 param acrName string
 
-@description('Name of the AKS cluster')
-param aksName string
+@description('Name of the Container Apps Environment')
+param containerAppsEnvName string
 
 @description('ACR SKU')
 @allowed([
@@ -45,22 +44,16 @@ param aksName string
 ])
 param acrSku string = 'Basic'
 
-@description('Number of AKS nodes')
-@minValue(1)
-@maxValue(10)
-param aksNodeCount int = 1
-
-@description('AKS node VM size')
-param aksNodeVmSize string = 'Standard_B2s'
-
 // ============================================================================
 // CONTAINER REGISTRY - Private Docker registry
 // ============================================================================
 // ACR stores and manages container images for:
-//   - Azure Kubernetes Service (AKS)
+// ACR stores and manages container images for:
+//   - Azure Container Apps
 //   - Azure Container Instances (ACI)
 //   - Azure App Service (Web App for Containers)
 //   - Azure Functions (custom containers)
+//   - Azure Kubernetes Service (AKS)
 //
 // AUTHENTICATION OPTIONS:
 //   - Admin user (enabled here for simplicity)
@@ -100,56 +93,24 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' =
 output acrName string = containerRegistry.name
 output acrId string = containerRegistry.id
 output acrLoginServer string = containerRegistry.properties.loginServer
-output aksName string = aksCluster.name
-output aksId string = aksCluster.id
-output aksFqdn string = aksCluster.properties.fqdn
+output containerAppsEnvName string = containerAppsEnvironment.name
+output containerAppsEnvId string = containerAppsEnvironment.id
 
 // ============================================================================
-// AZURE KUBERNETES SERVICE (AKS)
+// AZURE CONTAINER APPS ENVIRONMENT
 // ============================================================================
-// Managed Kubernetes cluster for container orchestration.
+// Serverless container platform — no clusters to manage.
 //
 // WHAT YOU PAY FOR:           WHAT AZURE MANAGES (FREE):
-//   - Worker node VMs           - Control plane
-//   - Storage for containers    - API server
-//   - Network egress            - etcd cluster + upgrades
+//   - vCPU/memory per request   - Infrastructure
+//   - ~$0 at low traffic        - Scaling
+//   - Consumption plan          - HTTPS/ingress
 
-resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
-  name: aksName
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+  name: containerAppsEnvName
   location: location
   tags: tags
-  identity: {
-    type: 'SystemAssigned'
-  }
   properties: {
-    dnsPrefix: aksName
-    kubernetesVersion: '1.33'
-
-    agentPoolProfiles: [
-      {
-        name: 'nodepool1'
-        count: aksNodeCount
-        vmSize: aksNodeVmSize
-        osType: 'Linux'
-        mode: 'System'
-        enableAutoScaling: false
-      }
-    ]
-
-    networkProfile: {
-      networkPlugin: 'azure'
-      loadBalancerSku: 'standard'
-    }
-  }
-}
-
-// Role assignment to allow AKS to pull from ACR
-resource acrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, aksCluster.id, 'acrpull')
-  scope: containerRegistry
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
-    principalId: aksCluster.properties.identityProfile.kubeletidentity.objectId
-    principalType: 'ServicePrincipal'
+    zoneRedundant: false
   }
 }

@@ -4,7 +4,7 @@
 
 ## Overview
 
-Azure provides managed container services for building, storing, and orchestrating containerised applications. This lesson covers Azure Container Registry (ACR) and Azure Container Apps.
+Azure provides managed container services for building, storing, and running containerised applications. This lesson covers Azure Container Registry (ACR) and Azure Container Apps.
 
 ## Prerequisites
 
@@ -64,18 +64,18 @@ ACR is a managed Docker registry service for storing container images:
 | **Standard** | More storage, webhooks        | Small production     |
 | **Premium**  | Geo-replication, private link | Enterprise           |
 
-### Azure Kubernetes Service (AKS)
+### Azure Container Apps
 
-AKS is a managed Kubernetes service for production workloads:
+Container Apps is a serverless container platform — no clusters to manage:
 
-| Component     | Managed By                   |
-| ------------- | ---------------------------- |
-| Control plane | Microsoft (free)             |
-| Worker nodes  | You (pay for VMs)            |
-| Upgrades      | Assisted by Azure            |
-| Scaling       | Cluster autoscaler available |
+| Feature         | Details                                   |
+| --------------- | ----------------------------------------- |
+| Pricing         | Consumption plan (~$0 at low traffic)     |
+| Scaling         | Scale-to-zero, auto-scale on HTTP/events  |
+| Ingress         | Built-in HTTPS with custom domains        |
+| Complexity      | No Kubernetes knowledge required          |
 
-> 💡 For learning, we use **Container Apps** (simpler). For production at scale, consider **AKS**.
+> 💡 For production Kubernetes workloads at scale, see [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/azure/aks/intro-kubernetes).
 
 ### Container Workflow
 
@@ -238,9 +238,12 @@ az acr build --registry <n> --image <img:tag> .    # Build in cloud
 az acr repository list --name <n>                  # List images
 
 # Azure Container Apps
-az containerapp env create --name <env> --resource-group <rg>
-az containerapp create --name <app> --image <acr>.azurecr.io/<img> --ingress external
-az containerapp show --name <app> --query properties.configuration.ingress.fqdn
+az containerapp env create --name <env> --resource-group <rg> --location <loc>
+az containerapp create --name <app> --resource-group <rg> --environment <env> \
+    --image <acr>.azurecr.io/<img> --target-port 8080 --ingress external
+az containerapp show --name <app> -g <rg> --query properties.configuration.ingress.fqdn
+az containerapp logs show -n <app> -g <rg>         # View logs
+az containerapp update -n <app> -g <rg> --min-replicas 1 --max-replicas 5  # Scale
 
 # Docker (optional - for local testing)
 docker run -d -p 8080:8080 <image>

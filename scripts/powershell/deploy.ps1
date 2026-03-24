@@ -657,7 +657,7 @@ function Select-Lesson {
     Write-Host "     " -NoNewline; Write-ColorOutput "4)" Cyan -NoNewline; Write-Host " Networking Services        " -NoNewline; Write-ColorOutput "[FREE]" Green -NoNewline; Write-Host "         VNets, subnets, NSGs"
     Write-Host "     " -NoNewline; Write-ColorOutput "5)" Cyan -NoNewline; Write-Host " Compute: Windows           " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Windows VM + App Service"
     Write-Host "     " -NoNewline; Write-ColorOutput "6)" Cyan -NoNewline; Write-Host " Compute: Linux & K8s       " -NoNewline; Write-ColorOutput "[QUOTA: B2s]" Yellow -NoNewline; Write-Host "  Ubuntu VM + MicroK8s"
-    Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$35/mo]" Yellow -NoNewline; Write-Host "      ACR + AKS"
+    Write-Host "     " -NoNewline; Write-ColorOutput "7)" Cyan -NoNewline; Write-Host " Container Services         " -NoNewline; Write-ColorOutput "[~`$5/mo]" Green -NoNewline; Write-Host "       ACR + Container Apps"
     Write-Host ""
     Write-ColorOutput "  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" Yellow
     Write-Host "    DAY 2 - ADVANCED SERVICES" -ForegroundColor White
@@ -1269,13 +1269,15 @@ function Show-PostDeploymentInfo {
 
     # Lesson 07: Containers
     if ($script:SelectedLesson -eq "07" -or $script:DeployAll) {
-        $rgAks = "rg-$($script:EnvName)-lesson07-containers"
+        $rgCa = "rg-$($script:EnvName)-lesson07-containers"
         try {
-            $aksName = az aks list -g $rgAks --query "[0].name" -o tsv 2>$null
-            if ($aksName) {
-                Write-ColorOutput "  📦 AKS Cluster (Lesson 07):" Cyan
-                Write-Host "     az aks get-credentials -g $rgAks -n $aksName"
-                Write-Host "     kubectl get nodes"
+            $caName = az containerapp list -g $rgCa --query "[0].name" -o tsv 2>$null
+            if ($caName) {
+                Write-ColorOutput "  📦 Container App (Lesson 07):" Cyan
+                $caFqdn = az containerapp show -n $caName -g $rgCa --query "properties.configuration.ingress.fqdn" -o tsv 2>$null
+                if ($caFqdn) {
+                    Write-Host "     https://$caFqdn"
+                }
                 Write-Host ""
             }
         }

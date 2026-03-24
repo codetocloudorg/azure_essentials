@@ -12,7 +12,7 @@
   "functionApp": "func-",
   "logicApp": "logic-",
   "containerRegistry": "cr",
-  "kubernetesService": "aks-",
+  "containerAppsEnvironment": "cae-",
   "cosmosDb": "cosmos-",
   "sqlServer": "sql-",
   "sqlDatabase": "sqldb-",

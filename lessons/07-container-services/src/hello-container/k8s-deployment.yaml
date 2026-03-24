@@ -1,23 +1,16 @@
 # ============================================================================
-# Kubernetes Deployment for Hello Container
+# Kubernetes Deployment for Hello Container (Optional)
 # ============================================================================
 # Code to Cloud | www.codetocloud.io
 #
-# This manifest deploys the hello-container app to AKS with:
-#   - 2 replicas for high availability
-#   - LoadBalancer service for external access
-#   - Resource limits for cost control
+# This manifest is for deploying hello-container to Kubernetes (MicroK8s or AKS).
+# The primary hands-on exercise uses Azure Container Apps instead.
 #
-# USAGE:
-#   # Replace ACR_NAME with your registry
+# For MicroK8s (Lesson 06):
+#   microk8s kubectl apply -f k8s-deployment.yaml
+#
+# For AKS (advanced):
 #   kubectl apply -f k8s-deployment.yaml
-#
-#   # Check deployment status
-#   kubectl get pods
-#   kubectl get svc hello-container
-#
-#   # Get external IP
-#   kubectl get svc hello-container -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 # ============================================================================
 
 apiVersion: apps/v1

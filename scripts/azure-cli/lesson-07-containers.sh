@@ -1,26 +1,25 @@
 #!/bin/bash
 #===============================================================================
-# Lesson 07: Container Services - ACR + AKS + Hello World
+# Lesson 07: Container Services - ACR + Container Apps + Hello World
 #===============================================================================
 # Code to Cloud | www.codetocloud.io
 #
 # This script demonstrates the complete container workflow:
 #   1. Create Azure Container Registry (ACR)
 #   2. Build a container image in ACR
-#   3. Create Azure Kubernetes Service (AKS) cluster
-#   4. Deploy hello-container to AKS
+#   3. Create Azure Container Apps environment
+#   4. Deploy hello-container to Container Apps
 #
 # COST ESTIMATE:
 #   ACR Basic:  ~$5/month
-#   AKS (1 node Standard_B2s): ~$30/month
-#   Total: ~$35/month
+#   Container Apps: ~$0 at low traffic (consumption plan)
+#   Total: ~$5/month
 #
 # Prerequisites:
 #   - Azure CLI installed and logged in (az login)
-#   - kubectl installed (az aks install-cli)
 #
 # Usage:
-#   ./lesson-07-containers.sh              # Deploy ACR + AKS + app
+#   ./lesson-07-containers.sh              # Deploy ACR + Container Apps + app
 #   ./lesson-07-containers.sh --yes        # Deploy without confirmation prompt
 #   ./lesson-07-containers.sh --cleanup    # Delete all resources
 #   ./lesson-07-containers.sh --commands   # Show key commands
@@ -41,7 +40,8 @@ LOCATION="${LOCATION:-centralus}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-essentials-containers}"
 UNIQUE_SUFFIX=$(openssl rand -hex 4)
 ACR_NAME="acressentials${UNIQUE_SUFFIX}"
-AKS_NAME="aks-essentials-${UNIQUE_SUFFIX}"
+CAE_NAME="cae-essentials-${UNIQUE_SUFFIX}"
+CA_NAME="hello-${UNIQUE_SUFFIX}"
 SKIP_CONFIRM="${SKIP_CONFIRM:-false}"
 
 # Get script directory for finding sample app
@@ -53,7 +53,7 @@ print_header() {
     echo ""
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo -e "${CYAN}  Lesson 07: Container Services${NC}"
-    echo -e "${CYAN}  ACR + AKS + Hello World Deployment${NC}"
+    echo -e "${CYAN}  ACR + Container Apps + Hello World Deployment${NC}"
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
 }
@@ -89,11 +89,6 @@ cleanup() {
         --yes \
         --no-wait
 
-    # Clean up kubeconfig
-    print_step "Removing AKS credentials from kubeconfig..."
-    kubectl config delete-context "${AKS_NAME}" 2>/dev/null || true
-    kubectl config delete-cluster "${AKS_NAME}" 2>/dev/null || true
-
     echo ""
     echo -e "${GREEN}✓ Cleanup initiated (runs in background)${NC}"
     echo ""
@@ -109,11 +104,11 @@ deploy() {
     print_info "Location: ${LOCATION}"
     print_info "Resource Group: ${RESOURCE_GROUP}"
     print_info "Container Registry: ${ACR_NAME}"
-    print_info "AKS Cluster: ${AKS_NAME}"
+    print_info "Container Apps Environment: ${CAE_NAME}"
     echo ""
 
     if [[ "$SKIP_CONFIRM" != "true" ]]; then
-        print_warning "This will create AKS (~\$30/month). Continue? (y/n)"
+        print_warning "This will create ACR + Container Apps (~\$5/month). Continue? (y/n)"
         read -r confirm
         if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
             echo "Deployment cancelled."
@@ -184,86 +179,57 @@ deploy() {
     echo ""
 
     #---------------------------------------------------------------------------
-    # Step 4: Create AKS Cluster
+    # Step 4: Install Container Apps extension
     #---------------------------------------------------------------------------
-    print_step "Creating AKS Cluster: ${AKS_NAME}"
-    print_info "This takes 3-5 minutes..."
+    print_step "Installing Container Apps extension..."
+    az extension add --name containerapp --upgrade -y 2>/dev/null
+    print_success "Extension ready"
     echo ""
 
-    az aks create \
-        --name "$AKS_NAME" \
+    #---------------------------------------------------------------------------
+    # Step 5: Create Container Apps Environment
+    #---------------------------------------------------------------------------
+    print_step "Creating Container Apps Environment: ${CAE_NAME}"
+    print_info "This takes 1-2 minutes..."
+    echo ""
+
+    az containerapp env create \
+        --name "$CAE_NAME" \
         --resource-group "$RESOURCE_GROUP" \
         --location "$LOCATION" \
-        --node-count 1 \
-        --node-vm-size Standard_B2s \
-        --enable-managed-identity \
-        --attach-acr "$ACR_NAME" \
-        --generate-ssh-keys \
-        --tags "course=azure-essentials" "lesson=07-containers" \
         --output none
 
-    print_success "AKS Cluster created"
+    print_success "Container Apps Environment created"
     echo ""
 
     #---------------------------------------------------------------------------
-    # Step 5: Get AKS Credentials
+    # Step 6: Deploy Hello Container to Container Apps
     #---------------------------------------------------------------------------
-    print_step "Getting AKS credentials for kubectl..."
+    print_step "Deploying hello-container to Container Apps..."
 
-    az aks get-credentials \
-        --name "$AKS_NAME" \
+    az containerapp create \
+        --name "$CA_NAME" \
         --resource-group "$RESOURCE_GROUP" \
-        --overwrite-existing
+        --environment "$CAE_NAME" \
+        --image "${login_server}/hello-container:v1" \
+        --registry-server "$login_server" \
+        --registry-username "$(az acr credential show -n "$ACR_NAME" --query username -o tsv)" \
+        --registry-password "$(az acr credential show -n "$ACR_NAME" --query passwords[0].value -o tsv)" \
+        --target-port 8080 \
+        --ingress external \
+        --output none
 
-    print_success "kubectl configured"
+    print_success "Container App deployed"
     echo ""
 
     #---------------------------------------------------------------------------
-    # Step 6: Deploy Hello Container to AKS
+    # Step 7: Get App URL
     #---------------------------------------------------------------------------
-    print_step "Deploying hello-container to AKS..."
-
-    # Create deployment with correct image
-    kubectl create deployment hello-container \
-        --image="${login_server}/hello-container:v1" \
-        --replicas=2
-
-    # Expose as LoadBalancer service
-    kubectl expose deployment hello-container \
-        --type=LoadBalancer \
-        --port=80 \
-        --target-port=8080
-
-    print_success "Deployment created"
-    echo ""
-
-    #---------------------------------------------------------------------------
-    # Step 7: Wait for External IP
-    #---------------------------------------------------------------------------
-    print_step "Waiting for external IP (this may take 1-2 minutes)..."
-
-    local external_ip=""
-    local attempts=0
-    local max_attempts=24
-
-    while [[ -z "$external_ip" || "$external_ip" == "<pending>" ]]; do
-        external_ip=$(kubectl get svc hello-container -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
-        if [[ -z "$external_ip" || "$external_ip" == "<pending>" ]]; then
-            ((attempts++))
-            if [[ $attempts -ge $max_attempts ]]; then
-                print_warning "Timeout waiting for IP. Check later with: kubectl get svc hello-container"
-                break
-            fi
-            echo -n "."
-            sleep 5
-        fi
-    done
-    echo ""
-
-    if [[ -n "$external_ip" && "$external_ip" != "<pending>" ]]; then
-        print_success "External IP: ${external_ip}"
-    fi
-    echo ""
+    local app_fqdn=$(az containerapp show \
+        --name "$CA_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --query properties.configuration.ingress.fqdn \
+        -o tsv)
 
     #---------------------------------------------------------------------------
     # Summary
@@ -277,32 +243,30 @@ deploy() {
     echo "  Login Server: ${login_server}"
     echo "  SKU:          Basic (~\$5/month)"
     echo ""
-    echo -e "${CYAN}Azure Kubernetes Service:${NC}"
-    echo "  Name:         ${AKS_NAME}"
-    echo "  Nodes:        1 x Standard_B2s (~\$30/month)"
+    echo -e "${CYAN}Azure Container Apps:${NC}"
+    echo "  Environment:  ${CAE_NAME}"
+    echo "  App:          ${CA_NAME}"
+    echo "  Cost:         ~\$0 at low traffic (consumption plan)"
     echo ""
     echo -e "${CYAN}Hello Container App:${NC}"
-    if [[ -n "$external_ip" && "$external_ip" != "<pending>" ]]; then
-        echo "  URL:          http://${external_ip}"
+    if [[ -n "$app_fqdn" ]]; then
+        echo "  URL:          https://${app_fqdn}"
         echo ""
-        echo -e "${YELLOW}🌐 Open in browser: ${BOLD}http://${external_ip}${NC}"
+        echo -e "${YELLOW}🌐 Open in browser: ${BOLD}https://${app_fqdn}${NC}"
     else
-        echo "  URL:          (pending - check: kubectl get svc hello-container)"
+        echo "  URL:          (check: az containerapp show -n ${CA_NAME} -g ${RESOURCE_GROUP} --query properties.configuration.ingress.fqdn)"
     fi
     echo ""
     echo -e "${CYAN}Useful Commands:${NC}"
     echo ""
-    echo "  # Check pods"
-    echo "  kubectl get pods"
+    echo "  # Check app status"
+    echo "  az containerapp show -n ${CA_NAME} -g ${RESOURCE_GROUP} --query properties.runningStatus"
     echo ""
-    echo "  # Check service"
-    echo "  kubectl get svc hello-container"
+    echo "  # View logs"
+    echo "  az containerapp logs show -n ${CA_NAME} -g ${RESOURCE_GROUP}"
     echo ""
-    echo "  # View pod logs"
-    echo "  kubectl logs -l app=hello-container"
-    echo ""
-    echo "  # Scale deployment"
-    echo "  kubectl scale deployment hello-container --replicas=3"
+    echo "  # Scale replicas"
+    echo "  az containerapp update -n ${CA_NAME} -g ${RESOURCE_GROUP} --min-replicas 1 --max-replicas 3"
     echo ""
     echo "Resource Group: ${RESOURCE_GROUP}"
     echo ""
@@ -332,35 +296,23 @@ show_commands() {
     echo "# List repositories"
     echo "az acr repository list --name <acr> -o table"
     echo ""
-    echo -e "${YELLOW}Azure Kubernetes Service (AKS)${NC}"
+    echo -e "${YELLOW}Azure Container Apps${NC}"
     echo ""
-    echo "# Create AKS cluster with ACR integration"
-    echo "az aks create --name <aks> --resource-group <rg> --node-count 1 \\"
-    echo "    --node-vm-size Standard_B2s --attach-acr <acr>"
+    echo "# Create environment"
+    echo "az containerapp env create --name <env> --resource-group <rg> --location <loc>"
     echo ""
-    echo "# Get kubectl credentials"
-    echo "az aks get-credentials --name <aks> --resource-group <rg>"
+    echo "# Deploy container from ACR"
+    echo "az containerapp create --name <app> --resource-group <rg> --environment <env> \\"
+    echo "    --image <acr>.azurecr.io/myapp:v1 --target-port 8080 --ingress external"
     echo ""
-    echo "# Attach ACR to existing AKS"
-    echo "az aks update --name <aks> --resource-group <rg> --attach-acr <acr>"
-    echo ""
-    echo -e "${YELLOW}Kubernetes (kubectl)${NC}"
-    echo ""
-    echo "# Create deployment"
-    echo "kubectl create deployment myapp --image=<acr>.azurecr.io/myapp:v1"
-    echo ""
-    echo "# Expose as LoadBalancer"
-    echo "kubectl expose deployment myapp --type=LoadBalancer --port=80 --target-port=8080"
-    echo ""
-    echo "# Check status"
-    echo "kubectl get pods"
-    echo "kubectl get svc"
-    echo ""
-    echo "# Scale"
-    echo "kubectl scale deployment myapp --replicas=3"
+    echo "# Check app status"
+    echo "az containerapp show -n <app> -g <rg> --query properties.configuration.ingress.fqdn"
     echo ""
     echo "# View logs"
-    echo "kubectl logs -l app=myapp"
+    echo "az containerapp logs show -n <app> -g <rg>"
+    echo ""
+    echo "# Scale replicas"
+    echo "az containerapp update -n <app> -g <rg> --min-replicas 1 --max-replicas 5"
     echo ""
 }
 

@@ -764,7 +764,7 @@ select_lesson() {
     echo -e "   ${CYAN}4)${NC} Networking Services        ${GREEN}[FREE]${NC}         VNets, subnets, NSGs"
     echo -e "   ${CYAN}5)${NC} Compute: Windows           ${YELLOW}[QUOTA: B2s]${NC}  Windows VM + App Service"
     echo -e "   ${CYAN}6)${NC} Compute: Linux & K8s       ${YELLOW}[QUOTA: B2s]${NC}  Ubuntu VM + MicroK8s"
-    echo -e "   ${CYAN}7)${NC} Container Services         ${YELLOW}[~\$35/mo]${NC}      ACR + AKS + Hello World"
+    echo -e "   ${CYAN}7)${NC} Container Services         ${GREEN}[~\$5/mo]${NC}       ACR + Container Apps"
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BOLD}  DAY 2 - ADVANCED SERVICES                                                   ${NC}"
@@ -1418,7 +1418,7 @@ setup_ssh_key() {
 # DEPLOYMENT TIME:
 #   - Storage/Networking: 1-2 minutes
 #   - VMs: 3-5 minutes
-#   - AKS: 5-10 minutes
+#   - Container Apps: 1-2 minutes
 #   - AI Foundry: 5-10 minutes
 #===============================================================================
 
@@ -1852,12 +1852,14 @@ show_completion() {
     fi
 
     if [ "$SELECTED_LESSON" = "07" ] || [ -z "$SELECTED_LESSON" ]; then
-        local aks_rg="rg-${ENV_NAME}-lesson07-containers"
-        local aks_name=$(az aks list -g "$aks_rg" --query "[0].name" -o tsv 2>/dev/null)
-        if [ -n "$aks_name" ]; then
-            echo -e "${CYAN}📦 AKS Cluster (Lesson 07):${NC}"
-            echo "     az aks get-credentials -g $aks_rg -n $aks_name"
-            echo "     kubectl get nodes"
+        local ca_rg="rg-${ENV_NAME}-lesson07-containers"
+        local ca_name=$(az containerapp list -g "$ca_rg" --query "[0].name" -o tsv 2>/dev/null)
+        if [ -n "$ca_name" ]; then
+            echo -e "${CYAN}📦 Container App (Lesson 07):${NC}"
+            local ca_fqdn=$(az containerapp show -n "$ca_name" -g "$ca_rg" --query properties.configuration.ingress.fqdn -o tsv 2>/dev/null)
+            if [ -n "$ca_fqdn" ]; then
+                echo "     https://$ca_fqdn"
+            fi
             echo ""
         fi
     fi

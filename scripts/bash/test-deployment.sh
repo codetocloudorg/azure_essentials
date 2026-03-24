@@ -20,7 +20,7 @@
 #   - az storage account list: Verify storage accounts
 #   - az network vnet list   : Verify virtual networks
 #   - az vm list             : Verify virtual machines
-#   - az aks list            : Verify Kubernetes clusters
+#   - az containerapp list   : Verify container apps
 #
 # WHY VALIDATION MATTERS:
 #   - Confirms Bicep deployments succeeded
@@ -43,7 +43,7 @@
 #   Lesson 04: Networking (VNet, Subnets, NSGs, Bastion)
 #   Lesson 05: Compute - Windows (Windows VM, IIS, ASP.NET)
 #   Lesson 06: Compute - Linux (Linux VM, MicroK8s)
-#   Lesson 07: Container Services (ACR, ACI, AKS)
+#   Lesson 07: Container Services (ACR, Container Apps)
 #   Lesson 08: Serverless (Azure Functions, Logic Apps)
 #   Lesson 09: Database Services (Cosmos DB, SQL)
 #   Lesson 11: AI Foundry (Azure OpenAI, AI Foundry project)
@@ -521,29 +521,28 @@ validate_lesson_06() {
 #-------------------------------------------------------------------------------
 # Azure provides multiple container hosting options:
 #   - ACR (Azure Container Registry): Private Docker image storage
-#   - ACI (Azure Container Instances): Serverless container hosting
-#   - AKS (Azure Kubernetes Service): Managed Kubernetes clusters
+#   - Container Apps: Serverless container platform
+#   - ACI (Azure Container Instances): Quick single containers
 #
 # KEY CONCEPTS:
 #   - Container images are stored in registries (ACR)
-#   - ACI is perfect for simple, single-container workloads
-#   - AKS is for production orchestration with multiple containers
+#   - Container Apps is serverless — no clusters to manage
+#   - Scale-to-zero with consumption plan
 #
 # BICEP CONCEPTS DEMONSTRATED:
 #   - ACR resource with admin credentials
-#   - ACI container group with environment variables
-#   - ACR integration with ACI/AKS (pull secrets)
+#   - Container Apps Environment
+#   - ACR integration with Container Apps
 #
 # AZURE CLI:
 #   az acr list -g <rg>
 #   az acr repository list -n <acr-name>
-#   az container list -g <rg>
-#   az aks list -g <rg>
+#   az containerapp list -g <rg>
 #-------------------------------------------------------------------------------
 validate_lesson_07() {
     print_section "🐳 Lesson 07: Container Services"
     echo -e "  ${CYAN}Verifying container infrastructure...${NC}"
-    echo -e "  ${CYAN}(ACR stores images, ACI/AKS run containers)${NC}"
+    echo -e "  ${CYAN}(ACR stores images, Container Apps runs containers)${NC}"
     echo ""
 
     local rg=$(az group list --query "[?contains(name, 'container') || contains(name, 'lesson07') || contains(name, 'lesson-07')].name" -o tsv 2>/dev/null | head -1)

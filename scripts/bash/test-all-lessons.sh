@@ -387,7 +387,7 @@ main() {
     echo "  • Lesson 04: Networking (FREE)"
     echo "  • Lesson 05: Windows VM (requires quota)"
     echo "  • Lesson 06: Linux VM + K8s (requires quota)"
-    echo "  • Lesson 07: Container Services (ACR + AKS)"
+    echo "  • Lesson 07: Container Services (ACR + Container Apps)"
     echo "  • Lesson 08: Serverless (Functions)"
     echo "  • Lesson 09: Cosmos DB (serverless)"
     echo "  • Lesson 11: AI Foundry"

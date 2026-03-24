@@ -143,7 +143,7 @@ See [SCRIPTS.md](SCRIPTS.md) for all options.
 | 04  | [Networking](lessons/04-networking/README.md)                  | 35 min | VNets, NSGs, load balancers       |
 | 05  | [Windows Compute](lessons/05-compute-windows/README.md)        | 30 min | VMs, App Service                  |
 | 06  | [Linux and K8s](lessons/06-compute-linux-kubernetes/README.md) | 25 min | Linux VMs, MicroK8s               |
-| 07  | [Containers](lessons/07-container-services/README.md)          | 25 min | ACR, AKS, Container Apps          |
+| 07  | [Containers](lessons/07-container-services/README.md)          | 25 min | ACR, Container Apps               |
 
 ### Day 2: Advanced Services
 

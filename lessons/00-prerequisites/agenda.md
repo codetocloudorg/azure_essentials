@@ -152,10 +152,10 @@ _☕ Break_
 
 | Time   | Topic                                   | Type            |
 | ------ | --------------------------------------- | --------------- |
-| 10 min | Azure Container Registry & AKS          | Presentation    |
-|        | • Building and pushing container images |                 |
-|        | • Azure Kubernetes Service overview     |                 |
-| 10 min | Build Container & Push to ACR           | Demo + Hands-on |
+| 10 min | Azure Container Registry & Container Apps | Presentation    |
+|        | • Building and pushing container images    |                 |
+|        | • Azure Container Apps overview            |                 |
+| 10 min | Build Container & Deploy to Container Apps | Demo + Hands-on |
 | 5 min  | Q&A                                     | Discussion      |
 
 ---

@@ -174,7 +174,7 @@ module computeWindows './modules/compute-windows.bicep' = if (deployComputeWindo
   }
 }
 
-// Lesson 07: Container Services (ACR + AKS)
+// Lesson 07: Container Services (ACR + Container Apps)
 module containers './modules/container-registry.bicep' = if (deployContainers) {
   name: 'containers-${resourceToken}'
   scope: rgContainers
@@ -182,7 +182,7 @@ module containers './modules/container-registry.bicep' = if (deployContainers) {
     location: location
     tags: defaultTags
     acrName: '${abbrs.containerRegistry}${resourceToken}'
-    aksName: 'aks-${environmentName}-${resourceToken}'
+    containerAppsEnvName: 'cae-${environmentName}-${resourceToken}'
   }
 }
 

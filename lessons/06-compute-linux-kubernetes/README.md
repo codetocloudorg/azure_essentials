@@ -491,7 +491,7 @@ In this lesson, you learned:
 
 ## Next Steps
 
-Continue to [Lesson 07: Container Services](../07-container-services/README.md) to work with Azure Container Registry and AKS.
+Continue to [Lesson 07: Container Services](../07-container-services/README.md) to work with Azure Container Registry and Container Apps.
 
 ---
 

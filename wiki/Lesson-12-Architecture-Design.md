@@ -231,7 +231,7 @@ Layer your security like an onion:
 ```
 
 **Azure Services:**
-- App Service or AKS (Web tier)
+- App Service or Container Apps (Web tier)
 - API Management + Functions (API tier)
 - SQL Database + Cosmos DB + Redis Cache (Data tier)
 
@@ -257,7 +257,7 @@ Layer your security like an onion:
 ```
 
 **Azure Services:**
-- Azure Kubernetes Service (AKS) or Container Apps
+- Azure Container Apps or AKS (for large-scale)
 - Service Bus for messaging between services
 - Each service has its own database
 

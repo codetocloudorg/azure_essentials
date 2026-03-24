@@ -9,7 +9,7 @@
 ### ACR (Azure Container Registry)
 A private library for storing container images. Like Docker Hub, but just for you.
 ```
-Your container images → ACR → Deploy to AKS, Container Apps, etc.
+Your container images → ACR → Deploy to Container Apps, AKS, etc.
 ```
 
 ### ARM (Azure Resource Manager)

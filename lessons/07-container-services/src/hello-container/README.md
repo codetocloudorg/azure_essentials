@@ -1,6 +1,6 @@
 # Hello Container - Azure Essentials
 
-A minimal "Hello World" container for learning Azure Container Registry and AKS.
+A minimal "Hello World" container for learning Azure Container Registry and Container Apps.
 
 ## Quick Start
 
@@ -33,7 +33,7 @@ docker run -p 8080:8080 hello-container:v1
 
 - Shows a "Hello from Azure!" page
 - Displays the container hostname
-- Has a `/health` endpoint for Kubernetes health checks
+- Has a `/health` endpoint for health checks
 
 ## Files
 
@@ -41,25 +41,26 @@ docker run -p 8080:8080 hello-container:v1
 |------|---------|
 | `app.py` | Flask web application |
 | `Dockerfile` | Container build instructions |
+| `k8s-deployment.yaml` | Kubernetes manifest (optional, for AKS/MicroK8s) |
 
-## Deploy to AKS
+## Deploy to Container Apps
 
-```yaml
-# kubernetes/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hello-container
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: hello-container
-  template:
-    spec:
-      containers:
-      - name: hello-container
-        image: <acr-name>.azurecr.io/hello-container:v1
-        ports:
-        - containerPort: 8080
+```bash
+# Set variables
+ACR_NAME="<your-acr-name>"
+RG="<your-resource-group>"
+
+# Create environment and deploy
+az containerapp env create --name my-env --resource-group $RG --location centralus
+az containerapp create \
+  --name hello-container \
+  --resource-group $RG \
+  --environment my-env \
+  --image $ACR_NAME.azurecr.io/hello-container:v1 \
+  --registry-server $ACR_NAME.azurecr.io \
+  --target-port 8080 \
+  --ingress external
+
+# Get the URL
+az containerapp show -n hello-container -g $RG --query properties.configuration.ingress.fqdn -o tsv
 ```
