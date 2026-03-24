@@ -13,12 +13,12 @@ In this lesson, you'll work with **Azure AI Foundry**, the platform for building
 
 ## Why Azure AI Foundry?
 
-| Challenge | How Foundry Solves It |
-|-----------|----------------------|
-| Need AI capabilities | Access to GPT-4o, Phi-4, embeddings, vision models |
-| Prompt experimentation | Built-in Playground to test without code |
-| Model management | Deploy, monitor, and scale models from one place |
-| Enterprise ready | Built-in security, compliance, and monitoring |
+| Challenge              | How Foundry Solves It                              |
+| ---------------------- | -------------------------------------------------- |
+| Need AI capabilities   | Access to GPT-4o, Phi-4, embeddings, vision models |
+| Prompt experimentation | Built-in Playground to test without code           |
+| Model management       | Deploy, monitor, and scale models from one place   |
+| Enterprise ready       | Built-in security, compliance, and monitoring      |
 
 **Real-world example**: Customer support chatbots, document analysis, content generation, code assistants.
 
@@ -76,7 +76,7 @@ In this lesson, you'll work with **Azure AI Foundry**, the platform for building
 ### Step 1: Open Model Catalog
 
 1. In your **azure-essentials** project, click **Model catalog** in the left menu
-2. Search for **gpt-4o-mini**
+2. Search for **gpt-4.1-mini**
 3. Click on the model card
 
 ### Step 2: Deploy the Model
@@ -85,7 +85,7 @@ In this lesson, you'll work with **Azure AI Foundry**, the platform for building
 2. Configure:
    | Setting | Value |
    |---------|-------|
-   | Deployment name | `gpt-4o-mini` |
+   | Deployment name | `gpt-4.1-mini` |
    | Deployment type | **Serverless API** |
 
 3. Click **Deploy**
@@ -94,6 +94,7 @@ In this lesson, you'll work with **Azure AI Foundry**, the platform for building
 ### Step 3: Note Your Credentials
 
 After deployment, note these values (you'll need them later):
+
 - **Endpoint URL**: `https://your-project.openai.azure.com/`
 - **API Key**: Click "Show key" to reveal
 
@@ -104,7 +105,7 @@ After deployment, note these values (you'll need them later):
 ### Step 1: Open Chat Playground
 
 1. In your project, click **Playgrounds** → **Chat**
-2. Select your **gpt-4o-mini** deployment
+2. Select your **gpt-4.1-mini** deployment
 
 ### Step 2: Set System Prompt
 
@@ -126,20 +127,20 @@ Click **Apply changes**.
 
 Try these prompts:
 
-| Prompt | What You'll Learn |
-|--------|-------------------|
-| "What is Azure Cosmos DB?" | Factual response |
-| "Explain serverless in one sentence" | Concise explanation |
+| Prompt                                   | What You'll Learn     |
+| ---------------------------------------- | --------------------- |
+| "What is Azure Cosmos DB?"               | Factual response      |
+| "Explain serverless in one sentence"     | Concise explanation   |
 | "Compare Azure Functions vs App Service" | Comparison capability |
 
 ### Step 4: Experiment with Parameters
 
 Click **Parameters** and try:
 
-| Parameter | Low Value | High Value | Effect |
-|-----------|-----------|------------|--------|
-| **Temperature** | 0.2 | 1.2 | Focused → Creative |
-| **Max tokens** | 100 | 1000 | Short → Long responses |
+| Parameter       | Low Value | High Value | Effect                 |
+| --------------- | --------- | ---------- | ---------------------- |
+| **Temperature** | 0.2       | 1.2        | Focused → Creative     |
+| **Max tokens**  | 100       | 1000       | Short → Long responses |
 
 ---
 
@@ -162,7 +163,7 @@ echo "Found: $AI_ACCOUNT in $RG"
 # Get endpoint and key
 export AZURE_AI_ENDPOINT=$(az cognitiveservices account show --name $AI_ACCOUNT --resource-group $RG --query properties.endpoint -o tsv)
 export AZURE_AI_KEY=$(az cognitiveservices account keys list --name $AI_ACCOUNT --resource-group $RG --query key1 -o tsv)
-export AZURE_AI_DEPLOYMENT="gpt-4o-mini"
+export AZURE_AI_DEPLOYMENT="gpt-4.1-mini"
 
 echo "Endpoint: $AZURE_AI_ENDPOINT"
 ```
@@ -180,6 +181,7 @@ python chatbot.py
 ```
 
 **Expected Output:**
+
 ```
 ============================================================
 Azure Learning Assistant
@@ -196,11 +198,11 @@ Assistant: Azure is Microsoft's cloud computing platform...
 
 The Python chatbot demonstrates:
 
-| Component | What It Does |
-|-----------|--------------|
-| `AzureOpenAI` client | Connects to your Foundry endpoint |
-| System prompt | Defines the assistant's behavior |
-| Message history | Maintains conversation context |
+| Component                   | What It Does                      |
+| --------------------------- | --------------------------------- |
+| `AzureOpenAI` client        | Connects to your Foundry endpoint |
+| System prompt               | Defines the assistant's behavior  |
+| Message history             | Maintains conversation context    |
 | `chat.completions.create()` | Sends messages and gets responses |
 
 ### Key Code Pattern
@@ -217,7 +219,7 @@ client = AzureOpenAI(
 
 # Send a message
 response = client.chat.completions.create(
-    model="gpt-4o-mini",
+    model="gpt-4.1-mini",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Hello!"}
@@ -234,20 +236,20 @@ print(response.choices[0].message.content)
 
 ### Model Parameters
 
-| Parameter | What It Does | When to Use |
-|-----------|--------------|-------------|
-| **Temperature** | Controls randomness | Low (0.2) for facts, High (1.0+) for creativity |
-| **Max tokens** | Limits response length | Set based on use case |
-| **Top P** | Alternative to temperature | Usually leave at 0.95 |
+| Parameter       | What It Does               | When to Use                                     |
+| --------------- | -------------------------- | ----------------------------------------------- |
+| **Temperature** | Controls randomness        | Low (0.2) for facts, High (1.0+) for creativity |
+| **Max tokens**  | Limits response length     | Set based on use case                           |
+| **Top P**       | Alternative to temperature | Usually leave at 0.95                           |
 
 ### Prompt Engineering Tips
 
-| Technique | Example |
-|-----------|---------|
-| **Be specific** | "List 3 benefits of Azure Functions" |
-| **Provide context** | "For a beginner developer..." |
-| **Set format** | "Respond in bullet points" |
-| **Define persona** | "You are an Azure architect" |
+| Technique           | Example                              |
+| ------------------- | ------------------------------------ |
+| **Be specific**     | "List 3 benefits of Azure Functions" |
+| **Provide context** | "For a beginner developer..."        |
+| **Set format**      | "Respond in bullet points"           |
+| **Define persona**  | "You are an Azure architect"         |
 
 ---
 
@@ -264,9 +266,10 @@ az cognitiveservices account list -o table
 ### "Model deployment not found"
 
 Check your deployments in the Portal:
+
 1. Go to [ai.azure.com](https://ai.azure.com)
 2. Open your **azure-essentials** project
-3. Click **Deployments** - verify `gpt-4o-mini` exists
+3. Click **Deployments** - verify `gpt-4.1-mini` exists
 
 ### "Invalid API key"
 
@@ -295,12 +298,12 @@ az cognitiveservices account purge --name $AI_ACCOUNT --location northcentralus
 
 ## Summary
 
-| Task | Completed |
-|------|-----------|
-| Created AI Foundry project (azure-essentials) | ✅ |
-| Deployed GPT-4o-mini model | ✅ |
-| Tested in Playground | ✅ |
-| Built Python chatbot | ✅ |
+| Task                                          | Completed |
+| --------------------------------------------- | --------- |
+| Created AI Foundry project (azure-essentials) | ✅        |
+| Deployed GPT-4o-mini model                    | ✅        |
+| Tested in Playground                          | ✅        |
+| Built Python chatbot                          | ✅        |
 
 ---
 
