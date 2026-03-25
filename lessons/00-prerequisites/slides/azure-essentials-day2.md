@@ -213,6 +213,11 @@ style: |
 **Exercise 9.2** — Test App Connection
 - Run Python test app with CRUD operations
 
+```bash
+pip install --user -r requirements.txt
+python app.py
+```
+
 📂 **See:** `lessons/09-database-services/README.md`
 
 ---
@@ -354,7 +359,7 @@ style: |
 - Create project in AI Foundry
 
 **Exercise 11.2** — Deploy a Model
-- Select and deploy gpt-4.1-mini
+- Select and deploy **gpt-4.1-mini** from the catalog
 
 **Exercise 11.3** — Build Simple Chatbot
 - Test the deployed model
@@ -534,8 +539,8 @@ style: |
 # Questions?
 
 **Contact:**
-- Course Repository: github.com/codetocloudorg/azure_essentials
-- Microsoft Learn: learn.microsoft.com
+- Course Repository: [github.com/codetocloudorg/azure_essentials](https://github.com/codetocloudorg/azure_essentials)
+- Microsoft Learn: [learn.microsoft.com](https://learn.microsoft.com)
 
 **Thank you for attending!**
 

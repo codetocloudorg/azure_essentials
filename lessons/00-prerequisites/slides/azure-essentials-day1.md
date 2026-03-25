@@ -500,16 +500,16 @@ Virtual Network (10.0.0.0/16)
 
 ---
 
-# Azure Kubernetes Service (AKS)
+# Azure Container Apps
 
-| Component | Managed By |
-|-----------|-----------|
-| Control plane | Microsoft (free) |
-| Worker nodes | You (pay for VMs) |
-| Upgrades | Assisted by Azure |
-| Scaling | Cluster autoscaler |
+| Feature | Details |
+|---------|--------|
+| **Pricing** | Pay per vCPU/memory second |
+| **Scaling** | Scale-to-zero, auto-scale |
+| **Ingress** | Built-in HTTPS |
+| **Complexity** | No Kubernetes required |
 
-> 📚 [AKS Overview](https://learn.microsoft.com/azure/aks/intro-kubernetes)
+> 📚 [Container Apps Overview](https://learn.microsoft.com/azure/container-apps/overview)
 
 ---
 
@@ -531,7 +531,10 @@ Or use **ACR Tasks** — build in the cloud, no Docker needed locally!
 - Create container registry (Basic SKU)
 
 **Exercise 7.2** — Build with ACR Tasks
-- Build Cloud Dashboard image in the cloud
+- Build container image in the cloud (no Docker needed!)
+
+**Exercise 7.3** — Deploy to Container Apps
+- Deploy with public URL
 
 📂 **See:** `lessons/07-container-services/README.md`
 
@@ -541,8 +544,8 @@ Or use **ACR Tasks** — build in the cloud, no Docker needed locally!
 
 - ACR stores private container images
 - ACR Tasks builds images without local Docker
-- AKS is the managed Kubernetes service
-- Control plane is free — you pay for worker node VMs
+- Container Apps: serverless containers, scale-to-zero
+- No Kubernetes knowledge required for Container Apps
 
 ---
 
@@ -567,4 +570,4 @@ Or use **ACR Tasks** — build in the cloud, no Docker needed locally!
 | Azure Fundamentals | [learn.microsoft.com/training/paths/azure-fundamentals](https://learn.microsoft.com/training/paths/azure-fundamentals/) |
 | Azure CLI Docs | [learn.microsoft.com/cli/azure](https://learn.microsoft.com/cli/azure/) |
 | Azure Architecture Center | [learn.microsoft.com/azure/architecture](https://learn.microsoft.com/azure/architecture/) |
-| Course Repository | github.com/codetocloudorg/azure_essentials |
+| Course Repository | [github.com/codetocloudorg/azure_essentials](https://github.com/codetocloudorg/azure_essentials) |
