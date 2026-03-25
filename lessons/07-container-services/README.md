@@ -68,12 +68,12 @@ ACR is a managed Docker registry service for storing container images:
 
 Container Apps is a serverless container platform — no clusters to manage:
 
-| Feature         | Details                                   |
-| --------------- | ----------------------------------------- |
-| Pricing         | Consumption plan (~$0 at low traffic)     |
-| Scaling         | Scale-to-zero, auto-scale on HTTP/events  |
-| Ingress         | Built-in HTTPS with custom domains        |
-| Complexity      | No Kubernetes knowledge required          |
+| Feature    | Details                                  |
+| ---------- | ---------------------------------------- |
+| Pricing    | Consumption plan (~$0 at low traffic)    |
+| Scaling    | Scale-to-zero, auto-scale on HTTP/events |
+| Ingress    | Built-in HTTPS with custom domains       |
+| Complexity | No Kubernetes knowledge required         |
 
 > 💡 For production Kubernetes workloads at scale, see [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/azure/aks/intro-kubernetes).
 

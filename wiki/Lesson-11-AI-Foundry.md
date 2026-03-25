@@ -36,7 +36,7 @@ The unified platform for building AI applications—access to GPT-4o, Phi-4, DAL
 | Model                | Capability           | Example                     |
 | -------------------- | -------------------- | --------------------------- |
 | **GPT-4o**           | Multimodal reasoning | Chatbots, document analysis |
-| **GPT-4.1-mini**      | Fast, efficient      | Quick responses, summaries  |
+| **GPT-4.1-mini**     | Fast, efficient      | Quick responses, summaries  |
 | **Phi-4**            | Small language model | Edge scenarios, low latency |
 | **DALL-E 3**         | Image generation     | Create images from text     |
 | **Whisper**          | Speech-to-text       | Transcription               |
@@ -283,7 +283,7 @@ Azure AI services charge per API call:
 | Service                    | Pricing (approx)         |
 | -------------------------- | ------------------------ |
 | **GPT-4o**                 | $0.005/1K input tokens   |
-| **GPT-4.1-mini**            | $0.00015/1K input tokens |
+| **GPT-4.1-mini**           | $0.00015/1K input tokens |
 | **Phi-4**                  | $0.00007/1K input tokens |
 | **DALL-E 3**               | $0.04/image              |
 | **Whisper**                | $0.006/minute            |

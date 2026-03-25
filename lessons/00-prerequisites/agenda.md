@@ -150,13 +150,13 @@ _☕ Break_
 
 ### Module 7: Container Services (25 min)
 
-| Time   | Topic                                   | Type            |
-| ------ | --------------------------------------- | --------------- |
-| 10 min | Azure Container Registry & Container Apps | Presentation    |
+| Time   | Topic                                      | Type            |
+| ------ | ------------------------------------------ | --------------- |
+| 10 min | Azure Container Registry & Container Apps  | Presentation    |
 |        | • Building and pushing container images    |                 |
 |        | • Azure Container Apps overview            |                 |
 | 10 min | Build Container & Deploy to Container Apps | Demo + Hands-on |
-| 5 min  | Q&A                                     | Discussion      |
+| 5 min  | Q&A                                        | Discussion      |
 
 ---
 
@@ -210,7 +210,7 @@ _☕ Break_
 | Time   | Topic                                    | Type            |
 | ------ | ---------------------------------------- | --------------- |
 | 20 min | AI Foundry Platform Overview             | Presentation    |
-|        | • AI Foundry project workspaces             |                 |
+|        | • AI Foundry project workspaces          |                 |
 |        | • Model catalog: OpenAI, Phi, embeddings |                 |
 |        | • Prompt flow and orchestration          |                 |
 | 20 min | Build & Test a Simple Chatbot            | Demo + Hands-on |

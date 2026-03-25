@@ -301,7 +301,7 @@ az cognitiveservices account purge --name $AI_ACCOUNT --location northcentralus
 | Task                                          | Completed |
 | --------------------------------------------- | --------- |
 | Created AI Foundry project (azure-essentials) | ✅        |
-| Deployed GPT-4.1-mini model                    | ✅        |
+| Deployed GPT-4.1-mini model                   | ✅        |
 | Tested in Playground                          | ✅        |
 | Built Python chatbot                          | ✅        |
 

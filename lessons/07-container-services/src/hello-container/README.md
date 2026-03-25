@@ -37,10 +37,10 @@ docker run -p 8080:8080 hello-container:v1
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `app.py` | Flask web application |
-| `Dockerfile` | Container build instructions |
+| File                  | Purpose                                          |
+| --------------------- | ------------------------------------------------ |
+| `app.py`              | Flask web application                            |
+| `Dockerfile`          | Container build instructions                     |
 | `k8s-deployment.yaml` | Kubernetes manifest (optional, for AKS/MicroK8s) |
 
 ## Deploy to Container Apps

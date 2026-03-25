@@ -5,6 +5,7 @@
 ## 🎯 What You'll Learn
 
 By the end of this lesson, you'll understand:
+
 - Azure Well-Architected Framework pillars
 - Common architecture patterns
 - How to design resilient, scalable systems
@@ -18,13 +19,13 @@ Microsoft's guide for building quality cloud workloads.
 
 ### The Five Pillars
 
-| Pillar | Question It Answers |
-|--------|---------------------|
-| **Reliability** | Will it keep working? |
-| **Security** | Is it protected? |
-| **Cost Optimization** | Is it worth the money? |
-| **Operational Excellence** | Can we run it well? |
-| **Performance Efficiency** | Is it fast enough? |
+| Pillar                     | Question It Answers    |
+| -------------------------- | ---------------------- |
+| **Reliability**            | Will it keep working?  |
+| **Security**               | Is it protected?       |
+| **Cost Optimization**      | Is it worth the money? |
+| **Operational Excellence** | Can we run it well?    |
+| **Performance Efficiency** | Is it fast enough?     |
 
 ---
 
@@ -34,21 +35,21 @@ Microsoft's guide for building quality cloud workloads.
 
 ### Key Concepts
 
-| Concept | Meaning |
-|---------|---------|
+| Concept          | Meaning                                                  |
+| ---------------- | -------------------------------------------------------- |
 | **Availability** | % of time system is up (99.9% = 8.7 hours downtime/year) |
-| **Redundancy** | Multiple copies so one failure doesn't stop everything |
-| **Failover** | Automatically switch to backup when primary fails |
-| **Recovery** | How fast can you restore after disaster? |
+| **Redundancy**   | Multiple copies so one failure doesn't stop everything   |
+| **Failover**     | Automatically switch to backup when primary fails        |
+| **Recovery**     | How fast can you restore after disaster?                 |
 
 ### Azure Services for Reliability
 
-| Pattern | Azure Service |
-|---------|---------------|
-| Multi-region deployment | Traffic Manager, Azure Front Door |
-| Data replication | Cosmos DB global distribution, SQL geo-replication |
-| Redundant storage | GRS, ZRS storage options |
-| Health monitoring | Azure Monitor, Application Insights |
+| Pattern                 | Azure Service                                      |
+| ----------------------- | -------------------------------------------------- |
+| Multi-region deployment | Traffic Manager, Azure Front Door                  |
+| Data replication        | Cosmos DB global distribution, SQL geo-replication |
+| Redundant storage       | GRS, ZRS storage options                           |
+| Health monitoring       | Azure Monitor, Application Insights                |
 
 ### Design Tips
 
@@ -93,12 +94,12 @@ Layer your security like an onion:
 
 ### Key Azure Security Services
 
-| Service | Purpose |
-|---------|---------|
-| **Azure AD (Entra ID)** | Identity management |
-| **Key Vault** | Secrets & certificates |
-| **Defender for Cloud** | Security posture |
-| **DDoS Protection** | Attack mitigation |
+| Service                 | Purpose                |
+| ----------------------- | ---------------------- |
+| **Azure AD (Entra ID)** | Identity management    |
+| **Key Vault**           | Secrets & certificates |
+| **Defender for Cloud**  | Security posture       |
+| **DDoS Protection**     | Attack mitigation      |
 
 ### Security Best Practices
 
@@ -124,12 +125,12 @@ Layer your security like an onion:
 
 ### Cost Drivers
 
-| Factor | How to Optimize |
-|--------|-----------------|
-| **Compute** | Right-size VMs, use reserved instances |
-| **Storage** | Choose right tier, lifecycle policies |
-| **Network** | Reduce data transfer, use CDN |
-| **Licensing** | Azure Hybrid Benefit for Windows |
+| Factor        | How to Optimize                        |
+| ------------- | -------------------------------------- |
+| **Compute**   | Right-size VMs, use reserved instances |
+| **Storage**   | Choose right tier, lifecycle policies  |
+| **Network**   | Reduce data transfer, use CDN          |
+| **Licensing** | Azure Hybrid Benefit for Windows       |
 
 ### Cost Optimization Strategies
 
@@ -155,12 +156,12 @@ Layer your security like an onion:
 
 ### DevOps Practices
 
-| Practice | Azure Tool |
-|----------|------------|
-| **Source Control** | Azure Repos, GitHub |
-| **CI/CD** | Azure Pipelines, GitHub Actions |
-| **Infrastructure as Code** | Bicep, Terraform, ARM |
-| **Monitoring** | Azure Monitor, Log Analytics |
+| Practice                   | Azure Tool                      |
+| -------------------------- | ------------------------------- |
+| **Source Control**         | Azure Repos, GitHub             |
+| **CI/CD**                  | Azure Pipelines, GitHub Actions |
+| **Infrastructure as Code** | Bicep, Terraform, ARM           |
+| **Monitoring**             | Azure Monitor, Log Analytics    |
 
 ### Monitoring Pyramid
 
@@ -184,20 +185,20 @@ Layer your security like an onion:
 
 ### Scaling Patterns
 
-| Pattern | When to Use |
-|---------|-------------|
-| **Scale Up (Vertical)** | Bigger machine (more CPU/RAM) |
-| **Scale Out (Horizontal)** | More machines |
-| **Auto-scaling** | Dynamic based on metrics |
+| Pattern                    | When to Use                   |
+| -------------------------- | ----------------------------- |
+| **Scale Up (Vertical)**    | Bigger machine (more CPU/RAM) |
+| **Scale Out (Horizontal)** | More machines                 |
+| **Auto-scaling**           | Dynamic based on metrics      |
 
 ### Performance Tips
 
-| Issue | Solution |
-|-------|----------|
-| Slow database | Add read replicas, caching (Redis) |
-| High latency | Use CDN, deploy closer to users |
+| Issue          | Solution                                  |
+| -------------- | ----------------------------------------- |
+| Slow database  | Add read replicas, caching (Redis)        |
+| High latency   | Use CDN, deploy closer to users           |
 | Traffic spikes | Auto-scale, use queue-based load leveling |
-| Slow API | Async processing, caching |
+| Slow API       | Async processing, caching                 |
 
 ---
 
@@ -231,6 +232,7 @@ Layer your security like an onion:
 ```
 
 **Azure Services:**
+
 - App Service or Container Apps (Web tier)
 - API Management + Functions (API tier)
 - SQL Database + Cosmos DB + Redis Cache (Data tier)
@@ -257,6 +259,7 @@ Layer your security like an onion:
 ```
 
 **Azure Services:**
+
 - Azure Container Apps or AKS (for large-scale)
 - Service Bus for messaging between services
 - Each service has its own database
@@ -277,6 +280,7 @@ Layer your security like an onion:
 ```
 
 **Azure Services:**
+
 - Event Hub (millions of events/second)
 - Event Grid (reactive events)
 - Azure Functions (event processing)
@@ -315,6 +319,7 @@ Layer your security like an onion:
 ```
 
 **Why this architecture?**
+
 - Front Door: Global load balancing, DDoS protection, caching
 - Multi-region: Low latency for users worldwide
 - Cosmos DB: Global replication keeps data in sync
@@ -326,25 +331,25 @@ Layer your security like an onion:
 
 Before designing, ask:
 
-| Category | Question |
-|----------|----------|
-| **Users** | Where are they located? How many concurrent? |
-| **Availability** | What uptime SLA do you need? |
-| **Data** | How much? How sensitive? |
-| **Compliance** | GDPR, HIPAA, SOC2 requirements? |
-| **Budget** | What's the monthly spend limit? |
-| **Team** | What skills do you have? |
+| Category         | Question                                     |
+| ---------------- | -------------------------------------------- |
+| **Users**        | Where are they located? How many concurrent? |
+| **Availability** | What uptime SLA do you need?                 |
+| **Data**         | How much? How sensitive?                     |
+| **Compliance**   | GDPR, HIPAA, SOC2 requirements?              |
+| **Budget**       | What's the monthly spend limit?              |
+| **Team**         | What skills do you have?                     |
 
 ---
 
 ## 🛠️ Architecture Tools
 
-| Tool | Purpose |
-|------|---------|
-| **Azure Architecture Center** | Reference architectures |
-| **Well-Architected Review** | Assess your design |
-| **Azure Advisor** | Personalized recommendations |
-| **Pricing Calculator** | Estimate costs |
+| Tool                          | Purpose                      |
+| ----------------------------- | ---------------------------- |
+| **Azure Architecture Center** | Reference architectures      |
+| **Well-Architected Review**   | Assess your design           |
+| **Azure Advisor**             | Personalized recommendations |
+| **Pricing Calculator**        | Estimate costs               |
 
 ### Resources
 
@@ -387,4 +392,4 @@ Congratulations! You've completed Azure Essentials!
 
 ---
 
-*Thank you for learning with Code to Cloud Inc.! 🚀*
+_Thank you for learning with Code to Cloud Inc.! 🚀_
